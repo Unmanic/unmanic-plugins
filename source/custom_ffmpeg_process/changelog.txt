@@ -1,7 +1,0 @@
-[B][COLOR=FF56ADDA]0.0.2[/COLOR][/B]
-• Add support for plugin Settings class
-• Add better description of how it works.
-• Move system info to a call to the Unmanic System class
-
-[B][COLOR=FF56ADDA]0.0.1[/COLOR][/B]
-• initial version
