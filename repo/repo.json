@@ -1,0 +1,22 @@
+{
+    "repo": {
+        "id": "repository.official",
+        "name": "Official Repo",
+        "author": "Josh.5",
+        "icon": "",
+        "repo_data_url": "https://raw.githubusercontent.com/Josh5/unmanic-plugins/official/repo/repo.json",
+        "repo_data_checksum": "",
+        "repo_data_directory": "https://raw.githubusercontent.com/Josh5/unmanic-plugins/official/repo/"
+    },
+    "plugins": [
+        {
+            "id": "strip_file_metadata",
+            "name": "Strip all video metadata from file",
+            "author": "Josh.5",
+            "version": "0.0.1",
+            "tags": "video,ffmpeg,worker",
+            "description": "Removes all metadata (if it exists).",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic/master/icon.png"
+        }
+    ]
+}
