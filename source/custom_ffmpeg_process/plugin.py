@@ -40,7 +40,7 @@
             :param data     - Dictionary object of data that will configure how the FFMPEG process is executed.
 
 """
-from unmanic.libs.plugins import PluginSettings
+from unmanic.libs.unplugins.settings import PluginSettings
 from unmanic.libs.system import System
 
 
