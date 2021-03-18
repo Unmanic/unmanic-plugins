@@ -51,15 +51,16 @@ class Settings(PluginSettings):
 
     This class has a number of methods available to it for accessing these settings:
 
-        > get_setting(<key>)            - Fetch a single setting value. Or set "all" as the key argument and return the
-                                        full dictionary
+        > get_setting(<key>)            - Fetch a single setting value. Or set "all" as the 
+                                        key argument and return the full dictionary.
         > set_setting(<key>, <value>)   - Set a singe setting value.
                                         Used by the Unmanic WebUI to save user settings.
                                         Settings are stored on disk in order to be persistent.
 
     """
     settings = {
-        "exec_ffmpeg": True
+        "Execute FFMPEG": True,
+        "Insert string into cache file name": "custom-string"
     }
 
 
@@ -81,7 +82,14 @@ def on_worker_process(data):
     system = System()
     system_info = system.info()
 
-    if not settings.get_setting('exec_ffmpeg'):
+    custom_string = settings.get_setting('Insert string into cache file name')
+    if custom_string:
+        tmp_file_out = os.path.splitext(data['file_out'])
+        data['file_out'] = "{}-{}-{}{}".format(tmp_file_out[0], custom_string, tmp_file_out[1])
+
+    if not settings.get_setting('Execute FFMPEG'):
         data['exec_ffmpeg'] = False
+
+        
 
     return data
