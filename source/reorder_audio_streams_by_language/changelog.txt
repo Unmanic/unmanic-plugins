@@ -1,2 +1,5 @@
+[B][COLOR=FF56ADDA]0.0.2[/COLOR][/B]
+• Fix mistake in subtitle track counter
+
 [B][COLOR=FF56ADDA]0.0.1[/COLOR][/B]
 • initial version

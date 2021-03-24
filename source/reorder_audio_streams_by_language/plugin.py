@@ -73,9 +73,9 @@ def on_worker_process(data):
         # Map the subtitle streams
         if probe_stream.get('codec_type').lower() == "subtitle":
             if not found_audio_streams:
-                first_stream_mapping += ['-map', '0:s:{}'.format(video_stream_count)]
+                first_stream_mapping += ['-map', '0:s:{}'.format(subtitle_stream_count)]
             else:
-                last_stream_mapping += ['-map', '0:s:{}'.format(video_stream_count)]
+                last_stream_mapping += ['-map', '0:s:{}'.format(subtitle_stream_count)]
             subtitle_stream_count += 1
             continue
 
