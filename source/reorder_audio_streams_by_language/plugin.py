@@ -15,10 +15,10 @@ def check_stream_contains_search_string(probe_stream, search_string):
     stream_tags = probe_stream.get('tags')
     if stream_tags and True in list(k.lower() in ['title', 'language'] for k in stream_tags):
         # Check if tag matches the "Search String"
-        if search_string.lower() in stream_tags.get('language').lower():
+        if search_string.lower() in stream_tags.get('language', '').lower():
             # Found a matching stream in language tag
             return True
-        elif search_string in stream_tags.get('title').lower():
+        elif search_string in stream_tags.get('title', '').lower():
             # Found a matching stream in title tag
             return True
     return False
@@ -42,7 +42,7 @@ def on_worker_process(data):
     settings = Settings()
     search_string = settings.get_setting('Search String')
 
-    # Default to run FFMPEG command unless no audio stream is found matching the "Search String"
+    # Default to run FFMPEG command unless no stream is found matching the "Search String"
     data['exec_ffmpeg'] = True
 
     # Check file probe for title metadata in the video
@@ -51,19 +51,19 @@ def on_worker_process(data):
 
     # Map the streams into four arrays that will be placed to gether in the correct order.
     first_stream_mapping = []
-    search_string_audio_stream_mapping = []
-    other_audio_stream_mapping = []
+    search_string_stream_mapping = []
+    other_stream_mapping = []
     last_stream_mapping = []
 
     video_stream_count = 0
     audio_stream_count = 0
     subtitle_stream_count = 0
 
-    found_audio_streams = False
+    found_search_string_streams = False
     for probe_stream in file_probe_streams:
         # Map the video stream
         if probe_stream.get('codec_type').lower() == "video":
-            if not found_audio_streams:
+            if not found_search_string_streams:
                 first_stream_mapping += ['-map', '0:v:{}'.format(video_stream_count)]
             else:
                 last_stream_mapping += ['-map', '0:v:{}'.format(video_stream_count)]
@@ -72,7 +72,7 @@ def on_worker_process(data):
 
         # Map the subtitle streams
         if probe_stream.get('codec_type').lower() == "subtitle":
-            if not found_audio_streams:
+            if not found_search_string_streams:
                 first_stream_mapping += ['-map', '0:s:{}'.format(subtitle_stream_count)]
             else:
                 last_stream_mapping += ['-map', '0:s:{}'.format(subtitle_stream_count)]
@@ -81,17 +81,16 @@ def on_worker_process(data):
 
         # Map the audio streams in their correct lists
         if probe_stream.get('codec_type').lower() == "audio":
-            found_audio_streams = True
+            found_search_string_streams = True
             if check_stream_contains_search_string(probe_stream, search_string):
-                search_string_audio_stream_mapping += ['-map', '0:a:{}'.format(audio_stream_count)]
+                search_string_stream_mapping += ['-map', '0:a:{}'.format(audio_stream_count)]
             else:
-                other_audio_stream_mapping += ['-map', '0:a:{}'.format(audio_stream_count)]
+                other_stream_mapping += ['-map', '0:a:{}'.format(audio_stream_count)]
             audio_stream_count += 1
-            position = 2
             continue
 
     # Ensure we found some streams matching our search
-    if not search_string_audio_stream_mapping:
+    if not search_string_stream_mapping:
         # Prevent FFMPEG command from running on this file from this plugin
         data['exec_ffmpeg'] = False
 
@@ -108,8 +107,8 @@ def on_worker_process(data):
         ]
         data['ffmpeg_args'] += ['-c', 'copy']
         data['ffmpeg_args'] += first_stream_mapping
-        data['ffmpeg_args'] += search_string_audio_stream_mapping
-        data['ffmpeg_args'] += other_audio_stream_mapping
+        data['ffmpeg_args'] += search_string_stream_mapping
+        data['ffmpeg_args'] += other_stream_mapping
         data['ffmpeg_args'] += last_stream_mapping
         data['ffmpeg_args'] += ['-y', data.get('file_out')]
 

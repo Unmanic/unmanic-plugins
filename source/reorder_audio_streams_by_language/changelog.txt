@@ -1,4 +1,8 @@
 [B][COLOR=FF56ADDA]0.0.2[/COLOR][/B]
+• Fix up issue caused by tags having only a title or language
+• Tidy up plugin code
+
+[B][COLOR=FF56ADDA]0.0.2[/COLOR][/B]
 • Fix mistake in subtitle track counter
 
 [B][COLOR=FF56ADDA]0.0.1[/COLOR][/B]
