@@ -5,5 +5,5 @@
     "version": "0.0.1",
     "tags": "video,ffmpeg,worker",
     "description": "Removes all metadata (if it exists).",
-    "icon": "https://raw.githubusercontent.com/Josh5/unmanic/master/icon.png"
+    "icon": ""
 }
