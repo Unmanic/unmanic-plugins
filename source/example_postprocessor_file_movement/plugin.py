@@ -9,11 +9,7 @@
 
 """
 import os
-from unmanic.libs.unplugins.settings import PluginSettings
-from unmanic.libs.system import System
 
-
-# TODO: Add library scanner plugin to prevent adding files again
 
 def add_path_to_unmanic_ignore_file(path):
     basename = os.path.basename(path)
@@ -53,12 +49,12 @@ def on_postprocessor_file_movement(data):
     # keep the original file. We are going to create a copy
     data['remove_source_file'] = False
 
-    # Add 'UNMANIC to the end of the file'
+    # Add an 'UNMANIC tag to the end of the file'
     tmp_file_out = os.path.splitext(data['file_out'])
     data['file_out'] = "{}-{}{}".format(tmp_file_out[0], 'UNMANIC', tmp_file_out[1])
 
     # Add original file's name to '.unmanicignore' file to prevent this directory being added again.
-    if data['file_out'].get('abspath'):
-        add_path_to_unmanic_ignore_file(data['file_out'].get('abspath'))
+    if data['source_data'].get('abspath'):
+        add_path_to_unmanic_ignore_file(data['source_data'].get('abspath'))
 
     return data
