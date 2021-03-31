@@ -66,7 +66,7 @@ class Settings(PluginSettings):
 
 def on_worker_process(data):
     """
-    Runner function - carries out additional processing during the worker stages of a task.
+    Runner function - enables additional configured processing jobs during the worker stages of a task.
 
     The 'data' object argument includes:
         exec_ffmpeg             - Boolean, should Unmanic run FFMPEG with the data returned from this plugin.

@@ -21,7 +21,7 @@ def on_postprocessor_task_results(data):
     """
     Runner function - provides a means for additional postprocessor functions based on the task success.
 
-    The 'info' object argument includes:
+    The 'data' object argument includes:
         task_processing_success         - Boolean, did all task processes complete successfully.
         file_move_processes_success     - Boolean, did all postprocessor movement tasks complete successfully.
         destination_files               - List containing all file paths created by postprocessor file movements.
