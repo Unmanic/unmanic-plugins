@@ -24,3 +24,5 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Skeleton plugin directories
+source/skeleton_plugin/**
