@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-
-import os
-import json
-import shutil
-import time
-import subprocess
-
 import glob
+import json
+import os
+import shutil
 import zipfile
-import xml.etree.ElementTree as ET
+
+import pip
 
 project_root = os.path.dirname(os.path.realpath(__file__))
 repo_source_path = os.path.join(project_root, 'source')
@@ -20,6 +17,16 @@ def zipdir(path, zip):
     for root, dirs, files in os.walk(path):
         for file in files:
             zip.write(os.path.join(root, file))
+
+
+def install_requirements(package):
+    requirements_file = os.path.join(item_path, 'requirements.txt')
+    install_target = os.path.join(item_path, 'site-packages')
+    if not os.path.exists(requirements_file):
+        print('      - no requirements.txt file found')
+        return
+
+    pip.main(['install', '--upgrade', '-r', requirements_file, '--target={}'.format(install_target)])
 
 
 print("-----------------------------------------------------------------------------")
@@ -96,6 +103,10 @@ for item in os.listdir(repo_source_path):
             print('      - Copying: {} >>>> {}/fanart.jpg'.format(file, dest_dir))
             shutil.copy(file, dest_dir)
         print()
+
+        # Install any package requirements
+        print("    Installing Python package requirements...")
+        install_requirements(item_path)
 
         # Generate a zip file from the plugin contents
         print("    Compressing {}...".format(plugin_zip))
