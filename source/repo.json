@@ -4,9 +4,9 @@
         "name": "Official Repo",
         "author": "Josh.5",
         "icon": "",
-        "repo_data_url": "https://raw.githubusercontent.com/Josh5/unmanic-plugins/official/repo/repo.json",
+        "repo_data_url": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/repo/repo.json",
         "repo_data_checksum": "",
-        "repo_data_directory": "https://raw.githubusercontent.com/Josh5/unmanic-plugins/official/repo/"
+        "repo_data_directory": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/repo/"
     },
     "plugins": []
 }
