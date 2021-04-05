@@ -35,6 +35,15 @@
             "tags": "subtitle,ffmpeg,worker",
             "description": "Specify a language tag for Unmanic to try and put as 1st subtitle track.\n\nIn the plugin settings, specify a 'Search String'. The plugin will search the files to find matching subtitle tracks. The matching subtitle tracks will be moved to the 1st subtitle track position.\n\nExamples of search strings:\n  - 'en'\n  - 'fr'\n  - 'de'",
             "icon": ""
+        },
+        {
+            "id": "notify_plex",
+            "name": "Notify Plex",
+            "author": "Josh.5",
+            "version": "0.0.1",
+            "tags": "plex,postprocessor",
+            "description": "Notify Plex on completion of a task.\n\nTo find your Plex token, follow the instructions found here: [url]https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/[/url]",
+            "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/repo/notify_plex/icon.png"
         }
     ]
 }
