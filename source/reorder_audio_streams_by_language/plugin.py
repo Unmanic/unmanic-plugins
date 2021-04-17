@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
 
 from unmanic.libs.unplugins.settings import PluginSettings
 
@@ -110,6 +111,12 @@ def on_worker_process(data):
         data['ffmpeg_args'] += search_string_stream_mapping
         data['ffmpeg_args'] += other_stream_mapping
         data['ffmpeg_args'] += last_stream_mapping
+
+        # Do not remux the file. Keep the file out in the same container
+        split_file_in = os.path.splitext(data.get('file_in'))
+        split_file_out = os.path.splitext(data.get('file_out'))
+        data['file_out'] = "{}{}".format(split_file_out[0], split_file_in[1])
+
         data['ffmpeg_args'] += ['-y', data.get('file_out')]
 
     return data
