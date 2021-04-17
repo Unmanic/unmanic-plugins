@@ -1,0 +1,9 @@
+{
+    "id": "strip_image_streams",
+    "name": "Strip all image streams from file",
+    "author": "Josh.5",
+    "description": "Removes all image streams (if any exists).",
+    "icon": "",
+    "tags": "video,ffmpeg,worker",
+    "version": "0.0.1"
+}
