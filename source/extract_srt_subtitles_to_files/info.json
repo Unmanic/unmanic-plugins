@@ -1,0 +1,9 @@
+{
+    "id": "extract_srt_subtitles_to_files",
+    "name": "Extract text subtitle streams to SRT files",
+    "author": "Josh.5",
+    "description": "This plugin will extract any text based subtitle streams found in the given file and save them as *.srt files in the same directory as the original file.\n\nRequires Unmanic >= v0.0.5.",
+    "icon": "",
+    "tags": "video,ffmpeg,worker,subtitle",
+    "version": "0.0.1"
+}
