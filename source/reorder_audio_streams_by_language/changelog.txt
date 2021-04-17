@@ -1,3 +1,6 @@
+[B][COLOR=FF56ADDA]0.0.3[/COLOR][/B]
+• Keep the output file out in the same container as the source
+
 [B][COLOR=FF56ADDA]0.0.2[/COLOR][/B]
 • Fix up issue caused by tags having only a title or language
 • Tidy up plugin code
