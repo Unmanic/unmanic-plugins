@@ -7,12 +7,13 @@ from unmanic.libs.unplugins.settings import PluginSettings
 
 class Settings(PluginSettings):
     settings = {
-        "Patterns": "",
+        "patterns": "",
     }
 
     form_settings = {
         "patterns": {
             "input_type": "textarea",
+            "label": "Patterns"
         }
     }
 
