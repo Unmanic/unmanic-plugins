@@ -10,6 +10,15 @@
     },
     "plugins": [
         {
+            "author": "Josh.5",
+            "description": "Trim X seconds from either the start or end of a video file.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/repo/video_trim/icon.png",
+            "id": "video_trim",
+            "name": "Video Trim",
+            "tags": "ffmpeg,worker",
+            "version": "0.0.1"
+        },
+        {
             "id": "strip_file_metadata",
             "name": "Strip all video metadata from file",
             "author": "Josh.5",
