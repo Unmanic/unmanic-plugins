@@ -1,2 +1,2 @@
-[B][COLOR=FF56ADDA]0.0.1[/COLOR][/B]
+[b][color=56adda]0.0.1[/color][/b]
 • initial version

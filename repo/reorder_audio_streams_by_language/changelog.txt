@@ -1,12 +1,12 @@
-[B][COLOR=FF56ADDA]0.0.3[/COLOR][/B]
+[b][color=56adda]0.0.3[/color][/b]
 • Keep the output file out in the same container as the source
 
-[B][COLOR=FF56ADDA]0.0.2[/COLOR][/B]
+[b][color=56adda]0.0.2[/color][/b]
 • Fix up issue caused by tags having only a title or language
 • Tidy up plugin code
 
-[B][COLOR=FF56ADDA]0.0.2[/COLOR][/B]
+[b][color=56adda]0.0.2[/color][/b]
 • Fix mistake in subtitle track counter
 
-[B][COLOR=FF56ADDA]0.0.1[/COLOR][/B]
+[b][color=56adda]0.0.1[/color][/b]
 • initial version
