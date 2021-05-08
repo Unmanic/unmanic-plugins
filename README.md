@@ -1,49 +1,13 @@
 # Unmanic Plugins (examples)
 
-Here you will find the documentation required in order to create plugins for [Unmanic](https://github.com/Josh5/unmanic)
+Here you will find examples to get you started in creating plugins for [Unmanic](https://github.com/Josh5/unmanic)
 
 
-## Contents
+## Links
 
-[Plugin Types](#plugin-types)
-
-[Configuring a Plugin](#configuring-a-plugin)
-
-[Testing a Plugin](#testing-a-plugin)
+[Unmanic Documentation](https://docs.unmanic.app/docs/)
 
 [License and Contribution](#license-and-contribution)
-
-
----
-## Plugin Types
-
-Currently the following plugin types are available:
-
-| Type     |                    Information                     |  
-|----------|:--------------------------------------------------:|
-| Worker   |  [Worker Plugin Docs](docs/plugin-types/WORKER.md) |
-
-Plugins are modules that consist of a `plugin.py` file containing one or more `"runners"`.
-
-A plugin runner is a function conforming to a particular name that is executed at defined 
-stages during the Unmanic file workflow.
-For more information on the different types of plugin runners, refer to the individual 
-plugin docs listed above.
-
-
----
-## Configuring a Plugin
-
-Plugins can be configured using the plugin's settings class.
-See [Plugin Settings Docs](docs/PLUGIN_SETTINGS.md)
-
-
----
-## Testing a Plugin
-
-There are a series of tools available to develop a plugin for Unmanic.
-
-See [Testing Plugins Docs](docs/TESTING_PLUGINS.md)
 
 
 ---
