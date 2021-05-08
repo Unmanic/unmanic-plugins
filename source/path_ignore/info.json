@@ -1,0 +1,9 @@
+{
+    "author": "Josh.5",
+    "description": "Specify paths for Unmanic to ignore within your library path.\n\nEnter line-separated regex.\n\nExamples:\n [list][*][color=red]^.*.*\\(.*\\).*\\..*$[/color] - Ignore files and folders containing parentheses '()' [*][color=red]^.*\\/\\.ignore_folder\\/.*$[/color] - Ignore folders containing '/.ignore_folder/' [/list]",
+    "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/repo/path_ignore/icon.png",
+    "id": "path_ignore",
+    "name": "Path Ignore",
+    "tags": "library,scan,path",
+    "version": "0.0.1"
+}
