@@ -8,6 +8,8 @@ class Settings(PluginSettings):
     settings = {
         "destination directory": "/library",
     }
+    
+    
 def on_postprocessor_file_movement(data):
     """
     Runner function - configures additional postprocessor file movements during the postprocessor stage of a task.
