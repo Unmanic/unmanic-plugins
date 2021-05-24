@@ -45,19 +45,6 @@ def on_postprocessor_file_movement(data):
     #output the file
     data['file_out'] = os.path.join(destdir, subdir, b_out)
     
-    # get the file in extension
-    extension = os.path.splitext(data['file_in'])[1]
-
-    # set the file out extension to the correct extension
-    data['file_out'] = "{}{}".format(os.path.splitext(data['file_out'])[0], extension)
-    print(destdir)
-    print(path)
-    print(basename)
-    print(dirname)
-    print(subdir)
-    print(b_out)
-    print(data)
-
     return data
    
    
