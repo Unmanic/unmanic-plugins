@@ -2,8 +2,8 @@
     "id": "reorder_audio_streams_by_language",
     "name": "Re-order audio streams by language",
     "author": "Josh.5",
-    "version": "0.0.4",
-    "tags": "video,ffmpeg,worker",
+    "version": "1.0.0",
+    "tags": "video,audio,ffmpeg,worker",
     "description": "Specify a language tag for Unmanic to try and put as 1st audio track.\n\nIn the plugin settings, specify a 'Search String'. The plugin will search the files to find matching audio tracks. The matching audio tracks will be moved to the 1st audio track.\n\nExamples of search strings:\n  - 'en'\n  - 'fr'\n  - 'de'",
     "icon": ""
 }

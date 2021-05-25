@@ -1,7 +1,10 @@
-[b][color=56adda]0.0.3[/color][/b]
+[b][color=56adda]1.0.0[/color][/b]
+• Add library scanner file test - Add files that have streams to be re-ordered
+
+[b][color=56adda]0.0.4[/color][/b]
 • Keep the output file out in the same container as the source
 
-[b][color=56adda]0.0.2[/color][/b]
+[b][color=56adda]0.0.3[/color][/b]
 • Fix up issue caused by tags having only a title or language
 • Tidy up plugin code
 
