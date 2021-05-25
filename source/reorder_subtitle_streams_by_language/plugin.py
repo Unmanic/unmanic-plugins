@@ -118,14 +118,29 @@ def file_should_be_processed(search_string_stream_mapping, unmatched_stream_mapp
       search string.
     If only unmatched streams were found, then the list of streams will remain the same as nothing matched the
       search string.
+    If matches were found for both, but the new mapped order of streams will be the same as the original streams,
+      then this file will not be reordered.
 
     :param search_string_stream_mapping:
     :param unmatched_stream_mapping:
     :return:
     """
+    result = False
+    # Test if there were any matches against the search string
     if search_string_stream_mapping and unmatched_stream_mapping:
-        return True
-    return False
+        logger.info("Streams were found matching the search string")
+        # Test if the mapping is already in the correct order
+        counter = 0
+        for item in search_string_stream_mapping + unmatched_stream_mapping:
+            if '-map' in item:
+                continue
+            original_position = item.split(':')[-1]
+            if int(original_position) != int(counter):
+                logger.info("The new order for the mapped streams will differ from the source file")
+                result = True
+                break
+            counter += 1
+    return result
 
 
 def on_library_management_file_test(data):
