@@ -1,0 +1,95 @@
+name: Unmanic Plugin Checker
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - 'official'
+      - 'dev-actions'
+
+jobs:
+  plugins-contains-git-ignore:
+    runs-on: ubuntu-latest
+    name: Plugins contain gitignore
+    steps:
+    # Checkout
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    # Run test
+    - name: Check .gitignore in all plugin folders
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a .gitignore file
+                if [ -e "${plugin_dir}/.gitignore" ]; then
+                    echo "Found .gitignore in plugin '${plugin_dir}'"
+                else
+                    echo "Missing .gitignore in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+
+  plugins-contains-info-json:
+    runs-on: ubuntu-latest
+    name: Plugins contain info.json
+    steps:
+    # Checkout
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    # Run test
+    - name: Check info.json in all plugin folders
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a info.json file
+                if [ -e "${plugin_dir}/info.json" ]; then
+                    echo "Found info.json in plugin '${plugin_dir}'"
+                else
+                    echo "Missing info.json in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+
+  plugins-contains-plugin-py:
+    runs-on: ubuntu-latest
+    name: Plugins contain plugin.py
+    steps:
+    # Checkout
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    # Run test
+    - name: Check plugin.py in all plugin folders
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a plugin.py file
+                if [ -e "${plugin_dir}/plugin.py" ]; then
+                    echo "Found plugin.py in plugin '${plugin_dir}'"
+                else
+                    echo "Missing plugin.py in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
