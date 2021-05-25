@@ -7,7 +7,6 @@ on:
   pull_request:
     branches:
       - 'official'
-      - 'dev-actions'
 
 jobs:
   #  _____                            ____                           _   
@@ -104,9 +103,9 @@ jobs:
   # | |___| | | \__ \ |_| | | |  __/ | |  | | \__ \__ \ | | | | (_| |
   # |_____|_| |_|___/\__,_|_|  \___| |_|  |_|_|___/___/_|_| |_|\__, |
   #                                                            |___/ 
-  plugins-does-not-contain-site-packages:
+  plugins-do-not-contain-site-packages:
     runs-on: ubuntu-latest
-    name: Plugins does not contain site-packages
+    name: Plugins do not contain site-packages
     steps:
     # Checkout
     - name: Checkout
@@ -131,9 +130,9 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
-  plugins-does-not-contain-settings-json:
+  plugins-do-not-contain-settings-json:
     runs-on: ubuntu-latest
-    name: Plugins does not contain settings.json
+    name: Plugins do not contain settings.json
     steps:
     # Checkout
     - name: Checkout
