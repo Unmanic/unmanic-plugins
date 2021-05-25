@@ -1,2 +1,7 @@
+[b][color=56adda]0.0.2[/color][/b]
+• [FIXED] If a file had multiple audio streams, this plugin was copying only one.
+• [FIXED] Under some conditions, the input buffer limit would be reached.
+• [FIXED] Plugin could not support MP4 files with truehd streams.
+
 [b][color=56adda]0.0.1[/color][/b]
-• initial version
+• Initial version

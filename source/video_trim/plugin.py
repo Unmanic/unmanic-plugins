@@ -79,13 +79,15 @@ def on_worker_process(data):
         '-i',
         data.get('file_in'),
         '-hide_banner',
-        '-loglevel',
-        'info',
+        '-loglevel', 'info',
+        '-strict', '-2',
+        '-max_muxing_queue_size', '4096',
     ]
     data['ffmpeg_args'] += start_point
     data['ffmpeg_args'] += end_point
     data['ffmpeg_args'] += [
         '-c', 'copy',
+        '-map', '0',
         '-y',
         data.get('file_out'),
     ]
