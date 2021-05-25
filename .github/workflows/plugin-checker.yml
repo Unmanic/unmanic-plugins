@@ -10,6 +10,12 @@ on:
       - 'dev-actions'
 
 jobs:
+  #  _____                            ____                           _   
+  # | ____|_ __  ___ _   _ _ __ ___  |  _ \ _ __ ___  ___  ___ _ __ | |_ 
+  # |  _| | '_ \/ __| | | | '__/ _ \ | |_) | '__/ _ \/ __|/ _ \ '_ \| __|
+  # | |___| | | \__ \ |_| | | |  __/ |  __/| | |  __/\__ \  __/ | | | |_ 
+  # |_____|_| |_|___/\__,_|_|  \___| |_|   |_|  \___||___/\___|_| |_|\__|
+  #                                                                      
   plugins-contains-git-ignore:
     runs-on: ubuntu-latest
     name: Plugins contain gitignore
@@ -27,9 +33,9 @@ jobs:
             if [ -d "${plugin_dir}" ]; then
                 # Ensure this directory contains a .gitignore file
                 if [ -e "${plugin_dir}/.gitignore" ]; then
-                    echo "Found .gitignore in plugin '${plugin_dir}'"
+                    echo "PASS - Found .gitignore in plugin '${plugin_dir}'"
                 else
-                    echo "Missing .gitignore in plugin '${plugin_dir}'"
+                    echo "FAIL - Missing .gitignore in plugin '${plugin_dir}'"
                     success=1
                 fi
             fi
@@ -37,7 +43,6 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
-
   plugins-contains-info-json:
     runs-on: ubuntu-latest
     name: Plugins contain info.json
@@ -55,9 +60,9 @@ jobs:
             if [ -d "${plugin_dir}" ]; then
                 # Ensure this directory contains a info.json file
                 if [ -e "${plugin_dir}/info.json" ]; then
-                    echo "Found info.json in plugin '${plugin_dir}'"
+                    echo "PASS - Found info.json in plugin '${plugin_dir}'"
                 else
-                    echo "Missing info.json in plugin '${plugin_dir}'"
+                    echo "FAIL - Missing info.json in plugin '${plugin_dir}'"
                     success=1
                 fi
             fi
@@ -65,7 +70,6 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
-
   plugins-contains-plugin-py:
     runs-on: ubuntu-latest
     name: Plugins contain plugin.py
@@ -83,10 +87,71 @@ jobs:
             if [ -d "${plugin_dir}" ]; then
                 # Ensure this directory contains a plugin.py file
                 if [ -e "${plugin_dir}/plugin.py" ]; then
-                    echo "Found plugin.py in plugin '${plugin_dir}'"
+                    echo "PASS - Found plugin.py in plugin '${plugin_dir}'"
                 else
-                    echo "Missing plugin.py in plugin '${plugin_dir}'"
+                    echo "FAIL - Missing plugin.py in plugin '${plugin_dir}'"
                     success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+
+  #  _____                            __  __ _         _             
+  # | ____|_ __  ___ _   _ _ __ ___  |  \/  (_)___ ___(_)_ __   __ _ 
+  # |  _| | '_ \/ __| | | | '__/ _ \ | |\/| | / __/ __| | '_ \ / _` |
+  # | |___| | | \__ \ |_| | | |  __/ | |  | | \__ \__ \ | | | | (_| |
+  # |_____|_| |_|___/\__,_|_|  \___| |_|  |_|_|___/___/_|_| |_|\__, |
+  #                                                            |___/ 
+  plugins-does-not-contain-site-packages:
+    runs-on: ubuntu-latest
+    name: Plugins does not contain site-packages
+    steps:
+    # Checkout
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    # Run test
+    - name: Check site-packages in all plugin folders
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a site-packages file
+                if [ -e "${plugin_dir}/site-packages" ]; then
+                    echo "FAIL - Directory 'site-packages' found in plugin '${plugin_dir}'"
+                    success=1
+                else
+                    echo "PASS - No 'site-packages' directory found in plugin '${plugin_dir}'"
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+  plugins-does-not-contain-settings-json:
+    runs-on: ubuntu-latest
+    name: Plugins does not contain settings.json
+    steps:
+    # Checkout
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    # Run test
+    - name: Check settings.json in all plugin folders
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a settings.json file
+                if [ -e "${plugin_dir}/settings.json" ]; then
+                    echo "FAIL - Directory 'settings.json' found in plugin '${plugin_dir}'"
+                    success=1
+                else
+                    echo "PASS - No 'settings.json' directory found in plugin '${plugin_dir}'"
                 fi
             fi
         done
