@@ -1,4 +1,4 @@
-name: Unmanic Plugin Checker
+name: Unmanic Plugin Test and Generate Repo
 
 on:
   push:
@@ -9,22 +9,25 @@ on:
       - 'official'
 
 jobs:
-  #  _____                            ____                           _   
-  # | ____|_ __  ___ _   _ _ __ ___  |  _ \ _ __ ___  ___  ___ _ __ | |_ 
-  # |  _| | '_ \/ __| | | | '__/ _ \ | |_) | '__/ _ \/ __|/ _ \ '_ \| __|
-  # | |___| | | \__ \ |_| | | |  __/ |  __/| | |  __/\__ \  __/ | | | |_ 
-  # |_____|_| |_|___/\__,_|_|  \___| |_|   |_|  \___||___/\___|_| |_|\__|
-  #                                                                      
-  plugins-contains-git-ignore:
+
+  # Ensure that all plugins contain the require files and that 
+  #   certain files or directories are not present.
+  plugins-contain-require-files:
     runs-on: ubuntu-latest
-    name: Plugins contain gitignore
+    name: Plugins contain all require files
     steps:
     # Checkout
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    # Run test
+
+    #  _____                            ____                           _   
+    # | ____|_ __  ___ _   _ _ __ ___  |  _ \ _ __ ___  ___  ___ _ __ | |_ 
+    # |  _| | '_ \/ __| | | | '__/ _ \ | |_) | '__/ _ \/ __|/ _ \ '_ \| __|
+    # | |___| | | \__ \ |_| | | |  __/ |  __/| | |  __/\__ \  __/ | | | |_ 
+    # |_____|_| |_|___/\__,_|_|  \___| |_|   |_|  \___||___/\___|_| |_|\__|
+    #                                                                      
     - name: Check .gitignore in all plugin folders
       run: |
         success=0
@@ -42,16 +45,6 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
-  plugins-contains-info-json:
-    runs-on: ubuntu-latest
-    name: Plugins contain info.json
-    steps:
-    # Checkout
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    # Run test
     - name: Check info.json in all plugin folders
       run: |
         success=0
@@ -69,16 +62,6 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
-  plugins-contains-plugin-py:
-    runs-on: ubuntu-latest
-    name: Plugins contain plugin.py
-    steps:
-    # Checkout
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    # Run test
     - name: Check plugin.py in all plugin folders
       run: |
         success=0
@@ -97,22 +80,12 @@ jobs:
             exit 1
         fi
 
-  #  _____                            __  __ _         _             
-  # | ____|_ __  ___ _   _ _ __ ___  |  \/  (_)___ ___(_)_ __   __ _ 
-  # |  _| | '_ \/ __| | | | '__/ _ \ | |\/| | / __/ __| | '_ \ / _` |
-  # | |___| | | \__ \ |_| | | |  __/ | |  | | \__ \__ \ | | | | (_| |
-  # |_____|_| |_|___/\__,_|_|  \___| |_|  |_|_|___/___/_|_| |_|\__, |
-  #                                                            |___/ 
-  plugins-do-not-contain-site-packages:
-    runs-on: ubuntu-latest
-    name: Plugins do not contain site-packages
-    steps:
-    # Checkout
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    # Run test
+    #  _____                            __  __ _         _             
+    # | ____|_ __  ___ _   _ _ __ ___  |  \/  (_)___ ___(_)_ __   __ _ 
+    # |  _| | '_ \/ __| | | | '__/ _ \ | |\/| | / __/ __| | '_ \ / _` |
+    # | |___| | | \__ \ |_| | | |  __/ | |  | | \__ \__ \ | | | | (_| |
+    # |_____|_| |_|___/\__,_|_|  \___| |_|  |_|_|___/___/_|_| |_|\__, |
+    #                                                            |___/ 
     - name: Check site-packages in all plugin folders
       run: |
         success=0
@@ -130,16 +103,6 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
-  plugins-do-not-contain-settings-json:
-    runs-on: ubuntu-latest
-    name: Plugins do not contain settings.json
-    steps:
-    # Checkout
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    # Run test
     - name: Check settings.json in all plugin folders
       run: |
         success=0
@@ -157,3 +120,26 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
+
+  # Build the plugin repository
+  deploy-plugin-repo:
+    runs-on: ubuntu-latest
+    name: Build the plugin repository
+    steps:
+
+    # Checkout
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Setup python environment
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    # Generate repo
+    - name: Generate repository from source
+      if: success()
+      id: generate_repo
+      run: |
+        python ./generate_repository.py
