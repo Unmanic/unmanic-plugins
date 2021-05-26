@@ -13,6 +13,21 @@ repo_dest_path = os.path.join(project_root, 'repo')
 repo_json_file = os.path.join(repo_dest_path, 'repo.json')
 
 
+class BColours:
+    HEADER = '\033[36m'
+    SEPARATOR = '\033[44m'
+    SECTION = '\033[34m'
+
+    SUBHEADER = '\033[94m'
+    RESULTS = '\033[39m'
+    OKGREEN = '\033[92m'
+    FAIL = '\033[91m'
+    WARNING = '\033[93m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 def zipdir(path, zip):
     for root, dirs, files in os.walk(path):
         for file in files:
@@ -29,17 +44,15 @@ def install_requirements(package):
     pip.main(['install', '--upgrade', '-r', requirements_file, '--target={}'.format(install_target)])
 
 
-print("-----------------------------------------------------------------------------")
-print("------------------------------------START------------------------------------")
-print("-----------------------------------------------------------------------------")
-print()
 
 # Ensure the repo directory exists
 if not os.path.exists(repo_dest_path):
     os.makedirs(repo_dest_path)
 
 # Build repo based on files in source directory
-print(">> Processing Plugins <<")
+print()
+print("{0}>> Processing Plugins <<{1}".format(BColours.HEADER, BColours.ENDC))
+print()
 for item in os.listdir(repo_source_path):
     item_path = os.path.join(repo_source_path, item)
     # Ignore files in the root directory of the source path
@@ -62,24 +75,34 @@ for item in os.listdir(repo_source_path):
                 raise Exception(msg)
 
         # Print data variables for info
-        print("  ------------------------------->")
-        print("  > Process plugin:  '{}'".format(plugin_info.get('name')))
-        print("    ID:               {}".format(plugin_info.get('id')))
-        print("    Author:           {}".format(plugin_info.get('author')))
-        print("    Version:          {}".format(plugin_info.get('version')))
-        print("    Tags:             {}".format(plugin_info.get('tags')))
-        print("    Description:      {}".format(plugin_info.get('description')))
+        description = plugin_info.get('description').split('\n')
+        description = "\n                        ".join(description)
+        print("{0}  ------------------------------->{1}  {2}".format(BColours.SEPARATOR, BColours.ENDC, plugin_info.get('name')))
+        print("  > Plugin Info:")
+        print("      Name:            {0}'{2}'{1}".format(BColours.SECTION, BColours.ENDC, plugin_info.get('name')))
+        print("      ID:              {0} {2}{1}".format(BColours.SECTION, BColours.ENDC, plugin_info.get('id')))
+        print("      Author:          {0} {2}{1}".format(BColours.SECTION, BColours.ENDC, plugin_info.get('author')))
+        print("      Version:         {0} {2}{1}".format(BColours.SECTION, BColours.ENDC, plugin_info.get('version')))
+        print("      Tags:            {0} {2}{1}".format(BColours.SECTION, BColours.ENDC, plugin_info.get('tags')))
+        print("      Description:     {0} {2}{1}".format(BColours.SECTION, BColours.ENDC, description))
         print()
 
         # Ensure that we are not overwriting a plugin that already exists with this version
         if os.path.exists(plugin_zip):
-            print("")
-            print("  !WARNING! Repository already contains {}.".format(plugin_zip_file))
-            print("  You will need to either:")
-            print("      - Remove the current file '{}'".format(plugin_zip))
-            print("      OR")
-            print("      - increase the plugin's version number if you wish to overwrite the current version.")
-            print("  Will not process plugin: '{}'".format(plugin_info.get('name')))
+            print("{}".format(BColours.WARNING))
+            print("  >  !!! WARNING !!!")
+            print("     _______________")
+            print("   |")
+            print("   | Repository already contains '{}'.".format(plugin_zip_file))
+            print("   |")
+            print("   | You will need to either:")
+            print("   |   - Remove the current file '{}'".format(plugin_zip))
+            print("   | OR")
+            print("   |   - increase the plugin's version number if you wish to overwrite the current version.")
+            print("{}".format(BColours.ENDC))
+            print()
+            print("  > Will not process plugin: '{}'".format(plugin_info.get('name')))
+            print()
             print()
             continue
 
@@ -123,7 +146,10 @@ for item in os.listdir(repo_source_path):
 
 # Write Repo data based on what is now in the repo directory
 print("-----------------------------------------------------------------------------")
-print(">> Processing Repo <<")
+print()
+print()
+print("{0}>> Processing Repo Metadata <<{1}".format(BColours.HEADER, BColours.ENDC))
+print()
 repo_data = {
     "repo":    {},
     "plugins": [],
@@ -147,7 +173,7 @@ with open(os.path.join(repo_source_path, 'repo.json')) as f:
     repo_data['repo'] = repo_info.get('repo')
 
 # Install repo_data to repo's plugins.json file
-print("  ------------------------------->")
+#print("{0}  ------------------------------->{1}".format(BColours.SEPARATOR, BColours.ENDC))
 print("  > Writing repo plugin list to '{}'...".format(repo_json_file))
 with open(repo_json_file, 'w') as json_file:
     json.dump(repo_data, json_file, indent=4)
@@ -155,6 +181,3 @@ with open(repo_json_file, 'w') as json_file:
 # TODO: add checksum to plugins_json_file file
 
 print()
-print("-----------------------------------------------------------------------------")
-print("-------------------------------------END-------------------------------------")
-print("-----------------------------------------------------------------------------")
