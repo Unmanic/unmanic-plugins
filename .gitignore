@@ -26,3 +26,6 @@ Thumbs.db
 
 # Skeleton plugin directories
 source/skeleton_plugin/**
+
+# Repo directory
+repo/
