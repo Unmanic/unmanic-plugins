@@ -24,8 +24,14 @@ Thumbs.db
 *.mov
 *.wmv
 
-# Skeleton plugin directories
-source/skeleton_plugin/**
-
 # Repo directory
 repo/
+
+# Scripts directory
+scripts/
+
+# Template directory
+template/
+
+# Plugin site-packages
+source/**/site-packages/**

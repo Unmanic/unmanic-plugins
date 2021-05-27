@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import glob
+import hashlib
 import json
 import os
 import shutil
@@ -11,6 +12,7 @@ project_root = os.path.dirname(os.path.realpath(__file__))
 repo_source_path = os.path.join(project_root, 'source')
 repo_dest_path = os.path.join(project_root, 'repo')
 repo_json_file = os.path.join(repo_dest_path, 'repo.json')
+repo_json_checksum_file = os.path.join(repo_dest_path, 'repo.json.md5')
 
 
 class BColours:
@@ -154,6 +156,10 @@ repo_data = {
     "repo":    {},
     "plugins": [],
 }
+
+
+print("  > Creating list of plugins".format(repo_json_file))
+print()
 for item in os.listdir(repo_dest_path):
     item_path = os.path.join(repo_dest_path, item)
     # Ignore files in the root directory of the source path
@@ -168,16 +174,34 @@ for item in os.listdir(repo_dest_path):
         continue
 
 # Add main repo info to repo data
-with open(os.path.join(repo_source_path, 'repo.json')) as f:
+print("  > Reading repo config".format(repo_json_file))
+print()
+with open(os.path.join(project_root, 'config.json')) as f:
     repo_info = json.load(f)
-    repo_data['repo'] = repo_info.get('repo')
+
+# Set the repo URL
+print("  > Setting repo data url".format(repo_json_file))
+print()
+configured_remote_origin = os.popen('git remote get-url --push origin').read()
+repo_path = configured_remote_origin.strip().rstrip(".git").lstrip('git@github.coms:').lstrip('https://github.com/s')
+repo_info['repo_data_directory'] = "https://raw.githubusercontent.com/{}/".format(repo_path)
+repo_info['repo_data_url'] = repo_info['repo_data_directory'] + "repo/repo.json"
+repo_data['repo'] = repo_info
 
 # Install repo_data to repo's plugins.json file
 #print("{0}  ------------------------------->{1}".format(BColours.SEPARATOR, BColours.ENDC))
-print("  > Writing repo plugin list to '{}'...".format(repo_json_file))
+print("  > Writing repo data to file '{}'...".format(repo_json_file))
+print()
 with open(repo_json_file, 'w') as json_file:
     json.dump(repo_data, json_file, indent=4)
 
-# TODO: add checksum to plugins_json_file file
+
+# Add checksum to plugins_json_file file
+print("  > Writing repo data file checksum to file '{}'...".format(repo_json_checksum_file))
+print()
+checksum = hashlib.md5(open(repo_json_file,'rb').read()).hexdigest()
+with open(repo_json_checksum_file, 'w') as checksum_file:
+    checksum_file.writelines(checksum)
+
 
 print()
