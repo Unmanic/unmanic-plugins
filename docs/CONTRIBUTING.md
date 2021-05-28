@@ -36,10 +36,33 @@ requests you hand over copyright ownership of that work to the Unmanic project a
 project owner.
 Your contribution becomes licensed under the same license as the project and ownership
 is handed over to the project owner. 
-This extends upon paragraph 11 of the Terms & Conditions stipulated in the GPL v3.0
+This extends upon paragraph 11 of the Terms & Conditions stipulated in the GPL v3.0.
 
-All pull requests must be opened to merge into the staging branch. No pull requests 
-will be merged into the master branch.
+All new python file contributions must contain the following header:
+
+```
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+    Written by:               {{YOUR_NAME}} <{{YOUR_EMAIL}}>
+    Date:                     {{DAY_NAME}} {{MONTH}} {{DAY_NUMBER}} {{YEAR}}, ({{TIME}} {{AM_PM}})
+ 
+    Copyright:
+        Copyright (C) {{YEAR}} {{YOUR_NAME}}
+
+        This program is free software: you can redistribute it and/or modify it under the terms of the GNU General
+        Public License as published by the Free Software Foundation, version 3.
+
+        This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+        implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+        for more details.
+
+        You should have received a copy of the GNU General Public License along with this program.
+        If not, see <https://www.gnu.org/licenses/>.
+
+"""
+```
 
 
 ### Quality control
