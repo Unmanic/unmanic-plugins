@@ -101,6 +101,60 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
+    - name: Check python source files contain the required SPDX identifier in header
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                correct_header=0
+                # Ensure this directory contains a settings.json file
+                for python_file in $(find ${plugin_dir} -name '*.py' -not -path "${plugin_dir}/site-packages/*"); do
+                    if ! grep -q "Copyright:" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "Copyright (C)" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "This program is free software" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "This program is distributed in the hop" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "You should have received a copy of the GNU General Public License along with this program" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                done
+                if [ ${correct_header} == 0 ]; then 
+                    echo "PASS - All python files in plugin '${plugin_dir}' contain the correct SPDX identifier in header"
+                fi
+                
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
 
     #  _____                            __  __ _         _             
     # | ____|_ __  ___ _   _ _ __ ___  |  \/  (_)___ ___(_)_ __   __ _ 
