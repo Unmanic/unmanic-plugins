@@ -65,6 +65,24 @@ jobs:
         if [ ${success} -gt 0 ]; then
             exit 1
         fi
+    - name: Check LICENSE file in all plugin folders
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a LICENSE file
+                if [ -e "${plugin_dir}/LICENSE" ]; then
+                    echo "PASS - Found LICENSE in plugin '${plugin_dir}'"
+                else
+                    echo "FAIL - Missing LICENSE in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
     - name: Check plugin.py in all plugin folders
       if: success() || failure()
       run: |
