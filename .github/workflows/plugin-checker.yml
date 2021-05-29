@@ -12,11 +12,11 @@ on:
 
 jobs:
 
-  # Ensure that all plugins contain the require files and that 
+  # Ensure that all plugins contain the required files and that 
   #   certain files or directories are not present.
-  plugins-contain-require-files:
+  plugins-contain-required-files:
     runs-on: ubuntu-latest
-    name: Plugins contain all require files
+    name: Plugins contain all required files
     steps:
     # Checkout
     - name: Checkout
