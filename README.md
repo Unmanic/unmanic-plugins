@@ -8,9 +8,7 @@ for instructions on creating your own repository to host plugins for Unmanic.
 
 ## Links
 
-[Unmanic Documentation](https://docs.unmanic.app/docs/)
-
-[License and Contribution](#license-and-contribution)
+ - [Unmanic Documentation](https://docs.unmanic.app/docs/)
 
 
 ---
