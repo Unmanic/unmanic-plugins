@@ -275,7 +275,7 @@ jobs:
 
     # Deploy to repo branch
     - name: Deploy repository
-      if: success() && (github.ref == 'refs/heads/master')
+      if: success() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/official')
       uses: s0/git-publish-subdir-action@develop
       env:
         REPO: self
