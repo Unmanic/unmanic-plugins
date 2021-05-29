@@ -174,7 +174,7 @@ print("  > Setting repo data url".format(repo_json_file))
 print()
 configured_remote_origin = os.popen('git remote get-url --push origin').read()
 repo_path = configured_remote_origin.strip().rstrip(".git").lstrip('git@github.coms:').lstrip('https://github.com/s')
-repo_info['repo_data_directory'] = "https://raw.githubusercontent.com/{}/".format(repo_path)
+repo_info['repo_data_directory'] = "https://raw.githubusercontent.com/{}/repo/".format(repo_path)
 repo_info['repo_data_url'] = repo_info['repo_data_directory'] + "repo/repo.json"
 repo_data['repo'] = repo_info
 
