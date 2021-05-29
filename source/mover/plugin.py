@@ -1,6 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+    Written by:               R3dC4p <31379247+R3dC4p@users.noreply.github.com>
+    Date:                     25 May 2021, (1:00 AM)
+ 
+    Copyright:
+        Copyright (C) 2021 R3dC4p
+
+        This program is free software: you can redistribute it and/or modify it under the terms of the GNU General
+        Public License as published by the Free Software Foundation, version 3.
+
+        This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+        implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+        for more details.
+
+        You should have received a copy of the GNU General Public License along with this program.
+        If not, see <https://www.gnu.org/licenses/>.
+
+"""
 import os
 from unmanic.libs.unplugins.settings import PluginSettings
 
