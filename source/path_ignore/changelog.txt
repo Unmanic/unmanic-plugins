@@ -1,3 +1,6 @@
+[b][color=56adda]0.0.3[/color][/b]
+• Update icon link
+
 [b][color=56adda]0.0.2[/color][/b]
 • Fix issue with settings not showing as a textarea input
 

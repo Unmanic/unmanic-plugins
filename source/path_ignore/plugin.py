@@ -32,7 +32,7 @@ class Settings(PluginSettings):
     form_settings = {
         "patterns": {
             "input_type": "textarea",
-            "label": "Patterns"
+            "label":      "Patterns"
         }
     }
 
