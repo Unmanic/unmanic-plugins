@@ -1,6 +1,6 @@
 # Unmanic Plugins (official)
 
-Here you will find examples to get you started in creating plugins for [Unmanic](https://github.com/Josh5/unmanic)
+Official plugins for [Unmanic](https://github.com/Unmanic/unmanic)
 
 
 ## Links
