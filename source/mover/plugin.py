@@ -22,12 +22,18 @@
 import os
 from unmanic.libs.unplugins.settings import PluginSettings
 
+
 class Settings(PluginSettings):
     settings = {
         "destination directory": "/library",
     }
-    
-    
+    form_settings = {
+        "destination directory": {
+            "input_type": "browse_directory",
+        },
+    }
+
+
 def on_postprocessor_file_movement(data):
     """
     Runner function - configures additional postprocessor file movements during the postprocessor stage of a task.
@@ -42,36 +48,24 @@ def on_postprocessor_file_movement(data):
     """
     settings = Settings()
     destdir = settings.get_setting('destination directory')
-    path = data['source_data'].get('abspath') 
+    path = data['source_data'].get('abspath')
     # Keep source file
     data['remove_source_file'] = False
-    
-    # Get the base name of the source file
-    basename = os.path.basename(path)
-    
+
     # Get the parent directory of the file
     dirname = os.path.dirname(path)
 
     # get the base name of that directory path
     subdir = os.path.basename(dirname)
 
-    # Make subfolder in destination directory
+    # Make sub-folder in destination directory
     if not os.path.exists(os.path.join(destdir, subdir)):
-        os.mkdir(os.path.join(destdir, subdir))
-    
-    #get the basenout of the output file
+        os.makedirs(os.path.join(destdir, subdir))
+
+    # get the basename out of the output file
     b_out = os.path.basename(data['file_out'])
-    
-    #output the file
+
+    # output the file
     data['file_out'] = os.path.join(destdir, subdir, b_out)
-    
+
     return data
-   
-   
-   
-
-
-
-    
-
-    
