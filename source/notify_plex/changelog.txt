@@ -1,2 +1,5 @@
+[b][color=56adda]0.0.2[/color][/b]
+• Updated icon URL
+
 [b][color=56adda]0.0.1[/color][/b]
 • initial version
