@@ -5,5 +5,5 @@
     "version": "0.0.1",
     "tags": "plex,postprocessor",
     "description": "Notify Plex on completion of a task.\n\nTo find your Plex token, follow the instructions found here: [url]https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/[/url]",
-    "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/repo/notify_plex/icon.png"
+    "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/repo/notify_plex/icon.png"
 }
