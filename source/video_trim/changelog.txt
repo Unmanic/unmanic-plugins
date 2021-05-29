@@ -1,3 +1,7 @@
+[b][color=56adda]0.0.3[/color][/b]
+• Added missing license file and header.
+• Updated icon URL
+
 [b][color=56adda]0.0.2[/color][/b]
 • [FIXED] If a file had multiple audio streams, this plugin was copying only one.
 • [FIXED] Under some conditions, the input buffer limit would be reached.

@@ -5,5 +5,5 @@
     "id": "video_trim",
     "name": "Video Trim",
     "tags": "ffmpeg,worker",
-    "version": "0.0.2"
+    "version": "0.0.3"
 }
