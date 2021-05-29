@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+      - '!template'
   pull_request:
     branches:
       - 'official'
