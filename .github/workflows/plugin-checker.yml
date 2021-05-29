@@ -1,0 +1,284 @@
+name: Unmanic Plugin Test and Generate Repo
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - 'official'
+      - 'master'
+
+jobs:
+
+  # Ensure that all plugins contain the require files and that 
+  #   certain files or directories are not present.
+  plugins-contain-require-files:
+    runs-on: ubuntu-latest
+    name: Plugins contain all require files
+    steps:
+    # Checkout
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    #  _____                            ____                           _   
+    # | ____|_ __  ___ _   _ _ __ ___  |  _ \ _ __ ___  ___  ___ _ __ | |_ 
+    # |  _| | '_ \/ __| | | | '__/ _ \ | |_) | '__/ _ \/ __|/ _ \ '_ \| __|
+    # | |___| | | \__ \ |_| | | |  __/ |  __/| | |  __/\__ \  __/ | | | |_ 
+    # |_____|_| |_|___/\__,_|_|  \___| |_|   |_|  \___||___/\___|_| |_|\__|
+    #                                                                      
+    - name: Check .gitignore in all plugin folders
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a .gitignore file
+                if [ -e "${plugin_dir}/.gitignore" ]; then
+                    echo "PASS - Found .gitignore in plugin '${plugin_dir}'"
+                else
+                    echo "FAIL - Missing .gitignore in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+    - name: Check info.json in all plugin folders
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a info.json file
+                if [ -e "${plugin_dir}/info.json" ]; then
+                    echo "PASS - Found info.json in plugin '${plugin_dir}'"
+                else
+                    echo "FAIL - Missing info.json in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+    - name: Check LICENSE file in all plugin folders
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a LICENSE file
+                if [ -e "${plugin_dir}/LICENSE" ]; then
+                    echo "PASS - Found LICENSE in plugin '${plugin_dir}'"
+                else
+                    echo "FAIL - Missing LICENSE in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+    - name: Check plugin.py in all plugin folders
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a plugin.py file
+                if [ -e "${plugin_dir}/plugin.py" ]; then
+                    echo "PASS - Found plugin.py in plugin '${plugin_dir}'"
+                else
+                    echo "FAIL - Missing plugin.py in plugin '${plugin_dir}'"
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+    - name: Check python source files contain the required SPDX identifier in header
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                correct_header=0
+                # Ensure this directory contains a settings.json file
+                for python_file in $(find ${plugin_dir} -name '*.py' -not -path "${plugin_dir}/site-packages/*"); do
+                    if ! grep -q "Copyright:" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "Copyright (C)" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "This program is free software" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "This program is distributed in the hop" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                    if ! grep -q "You should have received a copy of the GNU General Public License along with this program" "${python_file}"; then
+                        echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
+                        echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
+                        correct_header=1
+                        success=1
+                        continue
+                    fi
+                done
+                if [ ${correct_header} == 0 ]; then 
+                    echo "PASS - All python files in plugin '${plugin_dir}' contain the correct SPDX identifier in header"
+                fi
+                
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+
+    #  _____                            __  __ _         _             
+    # | ____|_ __  ___ _   _ _ __ ___  |  \/  (_)___ ___(_)_ __   __ _ 
+    # |  _| | '_ \/ __| | | | '__/ _ \ | |\/| | / __/ __| | '_ \ / _` |
+    # | |___| | | \__ \ |_| | | |  __/ | |  | | \__ \__ \ | | | | (_| |
+    # |_____|_| |_|___/\__,_|_|  \___| |_|  |_|_|___/___/_|_| |_|\__, |
+    #                                                            |___/ 
+    - name: Check site-packages in all plugin folders
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a site-packages file
+                if [ -e "${plugin_dir}/site-packages" ]; then
+                    echo "FAIL - Directory 'site-packages' found in plugin '${plugin_dir}'"
+                    success=1
+                else
+                    echo "PASS - No 'site-packages' directory found in plugin '${plugin_dir}'"
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+    - name: Check settings.json in all plugin folders
+      if: success() || failure()
+      run: |
+        success=0
+        for plugin_dir in source/*; do
+            if [ -d "${plugin_dir}" ]; then
+                # Ensure this directory contains a settings.json file
+                if [ -e "${plugin_dir}/settings.json" ]; then
+                    echo "FAIL - Directory 'settings.json' found in plugin '${plugin_dir}'"
+                    success=1
+                else
+                    echo "PASS - No 'settings.json' directory found in plugin '${plugin_dir}'"
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        fi
+
+    # Store success message in success file artifact
+    - name: Set success file on completion of tests
+      if: success()
+      run: echo 'true' > success_file.txt
+    - name: Upload success file
+      if: success()
+      uses: actions/upload-artifact@v1
+      with:
+        name: success_file
+        path: success_file.txt
+
+  # Build the plugin repository
+  deploy-plugin-repo:
+    needs: [plugins-contain-require-files]
+    runs-on: ubuntu-latest
+    name: Build the plugin repository
+    steps:
+
+    # Fetch and read sucess file
+    - name: Download success file from previous job
+      uses: actions/download-artifact@v2
+      with:
+        path: ./artifacts/
+    - name: Read success file
+      id: previous_jobs_success
+      run: |
+        IS_SUCCESS=$(cat ./artifacts/success_file/success_file.txt)
+        echo ::set-output name=IS_SUCCESS::${IS_SUCCESS}
+        rm -rfv ./artifacts
+
+    # Checkout
+    - name: Checkout
+      if: steps.previous_jobs_success.outputs.IS_SUCCESS == 'true'
+      uses: actions/checkout@v2
+
+    # Ensure repo is checked out
+    - name: Check repo for config file
+      if: success()
+      id: ensure_repo
+      run: |
+        if [ ! -e ./config.json ]; then
+            echo "Unable to build repo. Was not checked out."
+            exit 1
+        fi
+
+    # Import scripts from template branch
+    - name: Pull in scripts from template branch
+      if: success()
+      id: read_template_tree
+      run: |
+        git fetch origin template
+        git read-tree --prefix=template -u origin/template
+        cp -rf ./template/scripts ./
+        git rm -r --cached template
+        if [ ! -e ./scripts/generate_repository.py ]; then
+            echo "Unable to build repo. Could not find generator script."
+            exit 1
+        fi
+
+    # Setup python environment
+    - name: Set up Python 3.8
+      if: success()
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    # Generate repo
+    - name: Generate repository from source
+      if: success()
+      id: generate_repo
+      run: |
+        python ./scripts/generate_repository.py
+
+    # Deploy to repo branch
+    - name: Deploy repository
+      if: success() && (github.ref == 'refs/heads/master')
+      uses: s0/git-publish-subdir-action@develop
+      env:
+        REPO: self
+        BRANCH: repo
+        FOLDER: repo
+        SQUASH_HISTORY: true
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
