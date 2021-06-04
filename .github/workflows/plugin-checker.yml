@@ -213,7 +213,7 @@ jobs:
 
   # Build the plugin repository
   deploy-plugin-repo:
-    needs: [plugins-contain-require-files]
+    needs: [plugins-contain-required-files]
     runs-on: ubuntu-latest
     name: Build the plugin repository
     steps:
