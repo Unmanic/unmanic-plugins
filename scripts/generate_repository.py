@@ -106,8 +106,11 @@ for item in os.listdir(repo_source_path):
         shutil.copy(info_file, dest_dir)
 
         # Add additional files (optional files)
-        for file in glob.glob(os.path.join(item_path, '*changelog.txt')):
-            print('      - Copying: {} >>>> {}/changelog.txt'.format(file, dest_dir, plugin_info.get('version')))
+        for file in glob.glob(os.path.join(item_path, '*description.*')):
+            print('      - Copying: {} >>>> {}/description.[md|txt]'.format(file, dest_dir, plugin_info.get('version')))
+            shutil.copy(file, dest_dir)
+        for file in glob.glob(os.path.join(item_path, '*changelog.*')):
+            print('      - Copying: {} >>>> {}/changelog.[md|txt]'.format(file, dest_dir, plugin_info.get('version')))
             shutil.copy(file, dest_dir)
         for file in glob.glob(os.path.join(item_path, '*icon.*')):
             print('      - Copying: {} >>>> {}/icon.png'.format(file, dest_dir))
