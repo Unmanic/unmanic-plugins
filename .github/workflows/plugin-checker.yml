@@ -266,6 +266,12 @@ jobs:
       with:
         python-version: 3.8
 
+    # Setup node environment
+    - name: Set up node 16
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
     # Generate repo
     - name: Generate repository from source
       if: success()
