@@ -5,6 +5,7 @@ import json
 import os
 import pip
 import shutil
+import subprocess
 import zipfile
 
 # Set the path to the project root directory
@@ -28,13 +29,21 @@ class BColours:
     ENDC = '\033[0m'
 
 
+def install_npm_modules(plugin_source_path):
+    package_file = os.path.join(plugin_source_path, 'package.json')
+    if not os.path.exists(package_file):
+        print('      - no package.json file found')
+        return
+    subprocess.call(['npm', 'install'], cwd=plugin_source_path)
+    subprocess.call(['npm', 'run', 'build'], cwd=plugin_source_path)
+
+
 def install_requirements(plugin_source_path):
     requirements_file = os.path.join(plugin_source_path, 'requirements.txt')
     install_target = os.path.join(plugin_source_path, 'site-packages')
     if not os.path.exists(requirements_file):
         print('      - no requirements.txt file found')
         return
-
     pip.main(['install', '--upgrade', '-r', requirements_file, '--target={}'.format(install_target)])
 
 
