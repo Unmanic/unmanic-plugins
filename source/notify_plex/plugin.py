@@ -4,7 +4,7 @@
 """
     Written by:               Josh.5 <jsunnex@gmail.com>
     Date:                     5 April 2021, (10:00 PM)
- 
+
     Copyright:
         Copyright (C) 2021 Josh Sunnex
 
@@ -50,7 +50,7 @@ def on_postprocessor_task_results(data):
 
     :param data:
     :return:
-    
+
     """
     plugin_settings = Settings()
 
