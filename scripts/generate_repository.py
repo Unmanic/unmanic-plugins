@@ -130,6 +130,8 @@ for item in os.listdir(repo_source_path):
         print()
 
         # Install any package requirements
+        print("    Installing NPM package requirements...")
+        install_npm_modules(item_path)
         print("    Installing Python package requirements...")
         install_requirements(item_path)
 
