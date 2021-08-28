@@ -42,13 +42,13 @@ class Settings(PluginSettings):
         "only_on_task_processing_success": {
             "label": "Only run the command when the all worker processes completed successfully.",
         },
-        "run_for_each_destination_file": {
+        "run_for_each_destination_file":   {
             "label": "Run the command for each output file created by Unmanic.",
         },
-        "cmd":                           {
+        "cmd":                             {
             "label": "Command or script to execute.",
         },
-        "args":                          {
+        "args":                            {
             "label":      "Arguments to pass to the command or script. ",
             "input_type": "textarea",
         },
@@ -61,6 +61,13 @@ class DefaultMissingKeys(dict):
 
 
 def exec_subprocess(cmd, args):
+    """
+    Execute a subprocess command
+
+    :param cmd:
+    :param args:
+    :return:
+    """
     full_command = "{} {}".format(cmd, args)
     if full_command.strip():
         logger.debug("Executing command: '{}'.".format(full_command))
@@ -77,7 +84,7 @@ def exec_subprocess(cmd, args):
                 break
 
         # Get the final output and the exit status
-        process.communicate()[0]
+        var = process.communicate()[0]
         if process.returncode == 0:
             return True
         else:
@@ -96,7 +103,7 @@ def on_postprocessor_task_results(data):
 
     :param data:
     :return:
-    
+
     """
     # Fetch the configured command and settings
     settings = Settings()
@@ -118,9 +125,6 @@ def on_postprocessor_task_results(data):
     variable_map = {
         'source_file_path': data.get('source_data', {}).get('abspath'),
         'source_file_size': data.get('source_data', {}).get('size'),
-        'source_bit_rate':  data.get('source_data', {}).get('bit_rate'),
-        'source_duration':  data.get('source_data', {}).get('duration'),
-        'source_streams':   "{}".format(json.dumps(data.get('source_data', {}).get('streams', [])))
     }
 
     # If this is to be run for each file in the destination files, loop over the 'destination_files' list;
