@@ -4,7 +4,7 @@
 """
     Written by:               Josh.5 <jsunnex@gmail.com>
     Date:                     9 March 2021, (1:09 PM)
- 
+
     Copyright:
         Copyright (C) 2021 Josh Sunnex
 
@@ -19,7 +19,14 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
+import logging
+
 from unmanic.libs.unplugins.settings import PluginSettings
+
+from video_trim.lib.ffmpeg import StreamMapper, Probe, Parser
+
+# Configure plugin logger
+logger = logging.getLogger("Unmanic.Plugin.video_trim")
 
 
 class Settings(PluginSettings):
@@ -37,30 +44,74 @@ class Settings(PluginSettings):
     }
 
 
+class PluginStreamMapper(StreamMapper):
+    def __init__(self):
+        super(PluginStreamMapper, self).__init__(logger, 'video')
+
+    def test_stream_needs_processing(self, stream_info: dict):
+        if stream_info.get('codec_name').lower() in ['h264']:
+            return False
+        return True
+
+    def custom_stream_mapping(self, stream_info: dict, stream_id: int):
+        settings = Settings()
+
+        if settings.get_setting('advanced'):
+            stream_encoding = ['-c:v:{}'.format(stream_id), 'libx264']
+            stream_encoding += settings.get_setting('custom_options').split()
+        else:
+            stream_encoding = [
+                '-c:v:{}'.format(stream_id), 'libx264',
+                '-preset', str(settings.get_setting('preset')),
+                '-crf', str(settings.get_setting('crf')),
+            ]
+
+        return {
+            'stream_mapping':  ['-map', '0:v:{}'.format(stream_id)],
+            'stream_encoding': stream_encoding,
+        }
+
+
 def on_worker_process(data):
     """
     Runner function - enables additional configured processing jobs during the worker stages of a task.
 
     The 'data' object argument includes:
+        exec_command            - A command that Unmanic should execute. Can be empty.
+        command_progress_parser - A function that Unmanic can use to parse the STDOUT of the command to collect progress stats. Can be empty.
+        file_in                 - The source file to be processed by the command.
+        file_out                - The destination that the command should output (may be the same as the file_in if necessary).
+        original_file_path      - The absolute path to the original file.
+        repeat                  - Boolean, should this runner be executed again once completed with the same variables.
+
+    DEPRECIATED 'data' object args passed for legacy Unmanic versions:
         exec_ffmpeg             - Boolean, should Unmanic run FFMPEG with the data returned from this plugin.
-        file_probe              - A dictionary object containing the current file probe state.
         ffmpeg_args             - A list of Unmanic's default FFMPEG args.
-        file_in                 - The source file to be processed by the FFMPEG command.
-        file_out                - The destination that the FFMPEG command will output.
-        original_file_path      - The absolute path to the original library file.
 
     :param data:
     :return:
-    
+
     """
     settings = Settings()
 
+    # Default to not run the FFMPEG command unless streams are found to be converted
+    data['exec_command'] = []
+    data['repeat'] = False
+
+    # Get the path to the file
+    abspath = data.get('file_in')
+
+    # Get file probe
+    probe = Probe(logger)
+    probe.file(abspath)
+
     # Fetch duration from file probe...
-    file_probe = data.get('file_probe', {})
-    file_probe_format = file_probe.get('format', {})
+    file_probe_format = probe.get('format', {})
     duration = file_probe_format.get('duration')
     if not duration:
+        # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
         data['exec_ffmpeg'] = False
+        # Without duration, we cannot set the start or end cut points
         return data
 
     start_point = []
@@ -70,6 +121,7 @@ def on_worker_process(data):
         if float(start_seconds) > float(duration):
             # The configured value is larger than the duration of the file.
             # Skip this file for now...
+            # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
             data['exec_ffmpeg'] = False
             return data
         # Build the start trim args
@@ -85,6 +137,7 @@ def on_worker_process(data):
         if float(end_seconds) > float(duration):
             # The configured value is larger than the duration of the file.
             # Skip this file for now...
+            # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
             data['exec_ffmpeg'] = False
             return data
         # Build the end trim args
@@ -94,7 +147,7 @@ def on_worker_process(data):
         ]
 
     # Build ffmpeg args and add them to the return data
-    data['ffmpeg_args'] = [
+    ffmpeg_args = [
         '-i',
         data.get('file_in'),
         '-hide_banner',
@@ -102,13 +155,23 @@ def on_worker_process(data):
         '-strict', '-2',
         '-max_muxing_queue_size', '4096',
     ]
-    data['ffmpeg_args'] += start_point
-    data['ffmpeg_args'] += end_point
-    data['ffmpeg_args'] += [
+    ffmpeg_args += start_point
+    ffmpeg_args += end_point
+    ffmpeg_args += [
         '-c', 'copy',
         '-map', '0',
         '-y',
         data.get('file_out'),
     ]
+    # DEPRECIATED: 'ffmpeg_args' kept for legacy Unmanic versions
+    data['ffmpeg_args'] = ffmpeg_args
+
+    data['exec_command'] = ['ffmpeg']
+    data['exec_command'] += ffmpeg_args
+
+    # Set the parser
+    parser = Parser(logger)
+    parser.set_probe(probe)
+    data['command_progress_parser'] = parser.parse_progress
 
     return data

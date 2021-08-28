@@ -1,9 +1,15 @@
 {
     "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
     "description": "Trim X seconds from either the start or end of a video file.",
-    "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/repo/video_trim/icon.png",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_trim/master/icon.png",
     "id": "video_trim",
     "name": "Video Trim",
-    "tags": "ffmpeg,worker",
-    "version": "0.0.3"
+    "priorities": {
+        "on_worker_process": 0
+    },
+    "tags": "video,ffmpeg",
+    "version": "0.0.4"
 }
