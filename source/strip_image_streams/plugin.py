@@ -19,13 +19,71 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
+import logging
 import os
 
 from unmanic.libs.unplugins.settings import PluginSettings
 
+from strip_image_streams.lib.ffmpeg import StreamMapper, Probe, Parser
+
+# Configure plugin logger
+logger = logging.getLogger("Unmanic.Plugin.strip_image_streams")
+
 
 class Settings(PluginSettings):
     settings = {}
+
+
+class PluginStreamMapper(StreamMapper):
+    def __init__(self):
+        super(PluginStreamMapper, self).__init__(logger, ['video'])
+
+    def test_stream_needs_processing(self, stream_info: dict):
+        """Check if the video stream is actually an image"""
+        if stream_info.get('codec_name').lower() in ['mjpeg', 'png', 'gif']:
+            return True
+        return False
+
+    def custom_stream_mapping(self, stream_info: dict, stream_id: int):
+        """Do not map the image streams matched above"""
+        return {
+            'stream_mapping':  [],
+            'stream_encoding': [],
+        }
+
+
+def on_library_management_file_test(data):
+    """
+    Runner function - enables additional actions during the library management file tests.
+
+    The 'data' object argument includes:
+        path                            - String containing the full path to the file being tested.
+        issues                          - List of currently found issues for not processing the file.
+        add_file_to_pending_tasks       - Boolean, is the file currently marked to be added to the queue for processing.
+
+    :param data:
+    :return:
+
+    """
+    # Get the path to the file
+    abspath = data.get('path')
+
+    # Get file probe
+    probe = Probe(logger)
+    probe.file(abspath)
+
+    # Get stream mapper
+    mapper = PluginStreamMapper()
+    mapper.set_probe(probe)
+
+    if mapper.streams_need_processing():
+        # Mark this file to be added to the pending tasks
+        data['add_file_to_pending_tasks'] = True
+        logger.debug("File '{}' should be added to task list. Probe found streams require processing.".format(abspath))
+    else:
+        logger.debug("File '{}' does not contain streams require processing.".format(abspath))
+
+    return data
 
 
 def on_worker_process(data):
@@ -33,85 +91,60 @@ def on_worker_process(data):
     Runner function - enables additional configured processing jobs during the worker stages of a task.
 
     The 'data' object argument includes:
+        exec_command            - A command that Unmanic should execute. Can be empty.
+        command_progress_parser - A function that Unmanic can use to parse the STDOUT of the command to collect progress stats. Can be empty.
+        file_in                 - The source file to be processed by the command.
+        file_out                - The destination that the command should output (may be the same as the file_in if necessary).
+        original_file_path      - The absolute path to the original file.
+        repeat                  - Boolean, should this runner be executed again once completed with the same variables.
+
+    DEPRECIATED 'data' object args passed for legacy Unmanic versions:
         exec_ffmpeg             - Boolean, should Unmanic run FFMPEG with the data returned from this plugin.
-        file_probe              - A dictionary object containing the current file probe state.
         ffmpeg_args             - A list of Unmanic's default FFMPEG args.
-        file_in                 - The source file to be processed by the FFMPEG command.
-        file_out                - The destination that the FFMPEG command will output.
 
     :param data:
     :return:
 
     """
     # Default to no FFMPEG command required. This prevents the FFMPEG command from running if it is not required
+    data['exec_command'] = []
+    data['repeat'] = False
+    # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
     data['exec_ffmpeg'] = False
 
-    # Check file probe for title metadata in the video
-    file_probe = data.get('file_probe')
+    # Get the path to the file
+    abspath = data.get('file_in')
 
-    video_stream_count = 0
-    audio_stream_count = 0
-    subtitle_stream_count = 0
+    # Get file probe
+    probe = Probe(logger)
+    probe.file(abspath)
 
-    streams_to_map = []
-    streams_to_copy = []
+    # Get stream mapper
+    mapper = PluginStreamMapper()
+    mapper.set_probe(probe)
 
-    probe_streams = file_probe.get('streams')
-    for probe_stream in probe_streams:
-        # Check if a video stream exists with a codec name in ["mjpeg"]
-        codec_type = probe_stream.get('codec_type')
-        codec_name = probe_stream.get('codec_name')
-        if codec_type.lower() == 'video' and codec_name in ['mjpeg']:
-            # Found a stream with an image!
-            # Set the exec_ffmpeg param to True to run the ffmpeg command once the plugin completes
-            data['exec_ffmpeg'] = True
-            continue
-        else:
-            # Handle anything that is not an image video stream
-            index = probe_stream.get('index')
+    if mapper.streams_need_processing():
+        # Set the input file
+        mapper.set_input_file(abspath)
 
-            # Map this video stream to be processed
-            streams_to_map = streams_to_map + [
-                "-map", "0:{}".format(index)
-            ]
-
-            # Copy the stream to the new file
-            if codec_type.lower() == 'video':
-                streams_to_copy += [
-                    "-c:v:{}".format(video_stream_count), "copy"
-                ]
-                video_stream_count += 1
-                continue
-            elif codec_type.lower() == 'audio':
-                streams_to_copy += [
-                    "-c:a:{}".format(audio_stream_count), "copy"
-                ]
-                audio_stream_count += 1
-                continue
-            elif codec_type.lower() == 'subtitle':
-                streams_to_copy += [
-                    "-c:s:{}".format(subtitle_stream_count), "copy"
-                ]
-                subtitle_stream_count += 1
-                continue
-
-    if data['exec_ffmpeg']:
-        # Build ffmpeg args and add them to the return data
-        data['ffmpeg_args'] = [
-            '-i',
-            data.get('file_in'),
-            '-hide_banner',
-            '-loglevel',
-            'info',
-        ]
-        data['ffmpeg_args'] += streams_to_map
-        data['ffmpeg_args'] += streams_to_copy
-
+        # Set the output file
         # Do not remux the file. Keep the file out in the same container
-        split_file_in = os.path.splitext(data.get('file_in'))
+        split_file_in = os.path.splitext(abspath)
         split_file_out = os.path.splitext(data.get('file_out'))
-        data['file_out'] = "{}{}".format(split_file_out[0], split_file_in[1])
+        mapper.set_output_file("{}{}".format(split_file_out[0], split_file_in[1]))
 
-        data['ffmpeg_args'] += ['-y', data.get('file_out')]
+        # Get generated ffmpeg args
+        ffmpeg_args = mapper.get_ffmpeg_args()
+
+        # Apply ffmpeg args to command
+        data['exec_command'] = ['ffmpeg']
+        data['exec_command'] += ffmpeg_args
+        # DEPRECIATED: 'ffmpeg_args' kept for legacy Unmanic versions
+        data['ffmpeg_args'] = ffmpeg_args
+
+        # Set the parser
+        parser = Parser(logger)
+        parser.set_probe(probe)
+        data['command_progress_parser'] = parser.parse_progress
 
     return data
