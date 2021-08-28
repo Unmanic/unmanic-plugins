@@ -8,8 +8,8 @@
     "id": "file_size_metrics",
     "name": "File Size Metrics Data Panel",
     "priorities": {
-        "on_worker_process": 0
+        "on_worker_process": 1
     },
     "tags": "data panel",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }
