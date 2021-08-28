@@ -1,9 +1,15 @@
 {
+    "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
+    "description": "Extract any text based subtitle streams to *.srt files.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.extract_srt_subtitles_to_files/master/icon.png",
     "id": "extract_srt_subtitles_to_files",
     "name": "Extract text subtitle streams to SRT files",
-    "author": "Josh.5",
-    "description": "This plugin will extract any text based subtitle streams found in the given file and save them as *.srt files in the same directory as the original file.\n\nRequires Unmanic >= v0.0.5.",
-    "icon": "",
-    "tags": "video,ffmpeg,worker,subtitle",
-    "version": "0.0.1"
+    "priorities": {
+        "on_worker_process": 2
+    },
+    "tags": "subtitle,ffmpeg",
+    "version": "0.0.2"
 }
