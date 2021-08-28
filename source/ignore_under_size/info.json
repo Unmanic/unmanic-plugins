@@ -1,9 +1,15 @@
 {
     "author": "Josh.5",
-    "description": "Ignore files under the configured size.\nSizes can be written as:\n [list][*]Bytes (Eg. '50' or '800 B'), \n[*]Kilobytes (Eg. '100KB' or '23 K'), \n[*]Megabytes (Eg. '9M' or '34 MB'), \n[*]Gigabytes (Eg. '4GB'), \n[*]Terabytes (Eg. '1 TB'), \n[*]Petabytes (Eg. '0.5PB'), \n[*] etc...[/list]\nFor best results, ensure Unmanic is configured to run this plugin last in the 'Plugin Flow'.",
-    "icon": "https://raw.githubusercontent.com/unmanic/unmanic-plugins/official/source/ignore_under_size/icon.png",
+    "compatibility": [
+        1
+    ],
+    "description": "Ignore files under the configured size.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_under_size/master/icon.png",
     "id": "ignore_under_size",
     "name": "Ignore files by size on disk",
-    "tags": "library,scan,test",
-    "version": "0.0.2"
+    "priorities": {
+        "on_library_management_file_test": 2
+    },
+    "tags": "library file test",
+    "version": "0.0.3"
 }
