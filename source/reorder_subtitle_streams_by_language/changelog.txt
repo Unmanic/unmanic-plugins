@@ -1,5 +1,0 @@
-[b][color=56adda]0.0.2[/color][/b]
-• Keep the output file out in the same container as the source
-
-[b][color=56adda]0.0.1[/color][/b]
-• initial version
