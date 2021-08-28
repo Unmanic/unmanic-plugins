@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>File Size Metrics | Unmanic</title>
+    <link rel="shortcut icon" href="static/favicon.ico">
+
+    <link rel="stylesheet" type="text/css"
+          href="./static/vendor/datatables/media/css/jquery.dataTables.min.css?{cache_buster}">
+
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        table.dataTable td {
+            word-break: break-word;
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Float four columns side by side */
+        .column {
+            float: left;
+            width: 50%;
+            padding: 0 10px;
+        }
+
+        /* Remove extra left and right margins, due to padding */
+        .row {
+            margin: 0 -5px;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Responsive columns */
+        @media screen and (max-width: 600px) {
+            .column {
+                width: 100%;
+                display: block;
+                margin-bottom: 20px;
+            }
+        }
+
+        /*Cards*/
+        .card {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            /*padding: 16px;*/
+            text-align: center;
+            background-color: #ffffff;
+        }
+
+        .collapsible {
+            background-color: #777;
+            color: white;
+            cursor: pointer;
+            padding-left: 18px;
+            padding-right: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            height: 35px;
+        }
+
+        button.collapsible::after {
+            content: "\2212";
+            color: white;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+
+        }
+
+        button.collapsible.active::after {
+            content: '\002B';
+        }
+
+        .active, .collapsible:hover {
+            background-color: #555;
+        }
+
+        .content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        /*Back to top*/
+        .top-of-page-link svg {
+            -webkit-filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .3));
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .3));
+        }
+
+        .top-of-page-link {
+            transition: .2s;
+            position: fixed;
+            bottom: 0.2rem;
+            right: 1rem;
+            z-index: 15;
+        }
+
+        /*Custom*/
+        .car-header {
+            display: block;
+            min-height: 40px;
+            height: 100px;
+            text-align: left;
+            margin-top: 5px;
+        }
+
+        .view-btn {
+            background-color: #009fdd !important;
+            border-radius: 5px;
+            font-size: 17px;
+            font-family: 'Source Sans Pro', sans-serif;
+            padding: 6px 18px;
+            color: #FFFFFF;
+            border: none;
+            display: inline-block;
+            vertical-align: middle;
+            overflow: hidden;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .top-content {
+            position: fixed;
+            z-index: 15;
+            width: 100%;
+        }
+
+        .charts {
+            max-height: 550px;
+        }
+
+        .tables {
+            padding-top: 550px;
+        }
+
+        /* Responsive columns */
+        @media screen and (max-width: 600px) {
+            .top-content {
+                position: inherit;
+            }
+
+            .tables {
+                padding-top: 0;
+            }
+        }
+
+    </style>
+
+</head>
+<body id="top-of-page">
+
+<!-- ######## BEGIN PAGE CONTENT -->
+
+<div class="top-content">
+    <div class="charts">
+
+        <div class="row">
+
+            <div class="column">
+                <div class="card">
+                    <div class="card-content">
+                        <button type="button" class="collapsible">
+                            Individual File Size Change
+                        </button>
+                        <div class="content" style="display:block;">
+                            <span id="selected_task_name"
+                                  class="car-header">(Select a task from the table below)</span>
+                            <input id="selected_task_id" type="hidden" name="selected_task_id" value=""/>
+                            <div id="task_details">
+                                <div id="file_size_chart">
+                                    There was an issue showing this chart
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="card">
+                    <div class="card-content">
+                        <button type="button" class="collapsible">
+                            Total File Size Changed
+                        </button>
+                        <div class="content" style="display:block;">
+                            <span class="car-header"></span>
+                            <div id="total_size_chart">
+                                There was an issue showing this chart
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<div class="tables">
+
+    <hr>
+
+    <table id="history_completed_tasks_table" class="dataTable" style="width:100%">
+        <thead>
+        <tr>
+            <!--Headers are overwritten in JS datatable config-->
+            <th>Name</th>
+            <th>Started</th>
+            <th>Completed</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tfoot>
+        <tr>
+            <!--Headers are overwritten in JS datatable config-->
+            <th>Name</th>
+            <th>Started</th>
+            <th>Completed</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+
+<a href="#top-of-page" class="top-of-page-link" data-visible="true">
+    <svg width="32" height="32" viewBox="0 0 100 100">
+        <path fill="white"
+              d="m50 0c-13.262 0-25.98 5.2695-35.355 14.645s-14.645 22.094-14.645 35.355 5.2695 25.98 14.645 35.355 22.094 14.645 35.355 14.645 25.98-5.2695 35.355-14.645 14.645-22.094 14.645-35.355-5.2695-25.98-14.645-35.355-22.094-14.645-35.355-14.645zm20.832 62.5-20.832-22.457-20.625 22.457c-1.207 0.74219-2.7656 0.57812-3.7891-0.39844-1.0273-0.98047-1.2695-2.5273-0.58594-3.7695l22.918-25c0.60156-0.61328 1.4297-0.96094 2.2891-0.96094 0.86328 0 1.6914 0.34766 2.293 0.96094l22.918 25c0.88672 1.2891 0.6875 3.0352-0.47266 4.0898-1.1562 1.0508-2.9141 1.0859-4.1133 0.078125z"></path>
+    </svg>
+</a>
+
+
+<!-- ######## END PAGE CONTENT -->
+
+
+<!-- ######## BEGIN SCRIPTS -->
+
+<script type="text/javascript" src="./static/vendor/jquery/dist/jquery.min.js?{cache_buster}"></script>
+
+<!--DATATABLE-->
+<script type="text/javascript"
+        src="./static/vendor/datatables/media/js/jquery.dataTables.min.js?{cache_buster}"></script>
+
+<!--CHARTS-->
+<script type="text/javascript" src="./static/vendor/highcharts/highcharts.js?{cache_buster}"></script>
+<script type="text/javascript" src="./static/vendor/highcharts/highcharts-3d.js?{cache_buster}"></script>
+<script type="text/javascript" src="./static/vendor/highcharts/highcharts-more.js?{cache_buster}"></script>
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function () {
+            console.log('here')
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
+    }
+</script>
+
+<script type="text/javascript" src="./static/js/table.js?{cache_buster}"></script>
+
+<script type="text/javascript" src="./static/js/filesizechart.js?{cache_buster}"></script>
+
+<script>
+    window.onload = function funLoad() {
+        CompletedTasksDatatable.init();
+        CompletedTasksFileSizeDiffChart.init();
+    }
+</script>
+
+<!-- ######## END SCRIPTS -->
+
+</body>
+</html>

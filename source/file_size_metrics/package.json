@@ -1,0 +1,25 @@
+{
+  "scripts": {
+    "build": "vendor-copy"
+  },
+  "dependencies": {
+    "datatables": "^1.10.18",
+    "highcharts": "^9.2.2",
+    "jquery": "^3.6.0",
+    "vendor-copy": "^3.0.1"
+  },
+  "vendorCopy": [
+    {
+      "from": "node_modules/datatables",
+      "to": "static/vendor/datatables"
+    },
+    {
+      "from": "node_modules/jquery",
+      "to": "static/vendor/jquery"
+    },
+    {
+      "from": "node_modules/highcharts",
+      "to": "static/vendor/highcharts"
+    }
+  ]
+}
