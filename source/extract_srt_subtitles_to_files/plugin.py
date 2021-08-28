@@ -23,7 +23,7 @@ import logging
 import os
 import re
 
-from lib.ffmpeg import Probe, Parser
+from extract_srt_subtitles_to_files.lib.ffmpeg import Probe, Parser
 
 # Configure plugin logger
 logger = logging.getLogger("Unmanic.Plugin.extract_srt_subtitles_to_files")
