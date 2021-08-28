@@ -1,0 +1,15 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
+    "description": "Aggregate changes in file size metrics for processed files and add a data panel for displaying the results.",
+    "icon": "",
+    "id": "file_size_metrics",
+    "name": "File Size Metrics Data Panel",
+    "priorities": {
+        "on_worker_process": 0
+    },
+    "tags": "data panel",
+    "version": "0.0.1"
+}
