@@ -3,7 +3,7 @@
 
 """
     Written by:               Josh.5 <jsunnex@gmail.com>
-    Date:                     24 March 2021, (9:34 PM)
+    Date:                     23 March 2021, (8:06 PM)
  
     Copyright:
         Copyright (C) 2021 Josh Sunnex
@@ -20,11 +20,11 @@
 
 """
 import logging
-import mimetypes
 import os
 
-from unmanic.libs import unffmpeg
 from unmanic.libs.unplugins.settings import PluginSettings
+
+from reorder_subtitle_streams_by_language.lib.ffmpeg import StreamMapper, Probe, Parser
 
 # Configure plugin logger
 logger = logging.getLogger("Unmanic.Plugin.reorder_subtitle_streams_by_language")
@@ -36,130 +36,106 @@ class Settings(PluginSettings):
     }
 
 
-def get_file_probe(file_path):
-    # Ensure file exists
-    if not os.path.exists(file_path):
-        return {}
+class PluginStreamMapper(StreamMapper):
+    def __init__(self):
+        # Check all streams (only the desired stream type will matter when tested)
+        super(PluginStreamMapper, self).__init__(logger, ['video', 'audio', 'subtitle', 'data', 'attachment'])
 
-    # Only run this check against video/audio/image MIME types
-    mimetypes.init()
-    file_type = mimetypes.guess_type(file_path)[0]
-    # If the file has no MIME type then it cannot be tested
-    if file_type is None:
-        return {}
-    # Make sure the MIME type is either audio, video or image
-    file_type_category = file_type.split('/')[0]
-    if file_type_category not in ['audio', 'video', 'image']:
-        return {}
+    # The stream type we are considering as streams of interest
+    stream_type = 'subtitle'
 
-    try:
-        # Get the file probe info
-        return unffmpeg.Info().file_probe(file_path)
-    except unffmpeg.exceptions.ffprobe.FFProbeError as e:
-        return {}
-    except Exception as e:
-        return {}
+    # Flag to say if a search string has matched a stream of interest
+    found_search_string_streams = False
 
-
-def check_stream_contains_search_string(probe_stream, search_string):
-    # Check if tags exist in streams with the key "title" or "language"
-    stream_tags = probe_stream.get('tags')
-    if stream_tags and True in list(k.lower() in ['title', 'language'] for k in stream_tags):
-        # Check if tag matches the "Search String"
-        if search_string.lower() in stream_tags.get('language', '').lower():
-            # Found a matching stream in language tag
-            return True
-        elif search_string in stream_tags.get('title', '').lower():
-            # Found a matching stream in title tag
-            return True
-    return False
-
-
-def get_stream_mapping(file_probe_streams):
-    # Read plugin settings
-    settings = Settings()
-    search_string = settings.get_setting('Search String')
-
-    # Map the streams into four arrays that will be placed to gether in the correct order.
+    # First streams are ones found before the search string was found on a stream of interest
     first_stream_mapping = []
-    search_string_stream_mapping = []
-    unmatched_stream_mapping = []
+    # Last streams are ones found after the search string was found on a stream of interest
     last_stream_mapping = []
 
-    video_stream_count = 0
-    audio_stream_count = 0
-    subtitle_stream_count = 0
+    # Search string streams of interest are streams that contain the search string
+    search_string_stream_mapping = []
+    # Unmatched streams of interest are streams that do not contain the search string
+    unmatched_stream_mapping = []
 
-    found_search_string_streams = False
-    for probe_stream in file_probe_streams:
-        # Map the video stream
-        if probe_stream.get('codec_type').lower() == "video":
-            if not found_search_string_streams:
-                first_stream_mapping += ['-map', '0:v:{}'.format(video_stream_count)]
+    @staticmethod
+    def test_tags_for_search_string(stream_tags):
+        if stream_tags and True in list(k.lower() in ['title', 'language'] for k in stream_tags):
+            settings = Settings()
+            search_string = settings.get_setting('Search String')
+            # Check if tag matches the "Search String"
+            if search_string.lower() in stream_tags.get('language', '').lower():
+                # Found a matching stream in language tag
+                return True
+            elif search_string in stream_tags.get('title', '').lower():
+                # Found a matching stream in title tag
+                return True
+        return False
+
+    def test_stream_needs_processing(self, stream_info: dict):
+        # Always return true here.
+        # All streams will use the custom stream mapping method below
+        return True
+
+    def custom_stream_mapping(self, stream_info: dict, stream_id: int):
+        ident = {
+            'video':      'v',
+            'audio':      'a',
+            'subtitle':   's',
+            'data':       'd',
+            'attachment': 't'
+        }
+        codec_type = stream_info.get('codec_type').lower()
+
+        if codec_type == self.stream_type:
+            # Process streams of interest
+            self.found_search_string_streams = True
+            if self.test_tags_for_search_string(stream_info.get('tags')):
+                self.search_string_stream_mapping += ['-map', '0:{}:{}'.format(ident.get(codec_type), stream_id)]
             else:
-                last_stream_mapping += ['-map', '0:v:{}'.format(video_stream_count)]
-            video_stream_count += 1
-            continue
-
-        # Map the audio streams
-        if probe_stream.get('codec_type').lower() == "audio":
-            if not found_search_string_streams:
-                first_stream_mapping += ['-map', '0:a:{}'.format(audio_stream_count)]
+                self.unmatched_stream_mapping += ['-map', '0:{}:{}'.format(ident.get(codec_type), stream_id)]
+        else:
+            # Process streams not of interest
+            if not self.found_search_string_streams:
+                self.first_stream_mapping += ['-map', '0:{}:{}'.format(ident.get(codec_type), stream_id)]
             else:
-                last_stream_mapping += ['-map', '0:a:{}'.format(audio_stream_count)]
-            audio_stream_count += 1
-            continue
+                self.last_stream_mapping += ['-map', '0:{}:{}'.format(ident.get(codec_type), stream_id)]
 
-        # Map the subtitle streams in their correct lists
-        if probe_stream.get('codec_type').lower() == "subtitle":
-            found_search_string_streams = True
-            if check_stream_contains_search_string(probe_stream, search_string):
-                search_string_stream_mapping += ['-map', '0:s:{}'.format(subtitle_stream_count)]
-            else:
-                unmatched_stream_mapping += ['-map', '0:s:{}'.format(subtitle_stream_count)]
-            subtitle_stream_count += 1
-            continue
+        # Do not map any streams using the default method
+        return {
+            'stream_mapping':  [],
+            'stream_encoding': []
+        }
 
-    return {
-        'first_stream_mapping':         first_stream_mapping,
-        'search_string_stream_mapping': search_string_stream_mapping,
-        'unmatched_stream_mapping':     unmatched_stream_mapping,
-        'last_stream_mapping':          last_stream_mapping
-    }
+    def streams_to_be_reordered(self):
+        result = False
 
+        # Start by mapping streams
+        self.streams_need_processing()
 
-def file_should_be_processed(search_string_stream_mapping, unmatched_stream_mapping):
-    """
-    Ensure we found some streams matching our search and that we are actually going to reorder them...
-    If we found both a list of matching streams AND a list of streams that were unmatched,
-      then the streams in this file will be reordered.
-    If only matched streams were found, then the list of streams will remain the same as all streams matched the
-      search string.
-    If only unmatched streams were found, then the list of streams will remain the same as nothing matched the
-      search string.
-    If matches were found for both, but the new mapped order of streams will be the same as the original streams,
-      then this file will not be reordered.
+        # Test if there were any matches against the search string
+        if self.search_string_stream_mapping and self.unmatched_stream_mapping:
+            logger.info("Streams were found matching the search string")
+            # Test if the mapping is already in the correct order
+            counter = 0
+            for item in self.search_string_stream_mapping + self.unmatched_stream_mapping:
+                if '-map' in item:
+                    continue
+                original_position = item.split(':')[-1]
+                if int(original_position) != int(counter):
+                    logger.info("The new order for the mapped streams will differ from the source file")
+                    result = True
+                    break
+                counter += 1
 
-    :param search_string_stream_mapping:
-    :param unmatched_stream_mapping:
-    :return:
-    """
-    result = False
-    # Test if there were any matches against the search string
-    if search_string_stream_mapping and unmatched_stream_mapping:
-        logger.info("Streams were found matching the search string")
-        # Test if the mapping is already in the correct order
-        counter = 0
-        for item in search_string_stream_mapping + unmatched_stream_mapping:
-            if '-map' in item:
-                continue
-            original_position = item.split(':')[-1]
-            if int(original_position) != int(counter):
-                logger.info("The new order for the mapped streams will differ from the source file")
-                result = True
-                break
-            counter += 1
-    return result
+        return result
+
+    def order_stream_mapping(self):
+        args = ['-c', 'copy']
+        args += self.first_stream_mapping
+        args += self.search_string_stream_mapping
+        args += self.unmatched_stream_mapping
+        args += self.last_stream_mapping
+        self.advanced_options += args
 
 
 def on_library_management_file_test(data):
@@ -175,79 +151,96 @@ def on_library_management_file_test(data):
     :return:
 
     """
+    # Get the path to the file
+    abspath = data.get('path')
+
     # Get file probe
-    file_probe = get_file_probe(data.get('path'))
-    if not file_probe:
+    probe = Probe(logger)
+    if not probe.file(abspath):
         # File probe failed, skip the rest of this test
         return data
 
-    # Get stream mapping
-    stream_mapping = get_stream_mapping(file_probe.get('streams'))
-    search_string_stream_mapping = stream_mapping.get('search_string_stream_mapping', [])
-    unmatched_stream_mapping = stream_mapping.get('unmatched_stream_mapping', [])
+    # Get stream mapper
+    mapper = PluginStreamMapper()
+    mapper.set_probe(probe)
 
-    if file_should_be_processed(search_string_stream_mapping, unmatched_stream_mapping):
+    if mapper.streams_to_be_reordered():
         # Mark this file to be added to the pending tasks
         data['add_file_to_pending_tasks'] = True
-        logger.debug("File '{}' should be added to task list. Audio streams are not in the correct order".format(
-            data.get('path')))
+        logger.debug("File '{}' should be added to task list. Probe found streams require processing.".format(abspath))
+    else:
+        logger.debug("File '{}' does not contain streams require processing.".format(abspath))
 
     return data
 
 
 def on_worker_process(data):
     """
-    Runner function - carries out additional processing during the worker stages of a task.
+    Runner function - enables additional configured processing jobs during the worker stages of a task.
 
     The 'data' object argument includes:
+        exec_command            - A command that Unmanic should execute. Can be empty.
+        command_progress_parser - A function that Unmanic can use to parse the STDOUT of the command to collect progress stats. Can be empty.
+        file_in                 - The source file to be processed by the command.
+        file_out                - The destination that the command should output (may be the same as the file_in if necessary).
+        original_file_path      - The absolute path to the original file.
+        repeat                  - Boolean, should this runner be executed again once completed with the same variables.
+
+    DEPRECIATED 'data' object args passed for legacy Unmanic versions:
         exec_ffmpeg             - Boolean, should Unmanic run FFMPEG with the data returned from this plugin.
-        file_probe              - A dictionary object containing the current file probe state.
         ffmpeg_args             - A list of Unmanic's default FFMPEG args.
-        file_in                 - The source file to be processed by the FFMPEG command.
-        file_out                - The destination that the FFMPEG command will output.
 
     :param data:
     :return:
+
     """
-    # Default to run FFMPEG command unless no stream is found matching the "Search String"
-    data['exec_ffmpeg'] = True
+    # Default to no FFMPEG command required. This prevents the FFMPEG command from running if it is not required
+    data['exec_command'] = []
+    data['repeat'] = False
+    # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
+    data['exec_ffmpeg'] = False
 
-    # Check file probe for title metadata in the video
-    file_probe = data.get('file_probe')
-    file_probe_streams = file_probe.get('streams')
+    # Get the path to the file
+    abspath = data.get('file_in')
 
-    # Get stream mapping
-    stream_mapping = get_stream_mapping(file_probe_streams)
-    first_stream_mapping = stream_mapping.get('first_stream_mapping', [])
-    search_string_stream_mapping = stream_mapping.get('search_string_stream_mapping', [])
-    unmatched_stream_mapping = stream_mapping.get('unmatched_stream_mapping', [])
-    last_stream_mapping = stream_mapping.get('last_stream_mapping', [])
+    # Get file probe
+    probe = Probe(logger)
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
-    # Ensure we found some streams matching our search and we need to process the file to reorder them
-    if not file_should_be_processed(search_string_stream_mapping, unmatched_stream_mapping):
-        # Prevent FFMPEG command from running on this file from this plugin
-        data['exec_ffmpeg'] = False
+    # Get stream mapper
+    mapper = PluginStreamMapper()
+    mapper.set_probe(probe)
 
-    if data['exec_ffmpeg']:
-        # Build ffmpeg args and add them to the return data
-        data['ffmpeg_args'] = [
-            '-i',
-            data.get('file_in'),
-            '-hide_banner',
-            '-loglevel',
-            'info',
-        ]
-        data['ffmpeg_args'] += ['-c', 'copy']
-        data['ffmpeg_args'] += first_stream_mapping
-        data['ffmpeg_args'] += search_string_stream_mapping
-        data['ffmpeg_args'] += unmatched_stream_mapping
-        data['ffmpeg_args'] += last_stream_mapping
+    if mapper.streams_to_be_reordered():
+        # Set the input file
+        mapper.set_input_file(abspath)
 
+        # Set the output file
         # Do not remux the file. Keep the file out in the same container
-        split_file_in = os.path.splitext(data.get('file_in'))
+        split_file_in = os.path.splitext(abspath)
         split_file_out = os.path.splitext(data.get('file_out'))
-        data['file_out'] = "{}{}".format(split_file_out[0], split_file_in[1])
+        mapper.set_output_file("{}{}".format(split_file_out[0], split_file_in[1]))
 
-        data['ffmpeg_args'] += ['-y', data.get('file_out')]
+        # Set the custom mapping order with the advanced options
+        mapper.order_stream_mapping()
+
+        # Get generated ffmpeg args
+        ffmpeg_args = mapper.get_ffmpeg_args()
+
+        # Apply ffmpeg args to command
+        data['exec_command'] = ['ffmpeg']
+        data['exec_command'] += ffmpeg_args
+        # DEPRECIATED: 'ffmpeg_args' kept for legacy Unmanic versions
+        data['ffmpeg_args'] = ffmpeg_args
+
+        from pprint import pprint
+        pprint(ffmpeg_args)
+
+        # Set the parser
+        parser = Parser(logger)
+        parser.set_probe(probe)
+        data['command_progress_parser'] = parser.parse_progress
 
     return data
