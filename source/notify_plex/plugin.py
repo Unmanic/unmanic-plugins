@@ -19,9 +19,13 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
+import logging
 from unmanic.libs.unplugins.settings import PluginSettings
 
 from plexapi.server import PlexServer
+
+# Configure plugin logger
+logger = logging.getLogger("Unmanic.Plugin.notify_plex")
 
 
 class Settings(PluginSettings):
@@ -36,6 +40,7 @@ def update_plex(plex_url, plex_token):
     plex = PlexServer(plex_url, plex_token)
     # Call to Plex to trigger an update
     plex.library.update()
+    logger.info("Notifying Plex ({}) to update its library.".format(plex_url))
 
 
 def on_postprocessor_task_results(data):
