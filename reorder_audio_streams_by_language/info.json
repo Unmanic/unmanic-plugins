@@ -1,0 +1,16 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
+    "description": "Specify a language tag for Unmanic to try and put as 1st audio track.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.reorder_audio_streams_by_language/master/icon.png",
+    "id": "reorder_audio_streams_by_language",
+    "name": "Re-order audio streams by language",
+    "priorities": {
+        "on_library_management_file_test": 99,
+        "on_worker_process": 2
+    },
+    "tags": "audio,ffmpeg,library file test",
+    "version": "1.1.0"
+}

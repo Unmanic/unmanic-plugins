@@ -1,0 +1,34 @@
+
+
+For information on the normalisation settings:
+[url]http://johnriselvato.com/ffmpeg-how-to-normalize-audio/[/url]
+
+
+For more advanced information on the "loudnorm" filter being used:
+[url]https://ffmpeg.org/ffmpeg-filters.html#loudnorm[/url]
+
+
+[size=23]Config description:[/size]
+[b]The integrated loudness target:[/b] 
+This can be understood as the "overall" or "average power" level of your audio.
+[list]
+[*] Range is '[b]-70.0[/b]' to '[b]-5.0[/b]'. 
+[*] Default value is '[b]-24.0[/b]'.
+[/list]
+[b]Loudness range:[/b]
+Loudness range measures the variation of loudness over your entire track.
+[list]
+[*] Range is '[b]1.0[/b]' to '[b]20.0[/b]'. 
+[*] Default value is '[b]7.0[/b]'.
+[/list]
+[b]Maximum true peak:[/b]
+The absolute maximum level of the signal waveform.
+[list]
+[*] Range is '[b]-9.0[/b]' to '[b]+0.0[/b]'. 
+[*] Default value is '[b]-2.0[/b]'.
+[/list]
+[b]Ignore all files previously normalised with this plugin:[/b]
+If this is selected, the plugin will ignore any files found that have been tagged by the plugin as having already been normalised.
+If this is unselected, then the plugin will only ignore files that are found to have been normalised by this plugin with the exact same settings configured.
+
+

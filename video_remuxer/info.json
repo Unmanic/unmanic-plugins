@@ -1,0 +1,15 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
+    "description": "Remux a video file to the configured container",
+    "icon": "",
+    "id": "video_remuxer",
+    "name": "Remux Video Files",
+    "priorities": {
+        "on_worker_process": 0
+    },
+    "tags": "video,ffmpeg",
+    "version": "0.0.1"
+}

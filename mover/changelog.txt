@@ -1,0 +1,5 @@
+0.0.2
+• Add ability to browse to directory in settings rather than type it out
+
+0.0.1
+• initial version
