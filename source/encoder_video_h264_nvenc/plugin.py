@@ -234,6 +234,23 @@ class PluginStreamMapper(StreamMapper):
             'stream_encoding': stream_encoding,
         }
 
+    def generate_default_nvdec_args(self):
+        """
+        Generate a list of args for using a VAAPI decoder
+        :return:
+        """
+        settings = Settings()
+
+        # Check if we are using a VAAPI encoder also...
+        if settings.get_setting('hw_decoding'):
+            # TODO: Find the device. Add config option to select from available GPUs
+            dev_id = '0'
+            generic_kwargs = {
+                "-hwaccel":        "cuda",
+                "-hwaccel_device": dev_id,
+            }
+            self.set_ffmpeg_generic_options(**generic_kwargs)
+
 
 def on_library_management_file_test(data):
     """
@@ -252,8 +269,10 @@ def on_library_management_file_test(data):
     abspath = data.get('path')
 
     # Get file probe
-    probe = Probe(logger)
-    probe.file(abspath)
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
     # Get stream mapper
     mapper = PluginStreamMapper()
@@ -285,7 +304,7 @@ def on_worker_process(data):
     :return:
 
     """
-    # Default to not run the FFMPEG command unless streams are found to be converted
+    # Default to no FFMPEG command required. This prevents the FFMPEG command from running if it is not required
     data['exec_command'] = []
     data['repeat'] = False
 
@@ -293,8 +312,10 @@ def on_worker_process(data):
     abspath = data.get('file_in')
 
     # Get file probe
-    probe = Probe(logger)
-    probe.file(abspath)
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
     # Get stream mapper
     mapper = PluginStreamMapper()
@@ -303,59 +324,57 @@ def on_worker_process(data):
     if mapper.streams_need_processing():
         settings = Settings()
 
-        # Build ffmpeg args and add them to the return data
-        data['exec_command'] = [
-            'ffmpeg',
-            '-hide_banner',
-            '-loglevel',
-            'info',
-            '-strict', '-2',
-        ]
+        # Set the input file
+        mapper.set_input_file(abspath)
 
-        if settings.get_setting('advanced'):
-            data['exec_command'] += settings.get_setting('main_options').split()
-        else:
-            # Enable HW decoding?
-            if settings.get_setting('hw_decoding'):
-                # TODO: Find the device. Add config option to select from available GPUs
-                data['exec_command'] += [
-                    '-hwaccel', 'cuda',
-                    '-hwaccel_device', '0',
-                ]
-
-            # Set threads as one for slow conversions - produces better quality
-            if settings.get_setting('preset') in ['fast', 'medium']:
-                data['exec_command'] += ['-threads', '4']
-            else:
-                data['exec_command'] += ['-threads', '1']
-
-        # Add file in
-        data['exec_command'] += ['-i', abspath]
-
-        if settings.get_setting('advanced'):
-            data['exec_command'] += settings.get_setting('advanced_options').split()
-        else:
-            data['exec_command'] += ['-max_muxing_queue_size', str(settings.get_setting('max_muxing_queue_size'))]
-
-        # Add the stream mapping and the encoding args
-        data['exec_command'] += mapper.get_stream_mapping()
-        data['exec_command'] += mapper.get_stream_encoding()
-
-        split_file_out = os.path.splitext(data.get('file_out'))
+        # Set the output file
         if settings.get_setting('keep_container'):
             # Do not remux the file. Keep the file out in the same container
-            split_file_in = os.path.splitext(abspath)
-            data['file_out'] = "{}{}".format(split_file_out[0], split_file_in[1])
+            mapper.set_output_file(data.get('file_out'))
         else:
             # Force the remux to the configured container
+            split_file_out = os.path.splitext(data.get('file_out'))
+            mapper.set_output_file("{}{}".format(split_file_out[0], settings.get_setting('dest_container')))
             data['file_out'] = "{}.{}".format(split_file_out[0], settings.get_setting('dest_container'))
 
-        data['exec_command'] += ['-y', data.get('file_out')]
+        # Setup required HW accelerated decoder args
+        mapper.generate_default_nvdec_args()
+
+        # Setup the advanced settings (this will overwrite a lot of other settings)
+        if settings.get_setting('advanced'):
+
+            # If any main options are provided, overwrite them
+            main_options = settings.get_setting('main_options').split()
+            if main_options:
+                # Overwrite all main options
+                mapper.main_options = main_options
+
+            advanced_options = settings.get_setting('advanced_options').split()
+            if advanced_options:
+                # Overwrite all main options
+                mapper.advanced_options = advanced_options
+
+        else:
+            advanced_kwargs = {
+                '-max_muxing_queue_size': str(settings.get_setting('max_muxing_queue_size'))
+            }
+            # Set threads as one for slow conversions - produces better quality
+            if settings.get_setting('preset') in ['fast', 'medium']:
+                advanced_kwargs['-threads'] = '4'
+            else:
+                advanced_kwargs['-threads'] = '1'
+            mapper.set_ffmpeg_advanced_options(**advanced_kwargs)
+
+        # Get generated ffmpeg args
+        ffmpeg_args = mapper.get_ffmpeg_args()
+
+        # Apply ffmpeg args to command
+        data['exec_command'] = ['ffmpeg']
+        data['exec_command'] += ffmpeg_args
 
         # Set the parser
         parser = Parser(logger)
         parser.set_probe(probe)
-
         data['command_progress_parser'] = parser.parse_progress
 
     return data
