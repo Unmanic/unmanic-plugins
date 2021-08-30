@@ -69,8 +69,10 @@ def on_library_management_file_test(data):
     abspath = data.get('path')
 
     # Get file probe
-    probe = Probe(logger)
-    probe.file(abspath)
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
     # Get stream mapper
     mapper = PluginStreamMapper()
@@ -98,10 +100,6 @@ def on_worker_process(data):
         original_file_path      - The absolute path to the original file.
         repeat                  - Boolean, should this runner be executed again once completed with the same variables.
 
-    DEPRECIATED 'data' object args passed for legacy Unmanic versions:
-        exec_ffmpeg             - Boolean, should Unmanic run FFMPEG with the data returned from this plugin.
-        ffmpeg_args             - A list of Unmanic's default FFMPEG args.
-
     :param data:
     :return:
 
@@ -109,29 +107,29 @@ def on_worker_process(data):
     # Default to no FFMPEG command required. This prevents the FFMPEG command from running if it is not required
     data['exec_command'] = []
     data['repeat'] = False
-    # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
-    data['exec_ffmpeg'] = False
 
     # Get the path to the file
     abspath = data.get('file_in')
 
     # Get file probe
-    probe = Probe(logger)
-    probe.file(abspath)
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
     # Get stream mapper
     mapper = PluginStreamMapper()
     mapper.set_probe(probe)
 
     if mapper.streams_need_processing():
+        settings = Settings()
+
         # Set the input file
         mapper.set_input_file(abspath)
 
         # Set the output file
         # Do not remux the file. Keep the file out in the same container
-        split_file_in = os.path.splitext(abspath)
-        split_file_out = os.path.splitext(data.get('file_out'))
-        mapper.set_output_file("{}{}".format(split_file_out[0], split_file_in[1]))
+        mapper.set_output_file(data.get('file_out'))
 
         # Get generated ffmpeg args
         ffmpeg_args = mapper.get_ffmpeg_args()
@@ -139,8 +137,6 @@ def on_worker_process(data):
         # Apply ffmpeg args to command
         data['exec_command'] = ['ffmpeg']
         data['exec_command'] += ffmpeg_args
-        # DEPRECIATED: 'ffmpeg_args' kept for legacy Unmanic versions
-        data['ffmpeg_args'] = ffmpeg_args
 
         # Set the parser
         parser = Parser(logger)
