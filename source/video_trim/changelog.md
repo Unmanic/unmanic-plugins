@@ -1,4 +1,9 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Limit plugin to only process files with a "video" or "audio" mimetypes
+- Add support for audio trimming
+- Record files that have been trimmed. By default, don't trim them again.
+
 **<span style="color:#56adda">0.0.4</span>**
 - Update for compatibility with new Unmanic version
 
