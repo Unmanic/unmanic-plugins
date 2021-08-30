@@ -267,7 +267,6 @@ def on_library_management_file_test(data):
     # Get file probe
     probe = Probe(logger, allowed_mimetypes=['video'])
     if not probe.file(abspath):
-        logger.debug("File '{}' could not be probed for its stream data.".format(abspath))
         # File probe failed, skip the rest of this test
         return data
 
