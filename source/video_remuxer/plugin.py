@@ -21,7 +21,6 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
-
 import logging
 import os
 
@@ -90,7 +89,7 @@ def on_library_management_file_test(data):
     abspath = data.get('path')
 
     # Get file probe
-    probe = Probe(logger)
+    probe = Probe(logger, allowed_mimetypes=['video'])
     if not probe.file(abspath):
         # File probe failed, skip the rest of this test
         return data
@@ -131,11 +130,15 @@ def on_worker_process(data):
     :return:
     
     """
+    # Default to no FFMPEG command required. This prevents the FFMPEG command from running if it is not required
+    data['exec_command'] = []
+    data['repeat'] = False
+
     # Get the path to the file
     abspath = data.get('file_in')
 
     # Get file probe
-    probe = Probe(logger)
+    probe = Probe(logger, allowed_mimetypes=['video'])
     if not probe.file(abspath):
         # File probe failed, skip the rest of this test
         return data
