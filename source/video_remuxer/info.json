@@ -8,8 +8,8 @@
     "id": "video_remuxer",
     "name": "Remux Video Files",
     "priorities": {
-        "on_worker_process": 0
+        "on_worker_process": 70
     },
     "tags": "video,ffmpeg",
-    "version": "0.0.1"
+    "version": "0.0.3"
 }
