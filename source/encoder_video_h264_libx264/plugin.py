@@ -192,7 +192,7 @@ class Settings(PluginSettings):
 
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
-        super(PluginStreamMapper, self).__init__(logger, 'video')
+        super(PluginStreamMapper, self).__init__(logger, ['video'])
 
     def test_stream_needs_processing(self, stream_info: dict):
         if stream_info.get('codec_name').lower() in ['h264']:
@@ -235,8 +235,10 @@ def on_library_management_file_test(data):
     abspath = data.get('path')
 
     # Get file probe
-    probe = Probe(logger)
-    probe.file(abspath)
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
     # Get stream mapper
     mapper = PluginStreamMapper()
@@ -268,7 +270,7 @@ def on_worker_process(data):
     :return:
 
     """
-    # Default to not run the FFMPEG command unless streams are found to be converted
+    # Default to no FFMPEG command required. This prevents the FFMPEG command from running if it is not required
     data['exec_command'] = []
     data['repeat'] = False
 
@@ -276,8 +278,10 @@ def on_worker_process(data):
     abspath = data.get('file_in')
 
     # Get file probe
-    probe = Probe(logger)
-    probe.file(abspath)
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
     # Get stream mapper
     mapper = PluginStreamMapper()
@@ -286,45 +290,49 @@ def on_worker_process(data):
     if mapper.streams_need_processing():
         settings = Settings()
 
-        # Build ffmpeg args and add them to the return data
-        data['exec_command'] = [
-            'ffmpeg',
-            '-hide_banner',
-            '-loglevel',
-            'info',
-            '-strict', '-2',
-        ]
+        # Set the input file
+        mapper.set_input_file(abspath)
 
-        if settings.get_setting('advanced'):
-            data['exec_command'] += settings.get_setting('main_options').split()
-
-        # Add file in
-        data['exec_command'] += ['-i', abspath]
-
-        if settings.get_setting('advanced'):
-            data['exec_command'] += settings.get_setting('advanced_options').split()
-        else:
-            data['exec_command'] += ['-max_muxing_queue_size', str(settings.get_setting('max_muxing_queue_size'))]
-
-        # Add the stream mapping and the encoding args
-        data['exec_command'] += mapper.get_stream_mapping()
-        data['exec_command'] += mapper.get_stream_encoding()
-
-        split_file_out = os.path.splitext(data.get('file_out'))
+        # Set the output file
         if settings.get_setting('keep_container'):
             # Do not remux the file. Keep the file out in the same container
-            split_file_in = os.path.splitext(abspath)
-            data['file_out'] = "{}{}".format(split_file_out[0], split_file_in[1])
+            mapper.set_output_file(data.get('file_out'))
         else:
             # Force the remux to the configured container
+            split_file_out = os.path.splitext(data.get('file_out'))
+            mapper.set_output_file("{}{}".format(split_file_out[0], settings.get_setting('dest_container')))
             data['file_out'] = "{}.{}".format(split_file_out[0], settings.get_setting('dest_container'))
 
-        data['exec_command'] += ['-y', data.get('file_out')]
+        # Setup the advanced settings (this will overwrite a lot of other settings)
+        if settings.get_setting('advanced'):
+
+            # If any main options are provided, overwrite them
+            main_options = settings.get_setting('main_options').split()
+            if main_options:
+                # Overwrite all main options
+                mapper.main_options = main_options
+
+            advanced_options = settings.get_setting('advanced_options').split()
+            if advanced_options:
+                # Overwrite all main options
+                mapper.advanced_options = advanced_options
+
+        else:
+            advanced_kwargs = {
+                '-max_muxing_queue_size': str(settings.get_setting('max_muxing_queue_size'))
+            }
+            mapper.set_ffmpeg_advanced_options(**advanced_kwargs)
+
+        # Get generated ffmpeg args
+        ffmpeg_args = mapper.get_ffmpeg_args()
+
+        # Apply ffmpeg args to command
+        data['exec_command'] = ['ffmpeg']
+        data['exec_command'] += ffmpeg_args
 
         # Set the parser
         parser = Parser(logger)
         parser.set_probe(probe)
-
         data['command_progress_parser'] = parser.parse_progress
 
     return data
