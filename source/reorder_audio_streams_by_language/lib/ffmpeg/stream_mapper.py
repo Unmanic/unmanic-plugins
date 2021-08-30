@@ -318,6 +318,20 @@ class StreamMapper(object):
         """
         return self.__set_stream_mapping()
 
+    def container_needs_remuxing(self, container_extension):
+        """
+        Returns True/False if the file container needs to be processed.
+
+        :return:
+        """
+        if not self.input_file:
+            raise Exception("Input file not yet set")
+
+        split_file_in = os.path.splitext(self.input_file)
+        if split_file_in[1].lstrip('.') != container_extension.lstrip('.'):
+            return True
+        return False
+
     def set_input_file(self, path):
         """Set the input file for the FFmpeg args"""
         self.input_file = os.path.abspath(path)
