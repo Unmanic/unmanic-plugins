@@ -101,8 +101,38 @@ class Probe(object):
 
     probe_info = {}
 
-    def __init__(self, logger: Logger):
+    def __init__(self, logger: Logger, allowed_mimetypes=None):
         self.logger = logger
+        if allowed_mimetypes is None:
+            allowed_mimetypes = ['audio', 'video', 'image']
+        self.allowed_mimetypes = allowed_mimetypes
+
+    def __test_valid_mimetype(self, file_path):
+        """
+        Test the given file path for its mimetype.
+        If the mimetype cannot be detected, it will fail this test.
+        If the detected mimetype is not in the configured 'allowed_mimetypes'
+            class variable, it will fail this test.
+
+        :param file_path:
+        :return:
+        """
+        # Only run this check against video/audio/image MIME types
+        mimetypes.init()
+        file_type = mimetypes.guess_type(file_path)[0]
+
+        # If the file has no MIME type then it cannot be tested
+        if file_type is None:
+            self.logger.debug("Unable to fetch file MIME type - '{}'".format(file_path))
+            return False
+
+        # Make sure the MIME type is either audio, video or image
+        file_type_category = file_type.split('/')[0]
+        if file_type_category not in self.allowed_mimetypes:
+            self.logger.debug("File MIME type not in 'audio', 'video' or 'image' - '{}'".format(file_path))
+            return False
+
+        return True
 
     def file(self, file_path):
         """
@@ -119,17 +149,7 @@ class Probe(object):
             self.logger.debug("File does not exist - '{}'".format(file_path))
             return
 
-        # Only run this check against video/audio/image MIME types
-        mimetypes.init()
-        file_type = mimetypes.guess_type(file_path)[0]
-        # If the file has no MIME type then it cannot be tested
-        if file_type is None:
-            self.logger.debug("Unable to fetch file MIME type - '{}'".format(file_path))
-            return
-        # Make sure the MIME type is either audio, video or image
-        file_type_category = file_type.split('/')[0]
-        if file_type_category not in ['audio', 'video', 'image']:
-            self.logger.debug("File MIME type not in 'audio', 'video' or 'image' - '{}'".format(file_path))
+        if not self.__test_valid_mimetype(file_path):
             return
 
         try:
