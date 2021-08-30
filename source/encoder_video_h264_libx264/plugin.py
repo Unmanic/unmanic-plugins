@@ -300,7 +300,7 @@ def on_worker_process(data):
         else:
             # Force the remux to the configured container
             split_file_out = os.path.splitext(data.get('file_out'))
-            mapper.set_output_file("{}{}".format(split_file_out[0], settings.get_setting('dest_container')))
+            mapper.set_output_file("{}.{}".format(split_file_out[0], settings.get_setting('dest_container')))
             data['file_out'] = "{}.{}".format(split_file_out[0], settings.get_setting('dest_container'))
 
         # Setup the advanced settings (this will overwrite a lot of other settings)
