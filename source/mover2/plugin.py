@@ -34,20 +34,33 @@ class Settings(PluginSettings):
     settings = {
         "destination_directory":        "/library",
         "recreate_directory_structure": True,
+        "include_library_structure":    True,
         "remove_source_file":           False,
     }
-    form_settings = {
-        "destination_directory":        {
-            "label":      "Destination directory",
-            "input_type": "browse_directory",
-        },
-        "recreate_directory_structure": {
-            "label": "Recreate directory structure",
-        },
-        "remove_source_file":           {
-            "label": "Remove source files",
-        },
-    }
+
+    def __init__(self):
+        self.form_settings = {
+            "destination_directory":        {
+                "label":      "Destination directory",
+                "input_type": "browse_directory",
+            },
+            "recreate_directory_structure": {
+                "label": "Recreate directory structure",
+            },
+            "include_library_structure":    self.__set_include_library_structure(),
+            "remove_source_file":           {
+                "label": "Remove source files",
+            },
+        }
+
+    def __set_include_library_structure(self):
+        values = {
+            "label":      "Also include library path when re-creating the directory structure",
+            "input_type": "checkbox",
+        }
+        if not self.get_setting('recreate_directory_structure'):
+            values["display"] = 'hidden'
+        return values
 
 
 def all_parent_directories(head):
@@ -74,6 +87,13 @@ def get_file_out(original_source_path, file_out):
         # Get the parent directory of the original file
         # Eg. /library/path/to/my/file.ext    =   /library/path/to/my
         original_source_dirname = os.path.dirname(original_source_path)
+
+        if not settings.get_setting('include_library_structure'):
+            # Remove the library path from the original_source_dirname
+            from unmanic import config
+            unmanic_settings = config.Config()
+            library_path = unmanic_settings.get_library_path()
+            original_source_dirname = os.path.relpath(original_source_dirname, library_path)
 
         # Fetch a list of all directories in the original directory path
         # Eg. directories = ['library', 'path', 'to', 'my']
