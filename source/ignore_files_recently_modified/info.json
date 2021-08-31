@@ -1,0 +1,15 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
+    "description": "Ignore files recently modified on disk.",
+    "icon": "",
+    "id": "ignore_files_recently_modified",
+    "name": "Ignore files recently modified",
+    "priorities": {
+        "on_library_management_file_test": 2
+    },
+    "tags": "library file test",
+    "version": "0.0.1"
+}
