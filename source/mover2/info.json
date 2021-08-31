@@ -12,5 +12,5 @@
         "on_postprocessor_task_results": 99
     },
     "tags": "post-processor, mover",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }
