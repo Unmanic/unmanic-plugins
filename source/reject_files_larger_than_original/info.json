@@ -8,8 +8,10 @@
     "id": "reject_files_larger_than_original",
     "name": "Reject File if Larger than Original",
     "priorities": {
-        "on_worker_process": 2
+        "on_library_management_file_test": 2,
+        "on_worker_process": 2,
+        "on_postprocessor_file_movement": 5
     },
     "tags": "",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }
