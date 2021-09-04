@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Tidy up description
+
 **<span style="color:#56adda">0.0.4</span>**
 - Fix bug in setting extension when manually specifying the container
 

@@ -23,6 +23,8 @@ A slower preset will provide better compression (compression is quality per file
 This means that, for example, if you target a certain file size or constant bit rate, you will achieve better quality with a slower preset. 
 Similarly, for constant quality encoding, you will simply save bitrate by choosing a slower preset. 
 
+This plugin will also set FFmpeg to run in a single thread for 'Slow' and 'Lossless' presets to improve quality.
+
 
 #### <span style="color:blue">Profile</span>
 The profile determines which features of the codec are available and enabled, while also affecting other restrictions. 
@@ -45,11 +47,11 @@ This is for more advanced use cases where you need finer control over the file t
 
 ###### Note:
 These params are added in three different places:
-1. After the default main options.
+1. **MAIN OPTIONS** - After the default generic options.
    ([Main Options Docs](https://ffmpeg.org/ffmpeg.html#Main-options))
-1. After the input file has been specified.
+1. **ADVANCED OPTIONS** - After the input file has been specified.
    ([Advanced Options Docs](https://ffmpeg.org/ffmpeg.html#Advanced-options))
-1. After the video is mapped and the encoder is selected.
+1. **VIDEO OPTIONS** - After the video is mapped and the encoder is selected.
    ([Video Options Docs](https://ffmpeg.org/ffmpeg.html#Video-Options))
    ([Advanced Video Options Docs](https://ffmpeg.org/ffmpeg.html#Advanced-Video-options))
 
