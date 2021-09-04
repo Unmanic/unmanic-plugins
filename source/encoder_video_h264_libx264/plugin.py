@@ -299,9 +299,11 @@ def on_worker_process(data):
             mapper.set_output_file(data.get('file_out'))
         else:
             # Force the remux to the configured container
+            container_extension = settings.get_setting('dest_container')
             split_file_out = os.path.splitext(data.get('file_out'))
-            mapper.set_output_file("{}.{}".format(split_file_out[0], settings.get_setting('dest_container')))
-            data['file_out'] = "{}.{}".format(split_file_out[0], settings.get_setting('dest_container'))
+            new_file_out = "{}.{}".format(split_file_out[0], container_extension.lstrip('.'))
+            mapper.set_output_file(new_file_out)
+            data['file_out'] = new_file_out
 
         # Setup the advanced settings (this will overwrite a lot of other settings)
         if settings.get_setting('advanced'):
