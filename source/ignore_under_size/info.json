@@ -6,7 +6,7 @@
     "description": "Ignore files under the configured size.",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_under_size/master/icon.png",
     "id": "ignore_under_size",
-    "name": "Ignore files by size on disk",
+    "name": "Ignore files under size",
     "priorities": {
         "on_library_management_file_test": 2
     },
