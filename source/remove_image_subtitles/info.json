@@ -1,0 +1,16 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
+    "description": "Removes any image subtitle streams from video files.",
+    "icon": "",
+    "id": "remove_image_subtitles",
+    "name": "Remove image subtitle streams",
+    "priorities": {
+        "on_library_management_file_test": 50,
+        "on_worker_process": 1
+    },
+    "tags": "subtitle,ffmpeg,library file test",
+    "version": "0.0.1"
+}
