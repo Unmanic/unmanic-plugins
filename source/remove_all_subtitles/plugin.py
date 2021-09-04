@@ -22,7 +22,6 @@
 
 """
 import logging
-import os
 
 from unmanic.libs.unplugins.settings import PluginSettings
 
@@ -45,7 +44,7 @@ class PluginStreamMapper(StreamMapper):
         return True
 
     def custom_stream_mapping(self, stream_info: dict, stream_id: int):
-        """Do not map the image streams matched above"""
+        """Do not map the streams matched above"""
         return {
             'stream_mapping':  [],
             'stream_encoding': [],
