@@ -12,19 +12,12 @@ Check your GPU compatibility:
 #### <span style="color:blue">Enable NVDEC HW Accelerated Decoding?</span>
 Decode the video stream using hardware accelerated decoding. This enables full hardware transcode with NVDEC and NVENC, using only GPU memory for the entire video transcode.
 
-This value sets '-hwaccel cuda -hwaccel_output_format cuda' in the ffmpeg main options.
+This value sets '-hwaccel cuda -hwaccel_device {device}' in the ffmpeg main options. 
 
 It is recommended that for 10-bit encodes, disable this option.
 
 It should also be noted that not all codec can be decoded by NVDEC.
 Refer to the above listed GPU compatibility table to see what your GPU is capable of.
-
-#### <span style="color:blue">Max input stream packet buffer</span>
-When transcoding audio and/or video streams, ffmpeg will not begin writing into the output until it has one packet for each such stream. 
-While waiting for that to happen, packets for other streams are buffered. 
-This option sets the size of this buffer, in packets, for the matching output stream.
-
-FFmpeg docs refer to this value as '-max_muxing_queue_size' 
 
 
 #### <span style="color:blue">NVENC Encoder Quality Preset</span>
@@ -41,20 +34,12 @@ The profile determines which features of the codec are available and enabled, wh
 Any of these profiles are capable of 4:2:0, 4:2:2 and 4:4:4, however the support depends on the installed hardware.
 
 
-#### <span style="color:blue">Pixel Format</span>
-Set pixel format.
-It is recommended to keep this as auto. FFmpeg will attempt to match with the source file.
+#### <span style="color:blue">Max input stream packet buffer</span>
+When transcoding audio and/or video streams, ffmpeg will not begin writing into the output until it has one packet for each such stream. 
+While waiting for that to happen, packets for other streams are buffered. 
+This option sets the size of this buffer, in packets, for the matching output stream.
 
-[//]: <> (Ref:)
-[//]: <> (https://ffmpeg.org/doxygen/trunk/pixfmt_8h_source.html)
-
-
-#### <span style="color:blue">Bitrate</span>
-The target (average) bit rate for the encoder to use.
-Default FFmpeg value is 200K.
-
-[//]: <> (Ref:)
-[//]: <> (https://ffmpeg.org/doxygen/trunk/pixfmt_8h_source.html)
+FFmpeg docs refer to this value as '-max_muxing_queue_size'
 
 
 #### <span style="color:blue">Overwrite all options with custom input</span>
@@ -63,11 +48,11 @@ This is for more advanced use cases where you need finer control over the file t
 
 ###### Note:
 These params are added in three different places:
-1. After the default main options.
+1. **MAIN OPTIONS** - After the default generic options.
    ([Main Options Docs](https://ffmpeg.org/ffmpeg.html#Main-options))
-1. After the input file has been specified.
+1. **ADVANCED OPTIONS** - After the input file has been specified.
    ([Advanced Options Docs](https://ffmpeg.org/ffmpeg.html#Advanced-options))
-1. After the video is mapped and the encoder is selected.
+1. **VIDEO OPTIONS** - After the video is mapped and the encoder is selected.
    ([Video Options Docs](https://ffmpeg.org/ffmpeg.html#Video-Options))
    ([Advanced Video Options Docs](https://ffmpeg.org/ffmpeg.html#Advanced-Video-options))
 
@@ -75,7 +60,6 @@ These params are added in three different places:
 ffmpeg \
     -hide_banner \
     -loglevel info \
-    -strict -2 \
     <CUSTOM MAIN OPTIONS HERE> \
     -i /library/TEST_FILE.mkv \
     <CUSTOM ADVANCED OPTIONS HERE> \
@@ -88,3 +72,7 @@ ffmpeg \
     -c:a:1 copy \
     -y /path/to/output/video.mkv 
 ```
+
+
+[//]: <> (NOTES:)
+[//]: <> (https://github-wiki-see.page/m/Xaymar/obs-StreamFX/wiki/Encoder-FFmpeg-NVENC)

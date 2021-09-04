@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.6</span>**
+- Tidy up description
+- Fix bug preventing ffmpeg stream mapping from source to destination file
+
 **<span style="color:#56adda">0.0.5</span>**
 - Fix bug in setting extension when manually specifying the container
 
