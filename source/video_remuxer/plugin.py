@@ -162,7 +162,9 @@ def on_worker_process(data):
 
         # Set the output file
         split_file_out = os.path.splitext(data.get('file_out'))
-        mapper.set_output_file("{}.{}".format(split_file_out[0], container_extension.lstrip('.')))
+        new_file_out = "{}.{}".format(split_file_out[0], container_extension.lstrip('.'))
+        mapper.set_output_file(new_file_out)
+        data['file_out'] = new_file_out
 
         # Get generated ffmpeg args
         ffmpeg_args = mapper.get_ffmpeg_args()
