@@ -39,9 +39,7 @@ class Settings(PluginSettings):
         "preset":                "medium",
         "profile":               "main",
         "max_muxing_queue_size": 2048,
-        "main_options":          "-hwaccel cuda\n"
-                                 "-hwaccel_device 0\n"
-                                 "-threads 2\n",
+        "main_options":          "-threads 2\n",
         "advanced_options":      "-strict -2\n"
                                  "-max_muxing_queue_size 2048\n",
         "custom_options":        "-preset medium\n"
