@@ -37,10 +37,7 @@ class Settings(PluginSettings):
         "advanced":              False,
         "hw_decoding":           False,
         "max_muxing_queue_size": 2048,
-        "main_options":          "-init_hw_device vaapi=vaapi0:/dev/dri/renderD128\n"
-                                 "-hwaccel vaapi\n"
-                                 "-hwaccel_output_format vaapi\n"
-                                 "-hwaccel_device vaapi0\n",
+        "main_options":          "",
         "advanced_options":      "-strict -2\n"
                                  "-max_muxing_queue_size 2048\n"
                                  "-filter_hw_device vaapi0\n"
