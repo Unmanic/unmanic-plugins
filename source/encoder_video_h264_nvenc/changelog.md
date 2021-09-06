@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- Fix issue with default main args
+
 **<span style="color:#56adda">0.0.6</span>**
 - Tidy up description
 - Fix bug preventing ffmpeg stream mapping from source to destination file
