@@ -65,7 +65,7 @@ Eg.
     --originalsize={source_file_size}
 ```
 
-**Note:**
+#### <span style="color:gray">Note:</span>
 > You should place single quotes around this variable as it may contain characters that shell may otherwise attempt to parse.
 
 ---
