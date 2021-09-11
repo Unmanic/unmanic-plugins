@@ -25,6 +25,8 @@ import datetime
 import os.path
 from operator import attrgetter
 
+import peewee
+
 from file_size_metrics.lib.database import Database, HistoricTasks, HistoricTaskProbe
 
 
@@ -243,8 +245,8 @@ class Data(object):
         finish_time = None
 
         db = Database.db()
-        with db.atomic() as transaction:
-            try:
+        try:
+            with db.atomic():
                 new_historic_task = HistoricTasks.create(
                     task_label=task_label,
                     task_success=task_success,
@@ -260,17 +262,16 @@ class Data(object):
                     size=size
                 )
                 task_id = new_historic_task.id
-            except Exception:
-                transaction.rollback()
-                task_id = None
-                self.logger.exception("Failed to save historic data to database.")
+        except Exception:
+            task_id = None
+            self.logger.exception("Failed to save historic data to database.")
         return task_id
 
     def save_destination_item(self, task_id, abspath, size):
         basename = os.path.basename(abspath)
         db = Database.db()
-        with db.atomic() as transaction:
-            try:
+        try:
+            with db.atomic():
                 # Create probe entry for source item
                 HistoricTaskProbe.create(
                     historictask_id=task_id,
@@ -279,20 +280,19 @@ class Data(object):
                     basename=basename,
                     size=size
                 )
-            except Exception:
-                transaction.rollback()
-                self.logger.exception("Failed to save historic data to database.")
-                return False
+        except Exception:
+            self.logger.exception("Failed to save historic data to database.")
+            return False
 
         # Update the original entry
-        with db.atomic() as transaction:
-            try:
+        try:
+            with db.atomic():
                 historic_task, created = HistoricTasks.get_or_create(id=task_id)
                 historic_task.finish_time = datetime.datetime.now()
                 historic_task.task_success = True
                 historic_task.save()
-            except Exception:
-                transaction.rollback()
-                self.logger.exception("Failed to save historic data to database.")
-                return False
+        except Exception:
+            self.logger.exception("Failed to save historic data to database.")
+            return False
+
         return True
