@@ -4,7 +4,7 @@
         1
     ],
     "description": "Only look for files ending in a specified extension.",
-    "icon": "",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.limit_library_search_by_file_extension/master/icon.png",
     "id": "limit_library_search_by_file_extension",
     "name": "Limit library search by file extension",
     "priorities": {
