@@ -4,12 +4,13 @@
         1
     ],
     "description": "Aggregate changes in file size metrics for processed files and add a data panel for displaying the results.",
-    "icon": "",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.file_size_metrics/master/icon.png",
     "id": "file_size_metrics",
     "name": "File Size Metrics Data Panel",
     "priorities": {
-        "on_worker_process": 1
+        "on_worker_process": 1,
+        "on_postprocessor_task_results": 99
     },
     "tags": "data panel",
-    "version": "0.0.2"
+    "version": "0.0.3"
 }
