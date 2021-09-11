@@ -23,10 +23,78 @@ import logging
 import os
 import re
 
-from extract_srt_subtitles_to_files.lib.ffmpeg import Probe, Parser
+from extract_srt_subtitles_to_files.lib.ffmpeg import StreamMapper, Probe, Parser
 
 # Configure plugin logger
 logger = logging.getLogger("Unmanic.Plugin.extract_srt_subtitles_to_files")
+
+
+class PluginStreamMapper(StreamMapper):
+    sub_streams = []
+
+    def __init__(self):
+        super(PluginStreamMapper, self).__init__(logger, ['subtitle'])
+
+    def test_stream_needs_processing(self, stream_info: dict):
+        """Any text based will need to be processed"""
+        if stream_info.get('codec_name').lower() in ['srt', 'subrip', 'mov_text']:
+            return True
+        return False
+
+    def custom_stream_mapping(self, stream_info: dict, stream_id: int):
+        # Find a tag for this subtitle
+        subtitle_tag = ''
+        stream_tags = stream_info.get('tags', {})
+        if stream_tags.get('language'):
+            subtitle_tag = "{}.{}".format(subtitle_tag, stream_tags.get('language'))
+        if stream_tags.get('title'):
+            subtitle_tag = "{}.{}".format(subtitle_tag, stream_tags.get('title'))
+
+        # If there were no tags, just number the file
+        if not subtitle_tag:
+            subtitle_tag = "{}.{}".format(subtitle_tag, stream_info.get('index'))
+
+        # Ensure subtitle tag does not contain whitespace
+        subtitle_tag = re.sub('\s', '-', subtitle_tag)
+
+        self.sub_streams.append(
+            {
+                'stream_id':      stream_id,
+                'subtitle_tag':   subtitle_tag,
+                'stream_mapping': ['-map', '0:s:{}'.format(stream_id)],
+            }
+        )
+
+        # Copy the streams to the destination. This will actually do nothing...
+        return {
+            'stream_mapping':  ['-map', '0:s:{}'.format(stream_id)],
+            'stream_encoding': ['-c:s:{}'.format(stream_id), 'copy'],
+        }
+
+    def get_ffmpeg_args(self):
+        """
+        Overwrite default function. We only need the first lot of args.
+
+        :return:
+        """
+        args = []
+
+        # Add generic options first
+        args += self.generic_options
+
+        # Add the input file
+        # This class requires at least one input file specified with the input_file attribute
+        if not self.input_file:
+            raise Exception("Input file has not been set")
+        args += ['-i', self.input_file]
+
+        # Add other main options
+        args += self.main_options
+
+        # Add advanced options. This includes the stream mapping and the encoding args
+        args += self.advanced_options
+
+        return args
 
 
 def on_worker_process(data):
@@ -49,78 +117,45 @@ def on_worker_process(data):
     :return:
 
     """
-
     # Default to no FFMPEG command required. This prevents the FFMPEG command from running if it is not required
     data['exec_command'] = []
     data['repeat'] = False
-    exec_ffmpeg = False
 
     # Get the path to the file
     abspath = data.get('file_in')
 
     # Get file probe
-    probe = Probe(logger)
-    probe.file(abspath)
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return data
 
-    # Set the file out as the file in (the source file is not modified with this plugin)
-    data['file_out'] = data.get("file_in")
+    # Get stream mapper
+    mapper = PluginStreamMapper()
+    mapper.set_probe(probe)
 
     split_original_file_path = os.path.splitext(data.get('original_file_path'))
     original_file_directory = os.path.dirname(data.get('original_file_path'))
 
-    streams_to_map = []
-    probe_streams = probe.get('streams')
-    for probe_stream in probe_streams:
-        # Check if a video stream exists with a codec name in ["mjpeg"]
-        codec_type = probe_stream.get('codec_type')
-        codec_name = probe_stream.get('codec_name')
-        if codec_type.lower() == 'subtitle' and codec_name in ['srt', 'subrip', 'mov_text']:
-            # Found a stream with an supported subtitle!
-            # Set the exec_ffmpeg var to True to run the ffmpeg command once the plugin completes
-            exec_ffmpeg = True
+    if mapper.streams_need_processing():
+        # Set the input file
+        mapper.set_input_file(abspath)
 
-            # Find a tag for this subtitle
-            subtitle_tag = probe_stream.get('index')
-            stream_tags = probe_stream.get('tags', {})
-            if stream_tags.get('title'):
-                subtitle_tag = stream_tags.get('title')
-            elif stream_tags.get('language'):
-                subtitle_tag = stream_tags.get('language')
+        # Get generated ffmpeg args
+        ffmpeg_args = mapper.get_ffmpeg_args()
 
-            # Ensure subtitle tag only contains numbers or letters
-            subtitle_tag = re.sub('[^0-9a-zA-Z]+', '_', subtitle_tag)
+        # Append STR extract args
+        for sub_stream in mapper.sub_streams:
+            stream_mapping = sub_stream.get('stream_mapping', [])
+            subtitle_tag = sub_stream.get('subtitle_tag')
 
-            # Ensure subtitle tag is lower case
-            subtitle_tag = subtitle_tag.lower()
-
-            # Map this stream to new subtitle file
-            streams_to_map += [
-                "-map",
-                "0:{}".format(probe_stream.get('index')),
-                "-c",
-                "copy",
+            ffmpeg_args += stream_mapping
+            ffmpeg_args += [
                 "-y",
-                os.path.join(original_file_directory, "{}-{}.srt".format(split_original_file_path[0], subtitle_tag)),
+                os.path.join(original_file_directory, "{}{}.srt".format(split_original_file_path[0], subtitle_tag)),
             ]
 
-    # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
-    data['exec_ffmpeg'] = False
-    if exec_ffmpeg:
-        # Build ffmpeg args and add them to the return data
-        ffmpeg_args = [
-            '-i',
-            data.get('file_in'),
-            '-hide_banner',
-            '-loglevel',
-            'info',
-        ]
-        ffmpeg_args += streams_to_map
-
-        # DEPRECIATED: 'ffmpeg_args' kept for legacy Unmanic versions
-        data['ffmpeg_args'] = ffmpeg_args
-        # DEPRECIATED: 'exec_ffmpeg' kept for legacy Unmanic versions
-        data['exec_ffmpeg'] = True
-
+        # Apply ffmpeg args to command
         data['exec_command'] = ['ffmpeg']
         data['exec_command'] += ffmpeg_args
 
