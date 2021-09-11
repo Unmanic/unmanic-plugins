@@ -4,7 +4,7 @@
         1
     ],
     "description": "This Plugin will reset the current working file to the original source if the cache file is larger than the original source.",
-    "icon": "",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.reject_files_larger_than_original/master/icon.png",
     "id": "reject_files_larger_than_original",
     "name": "Reject File if Larger than Original",
     "priorities": {
