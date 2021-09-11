@@ -4,7 +4,7 @@
         1
     ],
     "description": "Removes any subtitle streams from video files.",
-    "icon": "",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.remove_all_subtitles/master/icon.png",
     "id": "remove_all_subtitles",
     "name": "Remove all subtitle streams",
     "priorities": {
