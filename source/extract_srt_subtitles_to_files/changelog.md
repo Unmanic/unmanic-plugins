@@ -1,4 +1,10 @@
 
+**<span style="color:#56adda">0.0.4</span>**
+- Limit plugin to only process files with a "video" mimetype
+- Remove support for older versions of Unmanic (requires >= 0.1.0)
+- Fix issue when creating SRT file naming (TypeError: expected string or bytes-like object)
+- Add better debug logging
+
 **<span style="color:#56adda">0.0.3</span>**
 - Fix import issue in plugin file
 
