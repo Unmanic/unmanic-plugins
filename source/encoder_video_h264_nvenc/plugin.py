@@ -34,8 +34,8 @@ logger = logging.getLogger("Unmanic.Plugin.encoder_video_h264_nvenc")
 
 class Settings(PluginSettings):
     settings = {
-        "advanced":              False,
         "hw_decoding":           False,
+        "advanced":              False,
         "preset":                "medium",
         "profile":               "main",
         "max_muxing_queue_size": 2048,
@@ -79,8 +79,6 @@ class Settings(PluginSettings):
             "label":      "Enable NVDEC HW Accelerated Decoding?",
             "input_type": "checkbox",
         }
-        if self.get_setting('advanced'):
-            values["display"] = 'hidden'
         return values
 
     def __set_max_muxing_queue_size_form_settings(self):
