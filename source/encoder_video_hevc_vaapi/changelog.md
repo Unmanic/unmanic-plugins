@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.4</span>**
+- Display HW Decoding option when advanced input settings options are displayed
+
 **<span style="color:#56adda">0.0.3</span>**
 - Fix issue with default main args
 

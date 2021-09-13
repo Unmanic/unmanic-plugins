@@ -34,8 +34,8 @@ logger = logging.getLogger("Unmanic.Plugin.encoder_video_hevc_vaapi")
 
 class Settings(PluginSettings):
     settings = {
-        "advanced":              False,
         "hw_decoding":           False,
+        "advanced":              False,
         "max_muxing_queue_size": 2048,
         "main_options":          "",
         "advanced_options":      "-strict -2\n"
@@ -68,8 +68,6 @@ class Settings(PluginSettings):
             "label":      "Enable VAAPI HW Accelerated Decoding?",
             "input_type": "checkbox",
         }
-        if self.get_setting('advanced'):
-            values["display"] = 'hidden'
         return values
 
     def __set_max_muxing_queue_size_form_settings(self):
@@ -336,7 +334,7 @@ def on_worker_process(data):
 
             advanced_options = settings.get_setting('advanced_options').split()
             if advanced_options:
-                # Overwrite all main options
+                # Overwrite all advanced options
                 mapper.advanced_options = advanced_options
 
         else:
