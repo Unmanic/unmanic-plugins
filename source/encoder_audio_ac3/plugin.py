@@ -85,7 +85,7 @@ class Settings(PluginSettings):
 
     def __set_custom_options_form_settings(self):
         values = {
-            "label":      "Write your own custom video options",
+            "label":      "Write your own custom audio options",
             "input_type": "textarea",
         }
         if not self.get_setting('advanced'):
