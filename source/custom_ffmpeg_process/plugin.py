@@ -40,6 +40,8 @@
             :param data     - Dictionary object of data that will configure how the FFMPEG process is executed.
 
 """
+import os
+
 from unmanic.libs.unplugins.settings import PluginSettings
 from unmanic.libs.system import System
 
@@ -59,7 +61,7 @@ class Settings(PluginSettings):
 
     """
     settings = {
-        "Execute FFMPEG": True,
+        "Execute Command": True,
         "Insert string into cache file name": "custom-string"
     }
 
@@ -69,11 +71,12 @@ def on_worker_process(data):
     Runner function - enables additional configured processing jobs during the worker stages of a task.
 
     The 'data' object argument includes:
-        exec_ffmpeg             - Boolean, should Unmanic run FFMPEG with the data returned from this plugin.
-        file_probe              - A dictionary object containing the current file probe state.
-        ffmpeg_args             - A list of Unmanic's default FFMPEG args.
-        file_in                 - The source file to be processed by the FFMPEG command.
-        file_out                - The destination that the FFMPEG command will output.
+        exec_command            - A command that Unmanic should execute. Can be empty.
+        command_progress_parser - A function that Unmanic can use to parse the STDOUT of the command to collect progress stats. Can be empty.
+        file_in                 - The source file to be processed by the command.
+        file_out                - The destination that the command should output (may be the same as the file_in if necessary).
+        original_file_path      - The absolute path to the original file.
+        repeat                  - Boolean, should this runner be executed again once completed with the same variables.
 
     :param data:
     :return:
@@ -87,8 +90,8 @@ def on_worker_process(data):
         tmp_file_out = os.path.splitext(data['file_out'])
         data['file_out'] = "{}-{}-{}{}".format(tmp_file_out[0], custom_string, tmp_file_out[1])
 
-    if not settings.get_setting('Execute FFMPEG'):
-        data['exec_ffmpeg'] = False
+    if not settings.get_setting('Execute Command'):
+        data['exec_command'] = False
 
         
 
