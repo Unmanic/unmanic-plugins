@@ -92,22 +92,7 @@ def save_source_size(abspath, size):
 
     data.close()
 
-    if task_id is None:
-        return False
-
-    # Store
-    profile_directory = settings.get_profile_directory()
-    # Use the basename of the source path to create a unique file for storing the file_out data.
-    # This can then be read and used by the on_postprocessor_task_results function below.
-    src_file_hash = hashlib.md5(abspath.encode('utf8')).hexdigest()
-    plugin_data_file = os.path.join(profile_directory, '{}.json'.format(src_file_hash))
-    with open(plugin_data_file, 'w') as f:
-        required_data = {
-            'db_id': task_id,
-        }
-        json.dump(required_data, f, indent=4)
-
-    return True
+    return task_id
 
 
 def save_destination_size(task_id, abspath, size):
@@ -136,13 +121,27 @@ def on_worker_process(data):
 
     :param data:
     :return:
-    
+
     """
+    settings = Settings()
+
     # Get the path to the file
     abspath = data.get('original_file_path')
     source_size = os.path.getsize(abspath)
-    if not save_source_size(abspath, source_size):
-        logger.error("Failed to create source size entry for this file")
+
+    # Store size metric in file for now...
+    # The DB should only be updated by a single thread. The workers are multi-threaded.
+    profile_directory = settings.get_profile_directory()
+    # Use the basename of the source path to create a unique file for storing the file_out data.
+    # This can then be read and used by the on_postprocessor_task_results function below.
+    src_file_hash = hashlib.md5(abspath.encode('utf8')).hexdigest()
+    plugin_data_file = os.path.join(profile_directory, '{}.json'.format(src_file_hash))
+
+    with open(plugin_data_file, 'w') as f:
+        required_data = {
+            'source_size': source_size,
+        }
+        json.dump(required_data, f, indent=4)
 
     return data
 
@@ -179,19 +178,25 @@ def on_postprocessor_task_results(data):
     with open(plugin_data_file) as infile:
         task_metadata = json.load(infile)
 
-    # Ensure the file was correctly moved as required
+    # Store the source size metric in the DB
+    source_size = task_metadata.get('source_size')
+    if not source_size:
+        logger.error("Plugin data file is missing 'source_size'.")
+        return data
+    task_id = save_source_size(original_source_path, source_size)
+    if task_id is None:
+        logger.error("Failed to create source size entry for this file")
+        return data
+
+    # For each of the destination files, write a file size metric entry
     for dest_file in data.get('destination_files', []):
         abspath = os.path.abspath(dest_file)
         # Add a destination file entry if the file actually exists
         if os.path.exists(abspath):
-            task_id = task_metadata.get('db_id')
             size = os.path.getsize(abspath)
             save_destination_size(task_id, abspath, size)
         else:
             logger.info("Skipping file '{}' as it does not exist.".format(abspath))
-
-    # Clean up plugin's data file
-    os.remove(plugin_data_file)
 
     return data
 
