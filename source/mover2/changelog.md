@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.3</span>**
+- Ensure the file copy flag is set for the file moments. Even tho the current default is to do so it may change in the future.
+
 **<span style="color:#56adda">0.0.2</span>**
 - Update available options with the ability to recreate directory structure relative to the library path.
 
