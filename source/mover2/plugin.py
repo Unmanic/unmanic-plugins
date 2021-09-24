@@ -145,6 +145,9 @@ def on_postprocessor_file_movement(data):
     file_out = get_file_out(original_source_path, os.path.abspath(data.get('file_out')))
     data['file_out'] = file_out
 
+    # Set plugin to copy file
+    data['copy_file'] = True
+
     # Store some required data in a JSON file for the on_postprocessor_task_results runner.
     # If the source needs to be removed, then we will handle that with the other plugin runner. Notes below...
     # For now, save the current file_out (which is Unmanic's destination file once all plugins are run) to a file.
