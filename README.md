@@ -9,7 +9,7 @@ https://raw.githubusercontent.com/Unmanic/unmanic-plugins/repo/repo.json
 ```
 
 
-Follow [Unmanic Documentation](http://localhost:3000/docs/plugins/plugin_repos/adding_a_custom_repo) 
+Follow [Unmanic Documentation](http://docs.unmanic.app/docs/plugins/adding_a_custom_plugin_repo/) 
 to add this repo to your Unmanic installation.
 
 
