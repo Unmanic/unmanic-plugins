@@ -1,0 +1,16 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1
+    ],
+    "description": "Specify a list of audio languages to remove from video files.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.remove_audio_stream_by_language/master/icon.png",
+    "id": "remove_audio_stream_by_language",
+    "name": "Remove audio streams by language",
+    "priorities": {
+        "on_library_management_file_test": 99,
+        "on_worker_process": 1
+    },
+    "tags": "audio,ffmpeg,library file test",
+    "version": "0.0.2"
+}
