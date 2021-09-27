@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">1.0.2</span>**
+- Fix Python bug in stream mapping 
+
 **<span style="color:#56adda">1.0.1</span>**
 - Limit plugin to only process files with a "video" mimetype
 
