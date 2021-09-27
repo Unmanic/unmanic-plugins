@@ -41,21 +41,21 @@ class PluginStreamMapper(StreamMapper):
         # Check all streams (only the desired stream type will matter when tested)
         super(PluginStreamMapper, self).__init__(logger, ['video', 'audio', 'subtitle', 'data', 'attachment'])
 
-    # The stream type we are considering as streams of interest
-    stream_type = 'audio'
+        # The stream type we are considering as streams of interest
+        self.stream_type = 'audio'
 
-    # Flag to say if a search string has matched a stream of interest
-    found_search_string_streams = False
+        # Flag to say if a search string has matched a stream of interest
+        self.found_search_string_streams = False
 
-    # First streams are ones found before the search string was found on a stream of interest
-    first_stream_mapping = []
-    # Last streams are ones found after the search string was found on a stream of interest
-    last_stream_mapping = []
+        # First streams are ones found before the search string was found on a stream of interest
+        self.first_stream_mapping = []
+        # Last streams are ones found after the search string was found on a stream of interest
+        self.last_stream_mapping = []
 
-    # Search string streams of interest are streams that contain the search string
-    search_string_stream_mapping = []
-    # Unmatched streams of interest are streams that do not contain the search string
-    unmatched_stream_mapping = []
+        # Search string streams of interest are streams that contain the search string
+        self.search_string_stream_mapping = []
+        # Unmatched streams of interest are streams that do not contain the search string
+        self.unmatched_stream_mapping = []
 
     @staticmethod
     def test_tags_for_search_string(stream_tags):
