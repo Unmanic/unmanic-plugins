@@ -4,12 +4,13 @@
         1
     ],
     "description": "Remux a video file to the configured container",
-    "icon": "",
+    "description": "Removes all image streams (if any exist) from video streams.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_remuxer/master/icon.png",
     "id": "video_remuxer",
     "name": "Remux Video Files",
     "priorities": {
-        "on_worker_process": 70
+        "on_worker_process": 3
     },
     "tags": "video,ffmpeg",
-    "version": "0.0.4"
+    "version": "0.0.5"
 }
