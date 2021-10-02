@@ -4,7 +4,7 @@
         1
     ],
     "description": "Convert any ASS subtitle streams in videos to subrip (SRT).",
-    "icon": "",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.convert_subtitle_streams_ass_to_srt/master/icon.png",
     "id": "convert_subtitle_streams_ass_to_srt",
     "name": "Convert any ASS subtitle streams in videos to SRT",
     "priorities": {
