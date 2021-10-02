@@ -4,7 +4,6 @@
         1
     ],
     "description": "Remux a video file to the configured container",
-    "description": "Removes all image streams (if any exist) from video streams.",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_remuxer/master/icon.png",
     "id": "video_remuxer",
     "name": "Remux Video Files",
