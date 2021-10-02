@@ -2,8 +2,9 @@
 
 Here you will find examples to get you started in creating plugins for [Unmanic](https://github.com/Josh5/unmanic)
 
-Follow the [Unmanic Documentation](http://localhost:3000/docs/plugins/plugin_repos/creating_your_own_repo) 
-for instructions on creating your own repository to host plugins for Unmanic.
+Follow the Unmanic Documentation for:
+ - [Creating your own repository to host plugins for Unmanic](https://docs.unmanic.app/docs/development/plugin_repos/creating_your_own_repo)
+ - [Developing Plugins for Unmanic](https://docs.unmanic.app/docs/development/developing_plugins)
 
 
 ## Links
