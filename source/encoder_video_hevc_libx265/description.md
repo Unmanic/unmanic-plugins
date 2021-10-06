@@ -1,6 +1,6 @@
 
 For information on the libx265 encoder settings:
- - [FFmpeg - H.266 (HEVC)](https://trac.ffmpeg.org/wiki/Encode/H.265)
+ - [FFmpeg - H.265 (HEVC)](https://trac.ffmpeg.org/wiki/Encode/H.265)
 
 
 ### Config description:

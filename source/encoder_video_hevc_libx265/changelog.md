@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.6</span>**
+- Add list of image video streams to ignore
+
 **<span style="color:#56adda">0.0.5</span>**
 - Tidy up description
 
