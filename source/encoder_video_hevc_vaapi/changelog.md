@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Add list of image video streams to ignore
+
 **<span style="color:#56adda">0.0.4</span>**
 - Display HW Decoding option when advanced input settings options are displayed
 
