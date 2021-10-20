@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Improvements to plugin's database connection
+
 **<span style="color:#56adda">0.0.4</span>**
 - Fix issue where the Plugin's database was being locked by multiple workers attempting to update at the same time
 

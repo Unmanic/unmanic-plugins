@@ -72,6 +72,7 @@ class HistoricTaskProbe(BaseModel):
 
 
 class Database(object):
+    conn = None
 
     def __init__(self, settings, logger):
         self.settings = settings
@@ -98,6 +99,12 @@ class Database(object):
     @staticmethod
     def db():
         return db
+
+    def get_db(self):
+        if isinstance(db, DatabaseProxy):
+            new_db_file = self.get_db_file()
+            self.conn = Database.select_database(new_db_file)
+        return self.conn
 
     def get_legacy_db_file(self):
         profile_directory = self.settings.get_plugin_directory()
