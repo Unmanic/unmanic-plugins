@@ -166,7 +166,7 @@ def on_postprocessor_task_results(data):
         logger.error("Provided 'source_data' is missing the source file abspath data.")
         return data
 
-    # Read the data from the on_postprocessor_file_movement runner
+    # Read the data from the on_worker_process runner
     settings = Settings()
     profile_directory = settings.get_profile_directory()
     # Get the file out and store

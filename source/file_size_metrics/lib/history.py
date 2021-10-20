@@ -100,6 +100,8 @@ class Data(object):
         return query.dicts()
 
     def get_history_probe_data(self, task_probe_id):
+        db = self.db.get_db()
+
         historictask = HistoricTaskProbe.select(HistoricTaskProbe.historictask_id).where(
             HistoricTaskProbe.id == task_probe_id).get()
 
@@ -136,6 +138,8 @@ class Data(object):
         return results
 
     def calculate_total_file_size_difference(self):
+        db = self.db.get_db()
+
         # Only show results for successful records
         results = {}
         from peewee import fn
@@ -172,6 +176,8 @@ class Data(object):
         return results
 
     def prepare_filtered_historic_tasks(self, request_dict):
+        db = self.db.get_db()
+
         # Generate filters for query
         draw = request_dict.get('draw')
         start = request_dict.get('start')
@@ -239,12 +245,11 @@ class Data(object):
         return return_data
 
     def save_source_item(self, abspath, size, task_success=False):
+        db = self.db.get_db()
         basename = os.path.basename(abspath)
         task_label = basename
         start_time = datetime.datetime.now()
         finish_time = None
-
-        db = Database.db()
         try:
             with db.atomic():
                 new_historic_task = HistoricTasks.create(
@@ -268,8 +273,8 @@ class Data(object):
         return task_id
 
     def save_destination_item(self, task_id, abspath, size):
+        db = self.db.get_db()
         basename = os.path.basename(abspath)
-        db = Database.db()
         try:
             with db.atomic():
                 # Create probe entry for source item
