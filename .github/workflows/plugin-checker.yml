@@ -110,7 +110,7 @@ jobs:
             if [ -d "${plugin_dir}" ]; then
                 correct_header=0
                 # Ensure this directory contains a settings.json file
-                for python_file in $(find ${plugin_dir} -name '*.py' -not -path "${plugin_dir}/site-packages/*"); do
+                for python_file in $(find ${plugin_dir} -name '*.py' -not -path "${plugin_dir}/site-packages/*" -not -path "${plugin_dir}/dep/*"); do
                     if ! grep -q "Copyright:" "${python_file}"; then
                         echo "FAIL - Python file '${python_file}' Missing required SPDX identifier in header"
                         echo "       See 'Standard License Header' here: https://spdx.org/licenses/GPL-3.0-only.html#licenseHeader"
