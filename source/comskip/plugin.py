@@ -297,11 +297,13 @@ def on_worker_process(data):
     data['exec_command'] = []
     data['repeat'] = False
 
-    # Get the path to the file
-    abspath = data.get('file_in')
+    # Get the file paths
+    file_in = data.get('file_in')
+    file_out = data.get('file_out')
+    original_file_path = data.get('original_file_path')
 
     # Ensure this is a video file
-    if not test_valid_mimetype(abspath):
+    if not test_valid_mimetype(file_in):
         return data
 
     # Limit to configured file extensions
@@ -309,29 +311,28 @@ def on_worker_process(data):
     settings = Settings()
     if settings.get_setting('limit_to_extensions'):
         allowed_extensions = settings.get_setting('allowed_extensions')
-        if not file_ends_in_allowed_extensions(data.get('original_file_path'), allowed_extensions):
+        if not file_ends_in_allowed_extensions(original_file_path, allowed_extensions):
             return data
 
-    if not file_already_processed(abspath):
+    if not file_already_processed(original_file_path):
         # Check what we are running...
         settings = Settings()
         if settings.get_setting('enable_comchap'):
             # Build args
-            args = build_comchap_args(abspath, data.get('file_out'))
+            args = build_comchap_args(file_in, data.get('file_out'))
         elif settings.get_setting('enable_comcut'):
             # Build args
-            args = build_comcut_args(abspath, data.get('file_out'))
+            args = build_comcut_args(file_in, data.get('file_out'))
         else:
             # Build args
             # This will create the file in the source file directory
-            args = build_comskip_args(abspath)
+            args = build_comskip_args(file_in)
 
         # Generate command
         data['exec_command'] = args
 
         # Mark file as being processed for post-processor
-        original_source_path = data.get('original_file_path', '_')
-        src_file_hash = hashlib.md5(original_source_path.encode('utf8')).hexdigest()
+        src_file_hash = hashlib.md5(original_file_path.encode('utf8')).hexdigest()
         profile_directory = settings.get_profile_directory()
         plugin_file_lockfile = os.path.join(profile_directory, '{}.lock'.format(src_file_hash))
         with open(plugin_file_lockfile, 'w') as f:
