@@ -505,10 +505,15 @@
             "subtitle": [
                 "subrip"
             ],
-            "data": [
-            ],
-            "attachment": [
-            ]
+            "data": [],
+            "attachment": []
+        },
+        "remove_codec_names": {
+            "video": [],
+            "audio": [],
+            "subtitle": [],
+            "data": [],
+            "attachment": []
         }
     },
     "mkv": {
@@ -1003,10 +1008,15 @@
             "subtitle": [
                 "subrip"
             ],
-            "data": [
-            ],
-            "attachment": [
-            ]
+            "data": [],
+            "attachment": []
+        },
+        "remove_codec_names": {
+            "video": [],
+            "audio": [],
+            "subtitle": [],
+            "data": [],
+            "attachment": []
         }
     },
     "avi": {
@@ -1510,12 +1520,16 @@
             "audio": [
                 "aac"
             ],
-            "subtitle": [
-            ],
-            "data": [
-            ],
-            "attachment": [
-            ]
+            "subtitle": [],
+            "data": [],
+            "attachment": []
+        },
+        "remove_codec_names": {
+            "video": [],
+            "audio": [],
+            "subtitle": [],
+            "data": [],
+            "attachment": []
         }
     },
     "mp4": {
@@ -1976,8 +1990,6 @@
                 "arib_caption",
                 "dvd_subtitle",
                 "eia_608",
-                "hdmv_pgs_subtitle",
-                "hdmv_text_subtitle",
                 "jacosub",
                 "microdvd",
                 "mov_text",
@@ -2016,10 +2028,17 @@
             "subtitle": [
                 "mov_text"
             ],
-            "data": [
+            "data": [],
+            "attachment": []
+        },
+        "remove_codec_names": {
+            "video": [],
+            "audio": [],
+            "subtitle": [
+                "hdmv_pgs_subtitle"
             ],
-            "attachment": [
-            ]
+            "data": [],
+            "attachment": []
         }
     }
 }

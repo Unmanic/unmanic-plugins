@@ -123,10 +123,15 @@ class PluginStreamMapper(StreamMapper):
                 'stream_encoding': [],
             }
 
-        # TODO: Check if this should be a config option
-        # If the codec name is not supported, update it to the default
+        # If codec is not supported by the container or able to be transcoded, remove it
+        # Else if it is not supported by the container but is able to be transcoded, update it to the default
         codec_name = stream_info.get('codec_name').lower()
-        if codec_name not in self.container_data.get('codec_names', {}).get(codec_type, []):
+        if codec_name in self.container_data.get('remove_codec_names', {}).get(codec_type, []):
+            return {
+                'stream_mapping':  [],
+                'stream_encoding': [],
+            }
+        elif codec_name not in self.container_data.get('codec_names', {}).get(codec_type, []):
             stream_encoding = ['-c:{}:{}'.format(ident.get(codec_type), stream_id)]
             # Fetch the default encoder params
             default_encoder_params = self.container_data.get('default_encoder_params', {}).get(codec_type, [])

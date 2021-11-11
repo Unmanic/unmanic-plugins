@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.6</span>**
+- Remove PGS subs from the list of sub codecs supported by MP4 containers
+
 **<span style="color:#56adda">0.0.5</span>**
 - Transcode or remove streams which are not compatible with destination container
 
