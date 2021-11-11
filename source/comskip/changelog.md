@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Fix issue with check on whether the file has already been processed
+
 **<span style="color:#56adda">0.0.4</span>**
 - Match file extension against the source file, not the current cached file.
 
