@@ -1,0 +1,12 @@
+requests
+idna
+requests-cache
+babelfish
+tmdbsimple
+mutagen
+guessit
+subliminal
+python-dateutil
+stevedore
+qtfaststart
+pymediainfo

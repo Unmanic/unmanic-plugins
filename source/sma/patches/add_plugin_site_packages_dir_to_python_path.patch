@@ -1,0 +1,17 @@
+diff --git a/manual.py b/manual.py
+index 3f40ea8..be011c4 100755
+--- a/dep/sickbeard_mp4_automator/manual.py
++++ b/dep/sickbeard_mp4_automator/manual.py
+@@ -2,6 +2,12 @@
+ 
+ import sys
+ import os
++
++# Add plugin site-packages directory to the PYTHONPATH
++plugin_site_packages_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'site-packages'))
++if os.path.exists(plugin_site_packages_dir) and plugin_site_packages_dir not in sys.path:
++    sys.path.append(plugin_site_packages_dir)
++
+ import guessit
+ import locale
+ import glob
