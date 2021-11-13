@@ -1,0 +1,13 @@
+diff --git a/manual.py b/manual.py
+index 3f40ea8..f94af6f 100755
+--- a/dep/sickbeard_mp4_automator/manual.py
++++ b/dep/sickbeard_mp4_automator/manual.py
+@@ -276,7 +276,7 @@ def processFile(inputfile, mp, info=None, relativePath=None, silent=False, tag=T
+                     postprocessor.setTV(tagdata.tmdbid, tagdata.season, tagdata.episode)
+             postprocessor.run_scripts()
+     else:
+-        log.error("There was an error processing file %s, no output data received" % inputfile)
++        raise Exception("There was an error processing file %s, no output data received" % inputfile)
+ 
+ 
+ def walkDir(dir, silent=False, preserveRelative=False, tmdbid=None, imdbid=None, tvdbid=None, tag=True, optionsOnly=False):
