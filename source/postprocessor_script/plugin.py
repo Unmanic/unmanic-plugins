@@ -55,11 +55,6 @@ class Settings(PluginSettings):
     }
 
 
-class DefaultMissingKeys(dict):
-    def __missing__(self, key):
-        return "{%s}" % key
-
-
 def exec_subprocess(cmd, args):
     """
     Execute a subprocess command
@@ -123,8 +118,8 @@ def on_postprocessor_task_results(data):
 
     # Map variables to be replaced in cmd and args
     variable_map = {
-        'source_file_path': data.get('source_data', {}).get('abspath'),
-        'source_file_size': data.get('source_data', {}).get('size'),
+        '{source_file_path}': data.get('source_data', {}).get('abspath'),
+        '{source_file_size}': data.get('source_data', {}).get('size'),
     }
 
     # If this is to be run for each file in the destination files, loop over the 'destination_files' list;
@@ -132,21 +127,31 @@ def on_postprocessor_task_results(data):
     if run_for_each_destination_file:
         for destination_file in data.get('destination_files'):
             # Set the single destination file to the 'output_file_path' mapped variable
-            variable_map['output_file_path'] = "{}".format(destination_file)
+            variable_map['{output_file_path}'] = "{}".format(destination_file)
 
             # Substitute all variables in the cmd and args strings
-            cmd = cmd.format_map(DefaultMissingKeys(variable_map))
-            args = args.format_map(DefaultMissingKeys(variable_map))
+            for key in variable_map:
+                value = variable_map.get(key)
+                if value is None:
+                    value = key
+                cmd = cmd.replace(key, value)
+                args = args.replace(key, value)
 
+            logger.info("Execute command on single file '{} {}'.".format(cmd, args))
             exec_subprocess(cmd, args)
     else:
         # Set the 'output_files' mapped variable to a JSON dumped object of the 'destination_files' list
-        variable_map['output_files'] = "{}".format(json.dumps(data.get('destination_files', [])))
+        variable_map['{output_files}'] = "{}".format(json.dumps(data.get('destination_files', [])))
 
         # Substitute all variables in the cmd and args strings
-        cmd = cmd.format_map(DefaultMissingKeys(variable_map))
-        args = args.format_map(DefaultMissingKeys(variable_map))
+        for key in variable_map:
+            value = variable_map.get(key)
+            if value is None:
+                value = key
+            cmd = cmd.replace(key, value)
+            args = args.replace(key, value)
 
+        logger.info("Execute command '{} {}'.".format(cmd, args))
         exec_subprocess(cmd, args)
 
     return data
