@@ -984,16 +984,7 @@
                 "vplayer",
                 "webvtt"
             ],
-            "data": [
-                "bin_data",
-                "dvd_nav_packet",
-                "epg",
-                "klv",
-                "mpegts",
-                "otf",
-                "scte_35",
-                "timed_id3"
-            ],
+            "data": [],
             "attachment": [
                 "ttf"
             ]
