@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- Remove all data streams for a remux to MKV
+
 **<span style="color:#56adda">0.0.6</span>**
 - Remove PGS subs from the list of sub codecs supported by MP4 containers
 
