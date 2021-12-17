@@ -91,12 +91,12 @@ class PluginStreamMapper(StreamMapper):
             self.container_data = settings.get_configured_container_data()
 
         # Check if codec type is supported
-        codec_type = stream_info.get('codec_type').lower()
+        codec_type = stream_info.get('codec_type', '').lower()
         if codec_type not in self.container_data.get('codec_types'):
             return True
 
         # Check if the codec name is supported for this container
-        codec_name = stream_info.get('codec_name').lower()
+        codec_name = stream_info.get('codec_name', '').lower()
         if codec_name not in self.container_data.get('codec_names', {}).get(codec_type, []):
             return True
 
@@ -116,7 +116,7 @@ class PluginStreamMapper(StreamMapper):
             self.container_data = settings.get_configured_container_data()
 
         # If codec type is not supported, remove it
-        codec_type = stream_info.get('codec_type').lower()
+        codec_type = stream_info.get('codec_type', '').lower()
         if codec_type not in self.container_data.get('codec_types'):
             return {
                 'stream_mapping':  [],
@@ -125,7 +125,7 @@ class PluginStreamMapper(StreamMapper):
 
         # If codec is not supported by the container or able to be transcoded, remove it
         # Else if it is not supported by the container but is able to be transcoded, update it to the default
-        codec_name = stream_info.get('codec_name').lower()
+        codec_name = stream_info.get('codec_name', '').lower()
         if codec_name in self.container_data.get('remove_codec_names', {}).get(codec_type, []):
             return {
                 'stream_mapping':  [],
