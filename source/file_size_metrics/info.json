@@ -9,8 +9,8 @@
     "name": "File Size Metrics Data Panel",
     "priorities": {
         "on_worker_process": 1,
-        "on_postprocessor_task_results": 99
+        "on_postprocessor_task_results": 0
     },
     "tags": "data panel",
-    "version": "0.0.6"
+    "version": "0.0.7"
 }
