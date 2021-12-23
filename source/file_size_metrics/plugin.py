@@ -490,17 +490,20 @@ def on_postprocessor_task_results(data):
     # Read the data from the on_worker_process runner
     settings = Settings()
     profile_directory = settings.get_profile_directory()
-    # Get the file out and store
+
+    # Get the file out and store (if it exists)
     src_file_hash = hashlib.md5(original_source_path.encode('utf8')).hexdigest()
     plugin_data_file = os.path.join(profile_directory, '{}.json'.format(src_file_hash))
-    if not os.path.exists(plugin_data_file):
-        logger.error("Plugin data file is missing.")
-        raise Exception("Plugin data file is missing.")
-    with open(plugin_data_file) as infile:
-        task_metadata = json.load(infile)
+    if os.path.exists(plugin_data_file):
+        # The store exists
+        with open(plugin_data_file) as infile:
+            task_metadata = json.load(infile)
+        source_size = task_metadata.get('source_size')
+    else:
+        # The store did not exist, resort to fetching the data from the original source file (hopefully unchanged)
+        logger.warning("Plugin data file is missing. Fetching source size direct from source path.")
+        source_size = os.path.getsize(data.get('source_data', {}).get('abspath'))
 
-    # Store the source size metric in the DB
-    source_size = task_metadata.get('source_size')
     if not source_size:
         logger.error("Plugin data file is missing 'source_size'.")
         return data
@@ -523,17 +526,17 @@ def on_postprocessor_task_results(data):
 
 
 def render_frontend_panel(data):
-    if data.get('path') in ['list', '/list', '/list/', '/list/']:
+    if data.get('path') in ['list', '/list', '/list/']:
         data['content_type'] = 'application/json'
         data['content'] = get_historical_data(data)
         return
 
-    if data.get('path') in ['conversionDetails', '/conversionDetails', '/conversionDetails/', '/conversionDetails/']:
+    if data.get('path') in ['conversionDetails', '/conversionDetails', '/conversionDetails/']:
         data['content_type'] = 'application/json'
         data['content'] = get_historical_data_details(data)
         return
 
-    if data.get('path') in ['totalSizeChange', '/totalSizeChange', '/totalSizeChange/', '/totalSizeChange/']:
+    if data.get('path') in ['totalSizeChange', '/totalSizeChange', '/totalSizeChange/']:
         data['content_type'] = 'application/json'
         data['content'] = get_total_size_change_data_details(data)
         return

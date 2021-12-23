@@ -3,15 +3,20 @@ const CompletedTasksFileSizeDiffChart = function () {
     /**
      * Format a byte integer into the smallest possible number appending a suffix
      *
+     * REF:
+     *  https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
+     *
      * @param bytes
      * @param decimals
      * @returns {string}
      */
-    const formatBytes = function (bytes, decimals) {
-        decimals = (typeof decimals !== 'undefined') ? decimals : 2;
+    const formatBytes = function (bytes) {
         if (bytes === 0) return '0 Bytes';
-        let k = 1024;
-        let dm = decimals < 0 ? 0 : decimals;
+        // Rather than using `let k = 1024;` (base 2) use `let k = 1000;` (base 10)
+        // This way the end result will better fit in with the high chart logic
+        // Using Base 2 will lead to the chart sections showing a rounded number and the bar showing something different
+        let k = 1000;
+        let dm = 2
         let sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
         let i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
@@ -108,13 +113,13 @@ const CompletedTasksFileSizeDiffChart = function () {
 
     const updateTotalChart = function () {
         // If the destination file size is greater than the source, then mark it negative, otherwise positive
-        let reduced = true;
+        let change_text = 'decrease';
         let destination_bar_colour = positive;
-        let percent_changed = 100 - (destination_total_size / source_total_size * 100);
-        if (destination_total_size >= source_total_size) {
-            reduced = false;
+        let difference_in_total_file_sizes = (source_total_size - destination_total_size)
+        if (destination_total_size > source_total_size) {
+            change_text = 'increase';
             destination_bar_colour = negative;
-            percent_changed = 100 - (source_total_size / destination_total_size * 100);
+            difference_in_total_file_sizes = (destination_total_size - source_total_size)
         }
         source_total_size = Number(source_total_size)
         destination_total_size = Number(destination_total_size)
@@ -125,7 +130,7 @@ const CompletedTasksFileSizeDiffChart = function () {
                 width: null
             },
             title: {
-                text: Highcharts.numberFormat(percent_changed, 2) + '% ' + ((reduced) ? 'decrease' : 'increase') + ' in total file size'
+                text: formatBytes(difference_in_total_file_sizes) + ' total ' + change_text + ' in file size'
             },
             colors: ['#555555', destination_bar_colour],
             tooltip: {
