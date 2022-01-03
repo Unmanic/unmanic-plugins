@@ -566,7 +566,11 @@ class ReadSettings:
 
         config = SMAConfigParser()
         if os.path.isfile(configFile):
-            config.read(configFile)
+            try:
+                config.read(configFile)
+            except:
+                self.log.exception("Error reading config file %s." % configFile)
+                sys.exit(1)
         else:
             self.log.error("Config file not found, creating %s." % configFile)
             # config.filename = filename

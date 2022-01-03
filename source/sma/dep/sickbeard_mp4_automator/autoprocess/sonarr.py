@@ -79,6 +79,10 @@ def accessAPI(url, payload, headers, log, requests, nzbGet, sleep=10, retry=0, m
         r = requests.post(url, json=payload, headers=headers)
         rstate = r.json()
         log.debug(rstate)
+        try:
+            rstate = rstate[0]
+        except:
+            pass
         log.info("%sSonarr response: %s." % (infoprefix, rstate['status']))
         if rstate['body']['path'] != payload['path']:
             if retry > maxretry:
