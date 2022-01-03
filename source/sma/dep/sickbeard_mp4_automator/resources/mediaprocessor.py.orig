@@ -407,7 +407,7 @@ class MediaProcessor:
                 self.log.debug("Cleaning up downloaded sub %s which was only used to simulate options." % (sub))
                 self.removeFile(sub)
 
-        return json.dumps(dump, sort_keys=False, indent=4)
+        return json.dumps(dump, sort_keys=False, indent=4).replace("\\\\", "\\").replace("\\\"", "\"")
 
     # Generate a dict of data about a source file
     def generateSourceDict(self, inputfile):

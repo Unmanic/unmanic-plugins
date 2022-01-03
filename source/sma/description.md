@@ -17,6 +17,14 @@ extensions.
 
 A list of extensions for files that the plugin should test and process. A file with any other extension will be ignored.
 
+#### <span style="color:blue">Only run against items that require FFmpeg processing</span>
+
+Only run the SMA scripts against files that SMA determine as requiring an FFmpeg command to be run against it.
+
+#### <span style="color:blue">Attempt to use Hardlinks when processing the file rather than copying</span>
+
+If possible, use a Hardlink instead of a file copy to create a cached copy of the file before processing it.
+
 #### <span style="color:blue">SMA configuration</span>
 
 Enter your `autoProcess.ini` configuration here. The plugin's default configuration is pretty much the same as the

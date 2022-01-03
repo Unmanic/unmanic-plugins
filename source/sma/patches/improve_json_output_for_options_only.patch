@@ -1,0 +1,13 @@
+diff --git a/resources/mediaprocessor.py b/resources/mediaprocessor.py
+index 556b002..e06ddef 100644
+--- a/dep/sickbeard_mp4_automator/resources/mediaprocessor.py
++++ b/dep/sickbeard_mp4_automator/resources/mediaprocessor.py
+@@ -406,7 +406,7 @@ class MediaProcessor:
+                 self.log.debug("Cleaning up downloaded sub %s which was only used to simulate options." % (sub))
+                 self.removeFile(sub)
+ 
+-        return json.dumps(dump, sort_keys=False, indent=4).replace("\\\\", "\\").replace("\\\"", "\"")
++        return json.dumps(dump, sort_keys=False, indent=4)
+ 
+     # Generate a dict of data about a source file
+     def generateSourceDict(self, inputfile):

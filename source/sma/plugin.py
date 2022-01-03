@@ -22,6 +22,7 @@
 
 """
 import hashlib
+import json
 import logging
 import mimetypes
 import os
@@ -39,16 +40,24 @@ class Settings(PluginSettings):
 
     def __init__(self):
         self.settings = {
-            'limit_to_extensions': False,
-            "allowed_extensions":  'mkv,avi,mov,ts,rmvb,mp4',
-            'config':              self.__read_default_config(),
+            'limit_to_extensions':         False,
+            "allowed_extensions":          'mkv,avi,mov,ts,rmvb,mp4',
+            "only_run_for_ffmpeg_command": True,
+            "process_file_with_hardlink":  False,
+            'config':                      self.__read_default_config(),
         }
         self.form_settings = {
-            "limit_to_extensions": {
+            "limit_to_extensions":         {
                 "label": "Only run when the original source file matches specified extensions",
             },
-            "allowed_extensions":  self.__set_allowed_extensions_form_settings(),
-            "config":              {
+            "allowed_extensions":          self.__set_allowed_extensions_form_settings(),
+            "only_run_for_ffmpeg_command": {
+                "label": "Only run against items that require FFmpeg processing",
+            },
+            "process_file_with_hardlink":  {
+                "label": "Attempt to use Hardlinks when processing the file rather than copying",
+            },
+            "config":                      {
                 "label":      "SMA configuration",
                 "input_type": "textarea",
             },
@@ -148,10 +157,37 @@ def file_already_processed(path):
 
     if int(previous_file_size) == int(file_size):
         logger.debug("File size has not change since previously processed with SMA script - '{}'".format(path))
-        # This stream already has been processed
+        # This file already has been processed
         return True
 
     # Default to...
+    return False
+
+
+def file_requires_processing_by_ffmpeg(abspath):
+    import re
+    import subprocess
+
+    # Build sma command args
+    cmd = build_worker_args(abspath)
+    cmd += ['--optionsonly']
+
+    # Exec command
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+
+    # Parse json output
+    raw_output = stdout.decode("utf-8")
+    pattern = re.compile('\n{\n(.|\n)*$')
+    matches = re.search(pattern, raw_output)
+    info = json.loads(matches.group(0))
+
+    # If there is no ffmpeg command created, then SMA will not be transcoding this file
+    #   (metadata tagging may still happen)
+    if info.get('ffmpeg_commands'):
+        logger.debug("SMA has found that this file needs processing - '{}'".format(abspath))
+        return True
+
     return False
 
 
@@ -169,6 +205,8 @@ def generate_mock_path(original_file_path, input_file_path, output_file_path):
     :param output_file_path:
     :return:
     """
+    settings = Settings()
+
     # Set the Unmanic working cache path
     cache_path = os.path.dirname(os.path.abspath(output_file_path))
 
@@ -190,7 +228,13 @@ def generate_mock_path(original_file_path, input_file_path, output_file_path):
     cached_copy = os.path.join(mock_cache_path, new_file_out)
     if os.path.abspath(input_file_path) == os.path.abspath(original_file_path):
         # If the input file is not a cache file (it is the original file), first create a copy
-        shutil.copyfile(input_file_path, cached_copy)
+        if settings.get_setting('process_file_with_hardlink'):
+            try:
+                os.link(input_file_path, cached_copy)
+            except OSError:
+                shutil.copyfile(input_file_path, cached_copy)
+        else:
+            shutil.copyfile(input_file_path, cached_copy)
     else:
         # If the file is a cached file, just move it
         shutil.move(input_file_path, cached_copy)
@@ -297,6 +341,19 @@ def on_library_management_file_test(data):
         if not file_ends_in_allowed_extensions(original_file_path, allowed_extensions):
             return data
 
+    # If the file requires processing (remux, transcode, etc) with ffmpeg, then add it to the list
+    if file_requires_processing_by_ffmpeg(original_file_path):
+        # Mark this file to be added to the pending tasks
+        data['add_file_to_pending_tasks'] = True
+        logger.debug(
+            "File needs processing with FFmpeg '{}'. It should be added to task list.".format(original_file_path))
+        return data
+
+    # If metadata tags, QTFastStart, etc are not a requirement for testing, then ignore the check against the file size
+    if settings.get_setting('only_run_for_ffmpeg_command'):
+        return data
+
+    # Check if the file has changed size since it was last processed (useful for metadata only)
     if not file_already_processed(original_file_path):
         # Mark this file to be added to the pending tasks
         data['add_file_to_pending_tasks'] = True
@@ -345,23 +402,27 @@ def on_worker_process(data):
         if not file_ends_in_allowed_extensions(original_file_path, allowed_extensions):
             return data
 
-    if not file_already_processed(original_file_path):
-        # Generate mock path
-        mock_file_in = generate_mock_path(original_file_path, file_in, file_out)
+    # If we are configured to only run for ffmpeg commands, but sma does not want to run one, then return here
+    if settings.get_setting('only_run_for_ffmpeg_command'):
+        if not file_requires_processing_by_ffmpeg(original_file_path):
+            return data
 
-        # Build args
-        data['exec_command'] = build_worker_args(mock_file_in)
+    # Generate mock path
+    mock_file_in = generate_mock_path(original_file_path, file_in, file_out)
 
-        # Set file_in and file_out
-        data['file_in'] = mock_file_in
-        data['file_out'] = predict_file_out(mock_file_in)
+    # Build args
+    data['exec_command'] = build_worker_args(mock_file_in)
 
-        # Mark file as being processed for post-processor
-        src_file_hash = hashlib.md5(original_file_path.encode('utf8')).hexdigest()
-        profile_directory = settings.get_profile_directory()
-        plugin_file_lockfile = os.path.join(profile_directory, '{}.lock'.format(src_file_hash))
-        with open(plugin_file_lockfile, 'w') as f:
-            pass
+    # Set file_in and file_out
+    data['file_in'] = mock_file_in
+    data['file_out'] = predict_file_out(mock_file_in)
+
+    # Mark file as being processed for post-processor
+    src_file_hash = hashlib.md5(original_file_path.encode('utf8')).hexdigest()
+    profile_directory = settings.get_profile_directory()
+    plugin_file_lockfile = os.path.join(profile_directory, '{}.lock'.format(src_file_hash))
+    with open(plugin_file_lockfile, 'w') as f:
+        pass
 
     return data
 
