@@ -96,9 +96,8 @@ class Settings(PluginSettings):
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['audio'])
-
-    codec = 'aac'
-    encoder = 'aac'
+        self.codec = 'aac'
+        self.encoder = 'aac'
 
     @staticmethod
     def calculate_bitrate(stream_info: dict):
