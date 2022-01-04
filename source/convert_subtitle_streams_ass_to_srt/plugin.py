@@ -37,10 +37,9 @@ class Settings(PluginSettings):
 
 
 class PluginStreamMapper(StreamMapper):
-    sub_streams = []
-
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['subtitle'])
+        self.sub_streams = []
 
     def test_stream_needs_processing(self, stream_info: dict):
         """Only process ass files"""
