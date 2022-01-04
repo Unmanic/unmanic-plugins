@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.10</span>**
+- Ensure no static vars are used with when stream mapping
+
 **<span style="color:#56adda">0.0.9</span>**
 - Add list of image video streams to ignore
 

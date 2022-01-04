@@ -204,43 +204,42 @@ class Settings(PluginSettings):
 
 
 class PluginStreamMapper(StreamMapper):
-    image_video_codecs = [
-        'alias_pix',
-        'apng',
-        'brender_pix',
-        'dds',
-        'dpx',
-        'exr',
-        'fits',
-        'gif',
-        'mjpeg',
-        'mjpegb',
-        'pam',
-        'pbm',
-        'pcx',
-        'pfm',
-        'pgm',
-        'pgmyuv',
-        'pgx',
-        'photocd',
-        'pictor',
-        'pixlet',
-        'png',
-        'ppm',
-        'ptx',
-        'sgi',
-        'sunrast',
-        'tiff',
-        'vc1image',
-        'wmv3image',
-        'xbm',
-        'xface',
-        'xpm',
-        'xwd',
-    ]
-
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['video'])
+        self.image_video_codecs = [
+            'alias_pix',
+            'apng',
+            'brender_pix',
+            'dds',
+            'dpx',
+            'exr',
+            'fits',
+            'gif',
+            'mjpeg',
+            'mjpegb',
+            'pam',
+            'pbm',
+            'pcx',
+            'pfm',
+            'pgm',
+            'pgmyuv',
+            'pgx',
+            'photocd',
+            'pictor',
+            'pixlet',
+            'png',
+            'ppm',
+            'ptx',
+            'sgi',
+            'sunrast',
+            'tiff',
+            'vc1image',
+            'wmv3image',
+            'xbm',
+            'xface',
+            'xpm',
+            'xwd',
+        ]
 
     def test_stream_needs_processing(self, stream_info: dict):
         if stream_info.get('codec_name').lower() in self.image_video_codecs:
@@ -269,12 +268,12 @@ class PluginStreamMapper(StreamMapper):
 
     def generate_default_nvdec_args(self):
         """
-        Generate a list of args for using a VAAPI decoder
+        Generate a list of args for using a NVDEC decoder
         :return:
         """
         settings = Settings()
 
-        # Check if we are using a VAAPI encoder also...
+        # Check if we are using a NVDEC encoder also...
         if settings.get_setting('hw_decoding'):
             # TODO: Find the device. Add config option to select from available GPUs
             dev_id = '0'
