@@ -7,7 +7,7 @@ Times can be written as:
 - **Hours:** h, hour, hours
 - **Days:** d, day, days
 - **Weeks:** w, week, weeks
-- **Months:** y, year, years
+- **Years:** y, year, years
 
 ---
 
