@@ -11,5 +11,5 @@
         "on_worker_process": 2
     },
     "tags": "subtitle,ffmpeg",
-    "version": "0.0.4"
+    "version": "0.0.5"
 }

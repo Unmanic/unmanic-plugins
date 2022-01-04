@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Fix bug in stream mapping causing subtitles from the previous file being added to the command of the current file
+
 **<span style="color:#56adda">0.0.4</span>**
 - Limit plugin to only process files with a "video" mimetype
 - Remove support for older versions of Unmanic (requires >= 0.1.0)

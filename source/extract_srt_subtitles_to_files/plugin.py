@@ -30,10 +30,9 @@ logger = logging.getLogger("Unmanic.Plugin.extract_srt_subtitles_to_files")
 
 
 class PluginStreamMapper(StreamMapper):
-    sub_streams = []
-
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['subtitle'])
+        self.sub_streams = []
 
     def test_stream_needs_processing(self, stream_info: dict):
         """Any text based will need to be processed"""
