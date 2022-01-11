@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import pip
+import re
 import shutil
 import subprocess
 import zipfile
@@ -162,7 +163,7 @@ repo_data = {
 repo_json_file = os.path.join(repo_dest_path, 'repo.json')
 repo_json_checksum_file = os.path.join(repo_dest_path, 'repo.json.md5')
 
-print("  > Creating list of plugins".format(repo_json_file))
+print("  > Creating list of plugins")
 print()
 for item in os.listdir(repo_dest_path):
     item_path = os.path.join(repo_dest_path, item)
@@ -178,16 +179,16 @@ for item in os.listdir(repo_dest_path):
         continue
 
 # Add main repo info to repo data
-print("  > Reading repo config".format(repo_json_file))
+print("  > Reading repo config")
 print()
 with open(os.path.join(project_root, 'config.json')) as f:
     repo_info = json.load(f)
 
 # Set the repo URL
-print("  > Setting repo data url".format(repo_json_file))
+print("  > Setting repo data url")
 print()
 configured_remote_origin = os.popen('git remote get-url --push origin').read()
-repo_path = configured_remote_origin.strip().rstrip(".git").lstrip('git@github.coms:').lstrip('https://github.com/s')
+repo_path = re.sub('^(?:http[s]*:\/\/github.com[\/]*)|(?:git@github\.com:)|(?:\.git$)', '', configured_remote_origin)
 repo_info['repo_data_directory'] = "https://raw.githubusercontent.com/{}/repo/".format(repo_path)
 repo_info['repo_data_url'] = repo_info['repo_data_directory'] + "repo/repo.json"
 repo_data['repo'] = repo_info
