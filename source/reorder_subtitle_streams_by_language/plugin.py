@@ -61,8 +61,7 @@ class PluginStreamMapper(StreamMapper):
     def set_settings(self, settings):
         self.settings = settings
 
-    @staticmethod
-    def test_tags_for_search_string(stream_tags):
+    def test_tags_for_search_string(self, stream_tags):
         if stream_tags and True in list(k.lower() in ['title', 'language'] for k in stream_tags):
             search_string = self.settings.get_setting('Search String')
             # Check if tag matches the "Search String"
