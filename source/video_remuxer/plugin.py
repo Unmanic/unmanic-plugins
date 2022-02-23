@@ -39,7 +39,8 @@ class Settings(PluginSettings):
         "dest_container": "mkv",
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
         self.form_settings = {
             "dest_container": self.__set_dest_container_form_settings()
         }
@@ -85,10 +86,12 @@ class PluginStreamMapper(StreamMapper):
         self.settings = None
         self.container_data = None
 
+    def set_settings(self, settings):
+        self.settings = settings
+
     def test_stream_needs_processing(self, stream_info: dict):
         if not self.container_data:
-            settings = Settings()
-            self.container_data = settings.get_configured_container_data()
+            self.container_data = self.settings.get_configured_container_data()
 
         # Check if codec type is supported
         codec_type = stream_info.get('codec_type', '').lower()
@@ -112,8 +115,7 @@ class PluginStreamMapper(StreamMapper):
             'attachment': 't'
         }
         if not self.container_data:
-            settings = Settings()
-            self.container_data = settings.get_configured_container_data()
+            self.container_data = self.settings.get_configured_container_data()
 
         # If codec type is not supported, remove it
         codec_type = stream_info.get('codec_type', '').lower()
@@ -181,14 +183,20 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     # Set the input file
     mapper.set_input_file(abspath)
 
-    settings = Settings()
     container_data = settings.get_configured_container_data()
     container_extension = container_data.get('extension')
 
@@ -232,14 +240,20 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     # Set the input file
     mapper.set_input_file(abspath)
 
-    settings = Settings()
     container_data = settings.get_configured_container_data()
     container_extension = container_data.get('extension')
 

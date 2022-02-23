@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.9</span>**
+- Update Plugin for Unmanic v2 PluginHandler compatibility
+
 **<span style="color:#56adda">0.0.8</span>**
 - Fix for error when the stream info does not contain a particular attribute
 
