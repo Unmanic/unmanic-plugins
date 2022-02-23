@@ -40,6 +40,7 @@ class PluginStreamMapper(StreamMapper):
     def __init__(self):
         # Check all streams (only the desired stream type will matter when tested)
         super(PluginStreamMapper, self).__init__(logger, ['video', 'audio', 'subtitle', 'data', 'attachment'])
+        self.settings = None
 
         # The stream type we are considering as streams of interest
         self.stream_type = 'audio'
@@ -57,11 +58,12 @@ class PluginStreamMapper(StreamMapper):
         # Unmatched streams of interest are streams that do not contain the search string
         self.unmatched_stream_mapping = []
 
-    @staticmethod
-    def test_tags_for_search_string(stream_tags):
+    def set_settings(self, settings):
+        self.settings = settings
+
+    def test_tags_for_search_string(self, stream_tags):
         if stream_tags and True in list(k.lower() in ['title', 'language'] for k in stream_tags):
-            settings = Settings()
-            search_string = settings.get_setting('Search String')
+            search_string = self.settings.get_setting('Search String')
             # Check if tag matches the "Search String"
             if search_string.lower() in stream_tags.get('language', '').lower():
                 # Found a matching stream in language tag
@@ -160,8 +162,15 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_to_be_reordered():
@@ -203,8 +212,15 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_to_be_reordered():
