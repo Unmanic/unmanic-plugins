@@ -70,7 +70,12 @@ def on_library_management_file_test(data):
     :return:
     
     """
-    settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     minimum_age = settings.get_setting('min_ctime')
 
     if not ensure_last_modified_time_on_file(data.get('path'), minimum_age):
