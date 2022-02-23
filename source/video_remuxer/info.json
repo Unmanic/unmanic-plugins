@@ -1,7 +1,8 @@
 {
     "author": "Josh.5",
     "compatibility": [
-        1
+        1,
+        2
     ],
     "description": "Remux a video file to the configured container",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_remuxer/master/icon.png",
@@ -11,5 +12,5 @@
         "on_worker_process": 3
     },
     "tags": "video,ffmpeg",
-    "version": "0.0.8"
+    "version": "0.0.9"
 }
