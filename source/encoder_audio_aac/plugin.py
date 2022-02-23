@@ -41,7 +41,8 @@ class Settings(PluginSettings):
         "custom_options":        "",
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
         self.form_settings = {
             "advanced":              {
                 "label": "Write your own FFmpeg params",
@@ -96,8 +97,12 @@ class Settings(PluginSettings):
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['audio'])
+        self.settings = None
         self.codec = 'aac'
         self.encoder = 'aac'
+
+    def set_settings(self, settings):
+        self.settings = settings
 
     @staticmethod
     def calculate_bitrate(stream_info: dict):
@@ -116,11 +121,9 @@ class PluginStreamMapper(StreamMapper):
         return True
 
     def custom_stream_mapping(self, stream_info: dict, stream_id: int):
-        settings = Settings()
-
         stream_encoding = ['-c:a:{}'.format(stream_id), self.encoder]
-        if settings.get_setting('advanced'):
-            stream_encoding += settings.get_setting('custom_options').split()
+        if self.settings.get_setting('advanced'):
+            stream_encoding += self.settings.get_setting('custom_options').split()
         else:
             # Automatically detect bitrate for this stream.
             if stream_info.get('channels'):
@@ -158,8 +161,15 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_need_processing():
@@ -201,8 +211,15 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_need_processing():
