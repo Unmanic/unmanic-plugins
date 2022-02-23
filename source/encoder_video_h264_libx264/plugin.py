@@ -45,7 +45,8 @@ class Settings(PluginSettings):
         "dest_container":        "mkv",
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
         self.form_settings = {
             "advanced":              {
                 "label": "Write your own FFmpeg params",
@@ -193,6 +194,7 @@ class Settings(PluginSettings):
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['video'])
+        self.settings = None
         self.image_video_codecs = [
             'alias_pix',
             'apng',
@@ -228,6 +230,9 @@ class PluginStreamMapper(StreamMapper):
             'xwd',
         ]
 
+    def set_settings(self, settings):
+        self.settings = settings
+
     def test_stream_needs_processing(self, stream_info: dict):
         if stream_info.get('codec_name').lower() in self.image_video_codecs:
             return False
@@ -236,16 +241,14 @@ class PluginStreamMapper(StreamMapper):
         return True
 
     def custom_stream_mapping(self, stream_info: dict, stream_id: int):
-        settings = Settings()
-
-        if settings.get_setting('advanced'):
+        if self.settings.get_setting('advanced'):
             stream_encoding = ['-c:v:{}'.format(stream_id), 'libx264']
-            stream_encoding += settings.get_setting('custom_options').split()
+            stream_encoding += self.settings.get_setting('custom_options').split()
         else:
             stream_encoding = [
                 '-c:v:{}'.format(stream_id), 'libx264',
-                '-preset', str(settings.get_setting('preset')),
-                '-crf', str(settings.get_setting('crf')),
+                '-preset', str(self.settings.get_setting('preset')),
+                '-crf', str(self.settings.get_setting('crf')),
             ]
 
         return {
@@ -276,8 +279,15 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_need_processing():
@@ -319,13 +329,18 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_need_processing():
-        settings = Settings()
-
         # Set the input file
         mapper.set_input_file(abspath)
 
