@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.8</span>**
+- Update Plugin for Unmanic v2 PluginHandler compatibility
+
 **<span style="color:#56adda">0.0.7</span>**
 - Fix issue with number formatting
 - Add support for parsing data for tasks processed with remote workers
