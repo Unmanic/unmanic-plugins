@@ -53,7 +53,8 @@ class Settings(PluginSettings):
         "dest_container":             "mkv",
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
         self.form_settings = {
             "advanced":                   {
                 "label": "Write your own FFmpeg params",
@@ -333,6 +334,10 @@ class PluginStreamMapper(StreamMapper):
 
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['video'])
+        self.settings = None
+
+    def set_settings(self, settings):
+        self.settings = settings
 
     def test_stream_needs_processing(self, stream_info: dict):
         if stream_info.get('codec_name').lower() in self.image_video_codecs:
@@ -342,11 +347,9 @@ class PluginStreamMapper(StreamMapper):
         return True
 
     def custom_stream_mapping(self, stream_info: dict, stream_id: int):
-        settings = Settings()
-
-        if settings.get_setting('advanced'):
+        if self.settings.get_setting('advanced'):
             stream_encoding = ['-c:v:{}'.format(stream_id), 'hevc_qsv']
-            stream_encoding += settings.get_setting('custom_options').split()
+            stream_encoding += self.settings.get_setting('custom_options').split()
         else:
             stream_encoding = [
                 '-c:v:{}'.format(stream_id), 'hevc_qsv',
@@ -354,24 +357,24 @@ class PluginStreamMapper(StreamMapper):
 
             # Add the preset and tune
             stream_encoding += [
-                '-preset', str(settings.get_setting('preset')),
-                '-tune', str(settings.get_setting('tune')),
+                '-preset', str(self.settings.get_setting('preset')),
+                '-tune', str(self.settings.get_setting('tune')),
             ]
 
-            if settings.get_setting('encoder_ratecontrol_method') in ['CQP', 'LA_ICQ', 'ICQ']:
+            if self.settings.get_setting('encoder_ratecontrol_method') in ['CQP', 'LA_ICQ', 'ICQ']:
                 # Configure QSV encoder with a quality-based mode
-                if settings.get_setting('encoder_ratecontrol_method') == 'CQP':
+                if self.settings.get_setting('encoder_ratecontrol_method') == 'CQP':
                     # Set values for constant quantizer scale
                     stream_encoding += [
-                        '-q', str(settings.get_setting('constant_quantizer_scale')),
+                        '-q', str(self.settings.get_setting('constant_quantizer_scale')),
                     ]
-                elif settings.get_setting('encoder_ratecontrol_method') in ['LA_ICQ', 'ICQ']:
+                elif self.settings.get_setting('encoder_ratecontrol_method') in ['LA_ICQ', 'ICQ']:
                     # Set the global quality
                     stream_encoding += [
-                        '-global_quality', str(settings.get_setting('constant_quality_scale')),
+                        '-global_quality', str(self.settings.get_setting('constant_quality_scale')),
                     ]
                     # Set values for constant quality scale
-                    if settings.get_setting('encoder_ratecontrol_method') == 'LA_ICQ':
+                    if self.settings.get_setting('encoder_ratecontrol_method') == 'LA_ICQ':
                         # Add lookahead
                         stream_encoding += [
                             '-look_ahead', '1',
@@ -380,17 +383,17 @@ class PluginStreamMapper(StreamMapper):
                 # Configure the QSV encoder with a bitrate-based mode
                 # Set the max and average bitrate (used by all bitrate-based modes)
                 stream_encoding += [
-                    '-b:v:{}'.format(stream_id), '{}M'.format(settings.get_setting('average_bitrate')),
+                    '-b:v:{}'.format(stream_id), '{}M'.format(self.settings.get_setting('average_bitrate')),
                 ]
-                if settings.get_setting('encoder_ratecontrol_method') == 'LA':
+                if self.settings.get_setting('encoder_ratecontrol_method') == 'LA':
                     # Add lookahead
                     stream_encoding += [
                         '-look_ahead', '1',
                     ]
-                elif settings.get_setting('encoder_ratecontrol_method') == 'CBR':
+                elif self.settings.get_setting('encoder_ratecontrol_method') == 'CBR':
                     # Add 'maxrate' with the same value to make CBR mode
                     stream_encoding += [
-                        '-maxrate', '{}M'.format(settings.get_setting('average_bitrate')),
+                        '-maxrate', '{}M'.format(self.settings.get_setting('average_bitrate')),
                     ]
 
         return {
@@ -438,8 +441,15 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_need_processing():
@@ -481,13 +491,18 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     if mapper.streams_need_processing():
-        settings = Settings()
-
         # Set the input file
         mapper.set_input_file(abspath)
 
