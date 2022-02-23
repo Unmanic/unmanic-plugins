@@ -1,7 +1,8 @@
 {
     "author": "Josh.5",
     "compatibility": [
-        1
+        1,
+        2
     ],
     "description": "Ignore files under the configured size.",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_under_size/master/icon.png",
@@ -11,5 +12,5 @@
         "on_library_management_file_test": 2
     },
     "tags": "library file test",
-    "version": "0.0.3"
+    "version": "0.0.4"
 }
