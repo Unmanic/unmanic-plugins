@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.6</span>**
+- Update Plugin for Unmanic v2 PluginHandler compatibility
+
 **<span style="color:#56adda">0.0.5</span>**
 - Fix bug in stream mapping causing subtitles from the previous file being added to the command of the current file
 
