@@ -44,8 +44,7 @@ class Settings(PluginSettings):
     }
 
 
-def file_marked_as_failed(path):
-    settings = Settings()
+def file_marked_as_failed(settings, path):
     if settings.get_setting('if_end_result_file_is_still_larger_mark_as_ignore'):
         directory_info = UnmanicDirectoryInfo(os.path.dirname(path))
 
@@ -83,7 +82,13 @@ def on_library_management_file_test(data):
     # Get the path to the file
     abspath = data.get('path')
 
-    if file_marked_as_failed(abspath):
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
+    if file_marked_as_failed(settings, abspath):
         # Mark this file to be added to the pending tasks
         data['add_file_to_pending_tasks'] = False
         logger.debug("File '{}' has been previously marked as failed.".format(abspath))
@@ -158,7 +163,12 @@ def on_postprocessor_file_movement(data):
     :return:
 
     """
-    settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     if settings.get_setting('if_end_result_file_is_still_larger_mark_as_ignore'):
         # Get the original file's absolute path
         original_source_path = data.get('source_data', {}).get('abspath')
