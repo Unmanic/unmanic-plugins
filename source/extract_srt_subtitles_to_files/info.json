@@ -1,7 +1,8 @@
 {
     "author": "Josh.5",
     "compatibility": [
-        1
+        1,
+        2
     ],
     "description": "Extract any text based subtitle streams to *.srt files.",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.extract_srt_subtitles_to_files/master/icon.png",
@@ -11,5 +12,5 @@
         "on_worker_process": 2
     },
     "tags": "subtitle,ffmpeg",
-    "version": "0.0.5"
+    "version": "0.0.6"
 }
