@@ -1,7 +1,8 @@
 {
     "author": "Josh.5",
     "compatibility": [
-        1
+        1,
+        2
     ],
     "description": "Execute an external script on completion of a task.",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.postprocessor_script/master/icon.png",
@@ -11,5 +12,5 @@
         "on_postprocessor_task_results": 0
     },
     "tags": "script,command,post-processor",
-    "version": "0.0.3"
+    "version": "0.0.4"
 }

@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.4</span>**
+- Update Plugin for Unmanic v2 PluginHandler compatibility
+
 **<span style="color:#56adda">0.0.3</span>**
 - FIX: The format_map function can cause issues with some command or arg strings
 
