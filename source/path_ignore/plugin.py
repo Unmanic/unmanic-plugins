@@ -50,7 +50,11 @@ def on_library_management_file_test(data):
     :return:
 
     """
-    settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
 
     regex_patterns = settings.get_setting('patterns')
 
