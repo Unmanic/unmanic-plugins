@@ -82,8 +82,13 @@ def on_library_management_file_test(data):
     # Get the path to the file
     abspath = data.get('path')
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get the list of configured extensions to search for
-    settings = Settings()
     allowed_extensions = settings.get_setting('allowed_extensions')
 
     if not file_ends_in_allowed_extensions(abspath, allowed_extensions):
