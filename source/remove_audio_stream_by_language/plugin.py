@@ -45,12 +45,15 @@ class Settings(PluginSettings):
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['audio'])
+        self.settings = None
+
+    def set_settings(self, settings):
+        self.settings = settings
 
     def test_tags_for_search_string(self, stream_tags, stream_id):
         # TODO: Check if we need to add 'title' tags
         if stream_tags and True in list(k.lower() in ['language'] for k in stream_tags):
-            settings = Settings()
-            language_list = settings.get_setting('languages')
+            language_list = self.settings.get_setting('languages')
             languages = list(filter(None, language_list.split(',')))
             for language in languages:
                 language = language.strip()
@@ -89,8 +92,11 @@ def on_library_management_file_test(data):
     :return:
 
     """
-    # Get the list of configured extensions to search for
-    settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
 
     # If the config is empty (not yet configured) ignore everything
     if not settings.get_setting('languages'):
@@ -108,6 +114,7 @@ def on_library_management_file_test(data):
 
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     # Set the input file
@@ -154,8 +161,15 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
     # Set the input file
