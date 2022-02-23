@@ -38,7 +38,8 @@ class Settings(PluginSettings):
         "remove_source_file":           False,
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
         self.form_settings = {
             "destination_directory":        {
                 "label":      "Destination directory",
@@ -75,9 +76,7 @@ def all_parent_directories(head):
     return dirs
 
 
-def get_file_out(original_source_path, file_out):
-    settings = Settings()
-
+def get_file_out(settings, original_source_path, file_out):
     # Get the destination directory
     destination_directory = settings.get_setting('destination_directory')
 
@@ -128,7 +127,11 @@ def on_postprocessor_file_movement(data):
     :return:
     
     """
-    settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
 
     # Get the original file's absolute path
     original_source_path = data.get('source_data', {}).get('abspath')
@@ -142,7 +145,7 @@ def on_postprocessor_file_movement(data):
     data['remove_source_file'] = settings.get_setting('remove_source_file')
 
     # Set the output file
-    file_out = get_file_out(original_source_path, os.path.abspath(data.get('file_out')))
+    file_out = get_file_out(settings, original_source_path, os.path.abspath(data.get('file_out')))
     data['file_out'] = file_out
 
     # Set plugin to copy file
@@ -181,7 +184,11 @@ def on_postprocessor_task_results(data):
     :return:
 
     """
-    settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
 
     # Get the original file's absolute path
     original_source_path = data.get('source_data', {}).get('abspath')
