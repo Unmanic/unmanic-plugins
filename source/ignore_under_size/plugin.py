@@ -61,7 +61,12 @@ def on_library_management_file_test(data):
     :return:
     
     """
-    settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     minimum_file_size = settings.get_setting('minimum_file_size')
 
     if check_file_size_under_max_file_size(data.get('path'), minimum_file_size):
