@@ -78,6 +78,10 @@ class Settings(PluginSettings):
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['audio'])
+        self.settings = None
+
+    def set_settings(self, settings):
+        self.settings = settings
 
     def test_stream_needs_processing(self, stream_info: dict):
         # Only process AAC audio streams
@@ -90,13 +94,12 @@ class PluginStreamMapper(StreamMapper):
             'stream_mapping':  ['-map', '0:a:{}'.format(stream_id)],
             'stream_encoding': [
                 '-c:a:{}'.format(stream_id), 'aac',
-                '-filter:a:{}'.format(stream_id), audio_filtergraph(),
+                '-filter:a:{}'.format(stream_id), audio_filtergraph(self.settings),
             ]
         }
 
 
-def audio_filtergraph():
-    settings = Settings()
+def audio_filtergraph(settings):
     i = settings.get_setting('I')
     if not i:
         i = settings.settings.get('I')
@@ -110,8 +113,7 @@ def audio_filtergraph():
     return 'loudnorm=I={}:LRA={}:TP={}'.format(i, lra, tp)
 
 
-def file_already_normalised(path):
-    settings = Settings()
+def file_already_normalised(settings, path):
     directory_info = UnmanicDirectoryInfo(os.path.dirname(path))
 
     try:
@@ -130,7 +132,7 @@ def file_already_normalised(path):
         if settings.get_setting('ignore_previously_processed'):
             logger.debug("Plugin configured to ignore previously normalised streams")
             return True
-        elif audio_filtergraph() in previous_loudnorm_filtergraph:
+        elif audio_filtergraph(settings) in previous_loudnorm_filtergraph:
             # The previously normalised stream matches what is already configured
             logger.debug(
                 "Stream was previously normalised with the same settings as what the plugin is currently configured")
@@ -162,11 +164,18 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
-    if not file_already_normalised(abspath):
+    if not file_already_normalised(settings, abspath):
         # Mark this file to be added to the pending tasks
         data['add_file_to_pending_tasks'] = True
         logger.debug("File '{}' should be added to task list. File has not been previously normalised.".format(abspath))
@@ -205,9 +214,16 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
-    if not file_already_normalised(data.get('file_in')):
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
+    if not file_already_normalised(settings, data.get('file_in')):
         # Get stream mapper
         mapper = PluginStreamMapper()
+        mapper.set_settings(settings)
         mapper.set_probe(probe)
 
         if mapper.streams_need_processing():
@@ -253,10 +269,16 @@ def on_postprocessor_task_results(data):
     if not data.get('task_processing_success'):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Loop over the destination_files list and update the directory info file for each one
     for destination_file in data.get('destination_files'):
         directory_info = UnmanicDirectoryInfo(os.path.dirname(destination_file))
-        directory_info.set('normalise_aac', os.path.basename(destination_file), audio_filtergraph())
+        directory_info.set('normalise_aac', os.path.basename(destination_file), audio_filtergraph(settings))
         directory_info.save()
         logger.debug("Normalise AAC info written for '{}'.".format(destination_file))
 
