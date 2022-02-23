@@ -41,7 +41,6 @@ This option sets the size of this buffer, in packets, for the matching output st
 
 FFmpeg docs refer to this value as '-max_muxing_queue_size'
 
-
 #### <span style="color:blue">Overwrite all options with custom input</span>
 This free text input allows you to write any FFmpeg params that you want. 
 This is for more advanced use cases where you need finer control over the file transcode.
