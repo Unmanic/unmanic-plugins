@@ -1,7 +1,8 @@
 {
     "author": "Josh.5",
     "compatibility": [
-        1
+        1,
+        2
     ],
     "description": "Removes any image subtitle streams from video files.",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.remove_image_subtitles/master/icon.png",
@@ -12,5 +13,5 @@
         "on_worker_process": 1
     },
     "tags": "subtitle,ffmpeg,library file test",
-    "version": "0.0.2"
+    "version": "0.0.3"
 }
