@@ -44,7 +44,8 @@ class Settings(PluginSettings):
         'enable_comcut':       False,
     }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
         self.form_settings = {
             "limit_to_extensions": {
                 "label": "Only run when the original source file matches specified extensions",
@@ -174,9 +175,8 @@ def file_already_processed(path):
     return False
 
 
-def comskip_config_file():
+def comskip_config_file(settings):
     # Set config file path
-    settings = Settings()
     profile_directory = settings.get_profile_directory()
 
     # Set the output file
@@ -194,8 +194,8 @@ def comskip_config_file():
     return comskip_config_file
 
 
-def build_comskip_args(abspath):
-    config_file = comskip_config_file()
+def build_comskip_args(abspath, settings):
+    config_file = comskip_config_file(settings)
     file_dirname = os.path.dirname(abspath)
     file_sans_ext = os.path.splitext(os.path.basename(abspath))[0]
     return [
@@ -207,8 +207,8 @@ def build_comskip_args(abspath):
     ]
 
 
-def build_comchap_args(abspath, file_out):
-    config_file = comskip_config_file()
+def build_comchap_args(abspath, file_out, settings):
+    config_file = comskip_config_file(settings)
     comchap_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'comchap', 'comchap'))
     # Ensure comchap is executable
     st = os.stat(comchap_path)
@@ -225,8 +225,8 @@ def build_comchap_args(abspath, file_out):
     return args
 
 
-def build_comcut_args(abspath, file_out):
-    config_file = comskip_config_file()
+def build_comcut_args(abspath, file_out, settings):
+    config_file = comskip_config_file(settings)
     comcut_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'comchap', 'comcut'))
     # Ensure comcut is executable
     st = os.stat(comcut_path)
@@ -262,8 +262,13 @@ def on_library_management_file_test(data):
     if not test_valid_mimetype(abspath):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Limit to configured file extensions
-    settings = Settings()
     if settings.get_setting('limit_to_extensions'):
         allowed_extensions = settings.get_setting('allowed_extensions')
         if not file_ends_in_allowed_extensions(abspath, allowed_extensions):
@@ -306,9 +311,14 @@ def on_worker_process(data):
     if not test_valid_mimetype(file_in):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Limit to configured file extensions
     # Unlike other plugins, this is checked against the original file path, not what is currently cached
-    settings = Settings()
     if settings.get_setting('limit_to_extensions'):
         allowed_extensions = settings.get_setting('allowed_extensions')
         if not file_ends_in_allowed_extensions(original_file_path, allowed_extensions):
@@ -316,17 +326,16 @@ def on_worker_process(data):
 
     if not file_already_processed(original_file_path):
         # Check what we are running...
-        settings = Settings()
         if settings.get_setting('enable_comchap'):
             # Build args
-            args = build_comchap_args(file_in, data.get('file_out'))
+            args = build_comchap_args(file_in, data.get('file_out'), settings)
         elif settings.get_setting('enable_comcut'):
             # Build args
-            args = build_comcut_args(file_in, data.get('file_out'))
+            args = build_comcut_args(file_in, data.get('file_out'), settings)
         else:
             # Build args
             # This will create the file in the source file directory
-            args = build_comskip_args(file_in)
+            args = build_comskip_args(file_in, settings)
 
         # Generate command
         data['exec_command'] = args
@@ -360,8 +369,13 @@ def on_postprocessor_task_results(data):
     if not data.get('task_processing_success'):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Was the processed file one of the ones we worked on...
-    settings = Settings()
     original_source_path = data.get('source_data', {}).get('abspath', '_')
     src_file_hash = hashlib.md5(original_source_path.encode('utf8')).hexdigest()
     profile_directory = settings.get_profile_directory()
@@ -371,7 +385,6 @@ def on_postprocessor_task_results(data):
     os.remove(plugin_file_lockfile)
 
     # Loop over the destination_files list and update the directory info file for each one
-    settings = Settings()
     for destination_file in data.get('destination_files'):
         directory_info = UnmanicDirectoryInfo(os.path.dirname(destination_file))
         if settings.get_setting('enable_comchap'):
