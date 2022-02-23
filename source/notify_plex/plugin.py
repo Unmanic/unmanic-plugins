@@ -57,13 +57,17 @@ def on_postprocessor_task_results(data):
     :return:
 
     """
-    plugin_settings = Settings()
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
 
-    if not data.get('task_processing_success') and not plugin_settings.get_setting('Notify on Task Failure?'):
+    if not data.get('task_processing_success') and not settings.get_setting('Notify on Task Failure?'):
         return data
 
-    plex_url = plugin_settings.get_setting('Plex URL')
-    plex_token = plugin_settings.get_setting('Plex Token')
+    plex_url = settings.get_setting('Plex URL')
+    plex_token = settings.get_setting('Plex Token')
     update_plex(plex_url, plex_token)
 
     return data
