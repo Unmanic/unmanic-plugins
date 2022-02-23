@@ -444,8 +444,6 @@ def on_worker_process(data):
     :return:
 
     """
-    settings = Settings()
-
     # Get the path to the file
     abspath = data.get('original_file_path')
     source_size = os.path.getsize(abspath)
@@ -488,7 +486,6 @@ def on_postprocessor_task_results(data):
         return data
 
     # Read the data from the on_worker_process runner
-    settings = Settings()
     profile_directory = settings.get_profile_directory()
 
     # Get the file out and store (if it exists)
