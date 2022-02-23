@@ -1,7 +1,8 @@
 {
     "author": "Josh.5",
     "compatibility": [
-        1
+        1,
+        2
     ],
     "description": "Ensure all video streams are encoded with the H265/HEVC codec using the libx265 encoder.",
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_hevc_libx265/master/icon.png",
@@ -12,5 +13,5 @@
         "on_worker_process": 0
     },
     "tags": "video,encoder,ffmpeg,library file test",
-    "version": "0.0.7"
+    "version": "0.0.8"
 }
