@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">1.1.3</span>**
+- Update Plugin for Unmanic v2 PluginHandler compatibility
+
 **<span style="color:#56adda">1.1.2</span>**
 - Fix Python bug in stream mapping 
 
