@@ -38,7 +38,8 @@ logger = logging.getLogger("Unmanic.Plugin.sickbeard_mp4_automator")
 
 class Settings(PluginSettings):
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
         self.settings = {
             'limit_to_extensions':         False,
             "allowed_extensions":          'mkv,avi,mov,ts,rmvb,mp4',
@@ -164,12 +165,12 @@ def file_already_processed(path):
     return False
 
 
-def file_requires_processing_by_ffmpeg(abspath):
+def file_requires_processing_by_ffmpeg(settings, abspath):
     import re
     import subprocess
 
     # Build sma command args
-    cmd = build_worker_args(abspath)
+    cmd = build_worker_args(settings, abspath)
     cmd += ['--optionsonly']
 
     # Exec command
@@ -191,7 +192,7 @@ def file_requires_processing_by_ffmpeg(abspath):
     return False
 
 
-def generate_mock_path(original_file_path, input_file_path, output_file_path):
+def generate_mock_path(settings, original_file_path, input_file_path, output_file_path):
     """
     Generate mock path which will be used
 
@@ -200,13 +201,12 @@ def generate_mock_path(original_file_path, input_file_path, output_file_path):
         OR: Copy file from the source directory to this new cache file directory
     It will then find and copy in all files in the original source directory that are smaller than 10MB
 
+    :param settings:
     :param original_file_path:
     :param input_file_path:
     :param output_file_path:
     :return:
     """
-    settings = Settings()
-
     # Set the Unmanic working cache path
     cache_path = os.path.dirname(os.path.abspath(output_file_path))
 
@@ -253,9 +253,8 @@ def generate_mock_path(original_file_path, input_file_path, output_file_path):
     return cached_copy
 
 
-def sma_config_file():
+def sma_config_file(settings):
     # Set config file path
-    settings = Settings()
     profile_directory = settings.get_profile_directory()
 
     # Set the output file
@@ -273,18 +272,17 @@ def sma_config_file():
     return sma_config_file
 
 
-def predict_file_out(mock_file_in):
+def predict_file_out(settings, mock_file_in):
     """
     Predict the SMA script file output.
 
     The SMA script will potentially remux the file.
     If it does, we will need to predict what it will be remuxed to from the config.
 
+    :param settings:
     :param mock_file_in:
     :return:
     """
-    # Set config file path
-    settings = Settings()
     # Get the output file
     config = settings.get_setting('config')
     if not config:
@@ -299,8 +297,8 @@ def predict_file_out(mock_file_in):
     return "{}.{}".format(file_name, extension)
 
 
-def build_worker_args(abspath):
-    config_file = sma_config_file()
+def build_worker_args(settings, abspath):
+    config_file = sma_config_file(settings)
     plugin_dir = os.path.dirname(os.path.realpath(__file__))
     sma_manual_script_path = os.path.join(plugin_dir, 'dep', 'sickbeard_mp4_automator', 'manual.py')
     return [
@@ -334,15 +332,20 @@ def on_library_management_file_test(data):
     if not test_valid_mimetype(original_file_path):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Limit to configured file extensions
-    settings = Settings()
     if settings.get_setting('limit_to_extensions'):
         allowed_extensions = settings.get_setting('allowed_extensions')
         if not file_ends_in_allowed_extensions(original_file_path, allowed_extensions):
             return data
 
     # If the file requires processing (remux, transcode, etc) with ffmpeg, then add it to the list
-    if file_requires_processing_by_ffmpeg(original_file_path):
+    if file_requires_processing_by_ffmpeg(settings, original_file_path):
         # Mark this file to be added to the pending tasks
         data['add_file_to_pending_tasks'] = True
         logger.debug(
@@ -394,9 +397,14 @@ def on_worker_process(data):
     if not test_valid_mimetype(file_in):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Limit to configured file extensions
     # Unlike other plugins, this is checked against the original file path, not what is currently cached
-    settings = Settings()
     if settings.get_setting('limit_to_extensions'):
         allowed_extensions = settings.get_setting('allowed_extensions')
         if not file_ends_in_allowed_extensions(original_file_path, allowed_extensions):
@@ -404,18 +412,18 @@ def on_worker_process(data):
 
     # If we are configured to only run for ffmpeg commands, but sma does not want to run one, then return here
     if settings.get_setting('only_run_for_ffmpeg_command'):
-        if not file_requires_processing_by_ffmpeg(original_file_path):
+        if not file_requires_processing_by_ffmpeg(settings, original_file_path):
             return data
 
     # Generate mock path
-    mock_file_in = generate_mock_path(original_file_path, file_in, file_out)
+    mock_file_in = generate_mock_path(settings, original_file_path, file_in, file_out)
 
     # Build args
-    data['exec_command'] = build_worker_args(mock_file_in)
+    data['exec_command'] = build_worker_args(settings, mock_file_in)
 
     # Set file_in and file_out
     data['file_in'] = mock_file_in
-    data['file_out'] = predict_file_out(mock_file_in)
+    data['file_out'] = predict_file_out(settings, mock_file_in)
 
     # Mark file as being processed for post-processor
     src_file_hash = hashlib.md5(original_file_path.encode('utf8')).hexdigest()
@@ -446,8 +454,13 @@ def on_postprocessor_task_results(data):
     if not data.get('task_processing_success'):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Was the processed file one of the ones we worked on...
-    settings = Settings()
     original_source_path = data.get('source_data', {}).get('abspath', '_')
     src_file_hash = hashlib.md5(original_source_path.encode('utf8')).hexdigest()
     profile_directory = settings.get_profile_directory()
