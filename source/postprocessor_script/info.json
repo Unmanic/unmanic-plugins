@@ -12,5 +12,5 @@
         "on_postprocessor_task_results": 0
     },
     "tags": "script,command,post-processor",
-    "version": "0.0.4"
+    "version": "0.0.5"
 }
