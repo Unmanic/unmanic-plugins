@@ -153,6 +153,7 @@ def on_library_management_file_test(data):
     """
     # Get the path to the file
     abspath = data.get('path')
+    basename = os.path.basename(abspath)
 
     # Configure settings object (maintain compatibility with v1 plugins)
     if data.get('library_id'):
@@ -164,7 +165,8 @@ def on_library_management_file_test(data):
         # Ensure this file is not added to the pending tasks
         data['add_file_to_pending_tasks'] = False
         logger.debug("File '{}' has been previously marked as moved.".format(abspath))
-    elif settings.get_setting('force_processing_all_files'):
+    elif settings.get_setting('force_processing_all_files') and basename != '.unmanic':
+        # (Never move the .unmanic file)
         # Ensure this file is added to the pending tasks regardless of status of any subsequent tests
         data['add_file_to_pending_tasks'] = True
         logger.debug("Forcing file '{}' to be added to task list.".format(abspath))
@@ -177,11 +179,15 @@ def on_postprocessor_file_movement(data):
     Runner function - configures additional postprocessor file movements during the postprocessor stage of a task.
 
     The 'data' object argument includes:
-        source_data             - Dictionary containing data pertaining to the original source file.
-        remove_source_file      - Boolean, should Unmanic remove the original source file after all copy operations are complete.
+        library_id              - Integer, the library that the current task is associated with.
+        source_data             - Dictionary, data pertaining to the original source file.
+        remove_source_file      - Boolean, should Unmanic remove the original source file after all copy operations
+                                  are complete. (default: 'True' if file name has changed)
         copy_file               - Boolean, should Unmanic run a copy operation with the returned data variables.
-        file_in                 - The converted cache file to be copied by the postprocessor.
-        file_out                - The destination file that the file will be copied to.
+                                  (default: 'False')
+        file_in                 - String, the converted cache file to be copied by the postprocessor.
+        file_out                - String, the destination file that the file will be copied to.
+        run_default_file_copy   - Boolean, should Unmanic run the default post-process file movement. (default: 'True')
 
     :param data:
     :return:
@@ -202,7 +208,10 @@ def on_postprocessor_file_movement(data):
     unmanic_destination_file = data.get('file_out')
 
     # Should the plugin remove the source file?
+    # If remove source file is not selected, then prevent the removal of the source file
+    #   and also prevent Unmanic from running the default file movement (requires Unmanic v0.2.0)
     data['remove_source_file'] = settings.get_setting('remove_source_file')
+    data['run_default_file_copy'] = settings.get_setting('remove_source_file')
 
     # Set the output file
     file_out = get_file_out(settings, original_source_path, os.path.abspath(data.get('file_out')))
