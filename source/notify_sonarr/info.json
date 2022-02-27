@@ -1,0 +1,15 @@
+{
+    "author": "Cpt.Chaz,Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Notify Sonarr on series update to rescan modified file.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.notify_sonarr/master/icon.png",
+    "id": "notify_sonarr",
+    "name": "Notify Sonarr",
+    "priorities": {
+        "on_postprocessor_task_results": 0
+    },
+    "tags": "sonarr",
+    "version": "0.0.1"
+}
