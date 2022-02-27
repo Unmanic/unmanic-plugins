@@ -23,6 +23,7 @@
 """
 import json
 import logging
+import os
 import subprocess
 
 from unmanic.libs.unplugins.settings import PluginSettings
@@ -120,9 +121,11 @@ def on_postprocessor_task_results(data):
     args = args.replace('\n', ' ').replace('\r', '')
 
     # Map variables to be replaced in cmd and args
+    abspath = data.get('source_data', {}).get('abspath')
+    source_size = os.path.getsize(abspath)
     variable_map = {
-        '{source_file_path}': data.get('source_data', {}).get('abspath'),
-        '{source_file_size}': data.get('source_data', {}).get('size'),
+        '{source_file_path}': str(abspath),
+        '{source_file_size}': str(source_size),
     }
 
     # If this is to be run for each file in the destination files, loop over the 'destination_files' list;
