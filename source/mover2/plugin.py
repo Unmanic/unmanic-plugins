@@ -82,7 +82,7 @@ def all_parent_directories(head):
     return dirs
 
 
-def get_file_out(settings, original_source_path, file_out):
+def get_file_out(settings, original_source_path, file_out, library_id=None):
     # Get the destination directory
     destination_directory = settings.get_setting('destination_directory')
 
@@ -95,17 +95,24 @@ def get_file_out(settings, original_source_path, file_out):
 
         if not settings.get_setting('include_library_structure'):
             # Remove the library path from the original_source_dirname
-            from unmanic import config
-            unmanic_settings = config.Config()
-            library_path = unmanic_settings.get_library_path()
+            if library_id:
+                from unmanic.libs.library import Library
+                library = Library(library_id)
+                library_path = library.get_path()
+            else:
+                from unmanic import config
+                unmanic_settings = config.Config()
+                library_path = unmanic_settings.get_library_path()
             original_source_dirname = os.path.relpath(original_source_dirname, library_path)
 
         # Fetch a list of all directories in the original directory path
         # Eg. directories = ['library', 'path', 'to', 'my']
         directories = all_parent_directories(original_source_dirname)
+        print(directories)
 
         # Append the directory structure to the destination directory
         destination_directory = os.path.join(destination_directory, *directories)
+        print(destination_directory)
 
         # Ensure the destination directory structure exists. Create it if it does not
         if not os.path.exists(destination_directory):
@@ -191,7 +198,7 @@ def on_postprocessor_file_movement(data):
 
     :param data:
     :return:
-    
+
     """
     # Configure settings object (maintain compatibility with v1 plugins)
     if data.get('library_id'):
@@ -214,7 +221,8 @@ def on_postprocessor_file_movement(data):
     data['run_default_file_copy'] = settings.get_setting('remove_source_file')
 
     # Set the output file
-    file_out = get_file_out(settings, original_source_path, os.path.abspath(data.get('file_out')))
+    file_out = get_file_out(settings, original_source_path, os.path.abspath(data.get('file_out')),
+                            library_id=data.get('library_id'))
     data['file_out'] = file_out
 
     # Set plugin to copy file
