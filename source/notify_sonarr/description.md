@@ -1,10 +1,4 @@
 
-
-For information on the VP9 encoder settings:
-- [https://trac.ffmpeg.org/wiki/Encode/VP9/](https://trac.ffmpeg.org/wiki/Encode/VP9/)
-
----
-
 ### Config description:
 
 
@@ -32,13 +26,13 @@ automated import by parsing the file name.
 
 
 #### <span style="color:blue">Limit file import size</span>
-Only available if the *Attempt to import episode into Sonarr on task complete* mode is selected.
+Only available if the *Import episode on task complete* mode is selected.
 
 Enable limiting the Sonarr notification on items over the value specified in the *Minimum file size* option.
 
 
 #### <span style="color:blue">Minimum file size</span>
-Only available if the *Attempt to import episode into Sonarr on task complete* mode, and the *Limit file import size* 
+Only available if the *Import episode on task complete* mode, and the *Limit file import size* 
 box is selected.
 
 Sizes can be written as:
