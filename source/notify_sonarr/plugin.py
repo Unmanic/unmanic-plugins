@@ -36,7 +36,7 @@ class Settings(PluginSettings):
     settings = {
         'host_url':                  'http://localhost:8989',
         'api_key':                   '',
-        'mode':                      'update_series',
+        'mode':                      'update_mode',
         'limit_import_on_file_size': True,
         'minimum_file_size':         '100MB',
     }
@@ -55,11 +55,11 @@ class Settings(PluginSettings):
                 "input_type":     "select",
                 "select_options": [
                     {
-                        'value': "update_series",
+                        'value': "update_mode",
                         'label': "Trigger series refresh on task complete",
                     },
                     {
-                        'value': "import_episode",
+                        'value': "import_mode",
                         'label': "Import episode on task complete",
                     },
                 ],
@@ -72,7 +72,7 @@ class Settings(PluginSettings):
         values = {
             "label": "Limit file import size",
         }
-        if self.get_setting('mode') != 'import_episode':
+        if self.get_setting('mode') != 'import_mode':
             values["display"] = 'hidden'
         return values
 
@@ -80,7 +80,7 @@ class Settings(PluginSettings):
         values = {
             "label": "Minimum file size",
         }
-        if self.get_setting('mode') != 'import_episode':
+        if self.get_setting('mode') != 'import_mode':
             values["display"] = 'hidden'
         if not self.get_setting('limit_import_on_file_size'):
             values["display"] = 'hidden'
@@ -94,8 +94,8 @@ def check_file_size_under_max_file_size(path, minimum_file_size):
     return True
 
 
-def update_series(api, abspath):
-    basename = os.path.basename(abspath)
+def update_mode(api, dest_path):
+    basename = os.path.basename(dest_path)
 
     # Fetch episode data
     episode_data = api.get_parsed_title(basename)
@@ -104,32 +104,32 @@ def update_series(api, abspath):
     series_title = episode_data.get('series', {}).get('title')
     series_id = episode_data.get('series', {}).get('id')
     if not series_id:
-        logger.error("Missing series ID. Failed to queued refresh of series for file: '{}'".format(abspath))
+        logger.error("Missing series ID. Failed to queued refresh of series for file: '{}'".format(dest_path))
         return
 
     # Run API command for RescanSeries
     #   - RescanSeries with a series ID
     result = api.post_command('RescanSeries', seriesId=series_id)
     if result.get('message'):
-        logger.error("Failed to queued refresh of series ID '{}' for file: '{}'".format(series_id, abspath))
+        logger.error("Failed to queued refresh of series ID '{}' for file: '{}'".format(series_id, dest_path))
         return
-    logger.info("Successfully queued refreshed the Series '{}' for file: '{}'".format(series_title, abspath))
+    logger.info("Successfully queued refreshed the Series '{}' for file: '{}'".format(series_title, dest_path))
 
 
-def import_episode(api, abspath):
-    basename = os.path.basename(abspath)
-    title = os.path.splitext(basename)[0].replace('\\', '')
-    abspath_string = abspath.replace('\\', '')
+def import_mode(api, source_path, dest_path):
+    source_basename = os.path.basename(source_path)
+    abspath_string = dest_path.replace('\\', '')
 
     download_id = None
     episode_title = None
 
     queue = api.get_queue()
     for item in queue.get('records', []):
-        item_title = item.get('title')
-        if item_title == title:
+        item_output_basename = os.path.basename(item.get('outputPath'))
+        if item_output_basename == source_basename:
             download_id = item.get('downloadId')
-            episode_title = item.get('episode', {}).get('title')
+            episode_title = item.get('title')
+            break
 
     # Run import
     if download_id:
@@ -145,27 +145,27 @@ def import_episode(api, abspath):
 
     # Log results
     if result.get('message'):
-        logger.error("Failed to queued import of file: '{}'".format(abspath))
+        logger.error("Failed to queued import of file: '{}'".format(dest_path))
         return
-    logger.info("Successfully queued import of file: '{}'".format(abspath))
+    logger.info("Successfully queued import of file: '{}'".format(dest_path))
 
 
-def process_files(settings, destination_files, host_url, api_key):
+def process_files(settings, source_file, destination_files, host_url, api_key):
     api = SonarrAPI(host_url, api_key)
 
     mode = settings.get_setting('mode')
 
     # Get the basename of the file
     for dest_file in destination_files:
-        if mode == 'update_series':
-            update_series(api, dest_file)
-        elif mode == 'import_episode':
+        if mode == 'update_mode':
+            update_mode(api, dest_file)
+        elif mode == 'import_mode':
             minimum_file_size = settings.get_setting('minimum_file_size')
             if check_file_size_under_max_file_size(dest_file, minimum_file_size):
                 # Ignore this file
                 logger.info("Ignoring file as it is under configured minimum size file: '{}'".format(dest_file))
                 continue
-            import_episode(api, dest_file)
+            import_mode(api, source_file, dest_file)
 
 
 def on_postprocessor_task_results(data):
@@ -189,10 +189,11 @@ def on_postprocessor_task_results(data):
     else:
         settings = Settings()
 
-    # Fetch destination files
+    # Fetch destination and source files
+    source_file = data.get('source_data', {}).get('abspath')
     destination_files = data.get('destination_files', [])
 
     # Setup API
     host_url = settings.get_setting('host_url')
     api_key = settings.get_setting('api_key')
-    process_files(settings, destination_files, host_url, api_key)
+    process_files(settings, source_file, destination_files, host_url, api_key)
