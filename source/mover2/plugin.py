@@ -108,11 +108,9 @@ def get_file_out(settings, original_source_path, file_out, library_id=None):
         # Fetch a list of all directories in the original directory path
         # Eg. directories = ['library', 'path', 'to', 'my']
         directories = all_parent_directories(original_source_dirname)
-        print(directories)
 
         # Append the directory structure to the destination directory
         destination_directory = os.path.join(destination_directory, *directories)
-        print(destination_directory)
 
         # Ensure the destination directory structure exists. Create it if it does not
         if not os.path.exists(destination_directory):
