@@ -24,6 +24,12 @@ If possible, this will associate with a matching queued download and import the 
 If it does fail, it will fallback to providing the file path to Sonarr and allowing Sonarr to carry out a normal 
 automated import by parsing the file name.
 
+<div style="background-color:pink;border-radius:4px;border-left:solid 5px red;padding:10px;">
+<b>Warning:</b>
+<br>When configuring a library that will be using this plugin in this "import" mode, it is advised to not include 
+the temporary download location within the library path. This may cause Unmanic to collect the incomplete 
+download especially with file monitor enabled.
+</div>
 
 #### <span style="color:blue">Limit file import size</span>
 Only available if the *Import episode on task complete* mode is selected.
