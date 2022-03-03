@@ -125,6 +125,8 @@ def import_mode(api, source_path, dest_path):
     episode_title = None
 
     queue = api.get_queue()
+    message = pprint.pformat(queue, indent=1)
+    logger.debug("Current queue \n{}".format(message))
     for item in queue.get('records', []):
         item_output_basename = os.path.basename(item.get('outputPath'))
         if item_output_basename == source_basename:
