@@ -23,6 +23,7 @@
 """
 import logging
 import os
+import pprint
 
 import humanfriendly
 from pyarr import RadarrAPI
@@ -151,9 +152,14 @@ def import_mode(api, source_path, dest_path):
         result = api.post_command('DownloadedMoviesScan', path=abspath_string)
 
     # Log results
-    if result.get('message'):
+    message = result
+    if isinstance(result, dict) or isinstance(result, list):
+        message = pprint.pformat(result, indent=1)
+    logger.debug("Queued import result \n{}".format(message))
+    if (isinstance(result, dict)) and result.get('message'):
         logger.error("Failed to queued import of file: '{}'".format(dest_path))
         return
+    # TODO: Check for other possible outputs
     logger.info("Successfully queued import of file: '{}'".format(dest_path))
 
 
