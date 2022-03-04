@@ -1,10 +1,13 @@
 
+**<span style="color:#56adda">0.0.8</span>**
+- Always prevent Unmanic's default move process (Requires Unmanic v0.2.0)
+
 **<span style="color:#56adda">0.0.7</span>**
 - Fixed bug where library path was not being correctly fetched on newer versions of Unmanic
 
 **<span style="color:#56adda">0.0.6</span>**
 - Always exclude the '.unmanic' file from file movements
-- Disable the default file copy of Unmnaic's post-processor when Remove source files is unselected
+- Disable the default file copy of Unmnaic's post-processor when Remove source files is unselected (Requires Unmanic v0.2.0)
 
 **<span style="color:#56adda">0.0.5</span>**
 - Ignore files on all future scans if "Remove source files" is not selected

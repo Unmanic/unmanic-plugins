@@ -214,9 +214,9 @@ def on_postprocessor_file_movement(data):
 
     # Should the plugin remove the source file?
     # If remove source file is not selected, then prevent the removal of the source file
-    #   and also prevent Unmanic from running the default file movement (requires Unmanic v0.2.0)
     data['remove_source_file'] = settings.get_setting('remove_source_file')
-    data['run_default_file_copy'] = settings.get_setting('remove_source_file')
+    # Always prevent Unmanic from running the default file movement (requires Unmanic v0.2.0)
+    data['run_default_file_copy'] = False
 
     # Set the output file
     file_out = get_file_out(settings, original_source_path, os.path.abspath(data.get('file_out')),
@@ -293,7 +293,7 @@ def on_postprocessor_task_results(data):
     src_file_hash = hashlib.md5(original_source_path.encode('utf8')).hexdigest()
     plugin_data_file = os.path.join(profile_directory, '{}.json'.format(src_file_hash))
     if not os.path.exists(plugin_data_file):
-        logger.error("Plugin data file is missing.")
+        logger.error("Plugin data file is missing (This may be because the file movement post-processor was skipped)")
         raise Exception("Plugin data file is missing.")
     with open(plugin_data_file) as infile:
         file_movement_data = json.load(infile)
