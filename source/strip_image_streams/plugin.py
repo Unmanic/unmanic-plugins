@@ -40,7 +40,41 @@ class PluginStreamMapper(StreamMapper):
 
     def test_stream_needs_processing(self, stream_info: dict):
         """Check if the video stream is actually an image"""
-        if stream_info.get('codec_name').lower() in ['mjpeg', 'png', 'gif']:
+        image_video_codecs = [
+            'alias_pix',
+            'apng',
+            'brender_pix',
+            'dds',
+            'dpx',
+            'exr',
+            'fits',
+            'gif',
+            'mjpeg',
+            'mjpegb',
+            'pam',
+            'pbm',
+            'pcx',
+            'pfm',
+            'pgm',
+            'pgmyuv',
+            'pgx',
+            'photocd',
+            'pictor',
+            'pixlet',
+            'png',
+            'ppm',
+            'ptx',
+            'sgi',
+            'sunrast',
+            'tiff',
+            'vc1image',
+            'wmv3image',
+            'xbm',
+            'xface',
+            'xpm',
+            'xwd',
+        ]
+        if stream_info.get('codec_name').lower() in image_video_codecs:
             return True
         return False
 
