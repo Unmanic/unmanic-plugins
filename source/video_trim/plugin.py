@@ -54,6 +54,10 @@ class Settings(PluginSettings):
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
         super(PluginStreamMapper, self).__init__(logger, ['video', 'audio'])
+        self.settings = None
+
+    def set_settings(self, settings):
+        self.settings = settings
 
     def test_stream_needs_processing(self, stream_info: dict):
         # No streams need to be modified with custom mapping. Copy all.
@@ -66,8 +70,8 @@ class PluginStreamMapper(StreamMapper):
             'stream_encoding': [],
         }
 
-    def __gen_start_args(self, settings, duration):
-        start_seconds = settings.get_setting('start_seconds')
+    def __gen_start_args(self, duration):
+        start_seconds = self.settings.get_setting('start_seconds')
         main_options = {}
         if start_seconds and float(start_seconds) > 0:
             # Ensure the start trim is less than the duration of the file
@@ -77,15 +81,15 @@ class PluginStreamMapper(StreamMapper):
                 return main_options
             # Build the start trim args
             main_options = {
-                "-ss": str(settings.get_setting('start_seconds')),
+                "-ss": str(self.settings.get_setting('start_seconds')),
             }
             self.set_ffmpeg_main_options(**main_options)
 
         return main_options
 
-    def __gen_end_args(self, settings, duration):
+    def __gen_end_args(self, duration):
         # Reduce duration by X seconds less the start_seconds
-        end_seconds = settings.get_setting('end_seconds')
+        end_seconds = self.settings.get_setting('end_seconds')
         main_options = {}
         if end_seconds and float(end_seconds) > 0:
             # Ensure the end trim is less than the duration of the file
@@ -106,7 +110,6 @@ class PluginStreamMapper(StreamMapper):
         Generate a list of args for using a VAAPI decoder
         :return:
         """
-        settings = Settings()
         file_probe_format = self.probe.get('format', {})
         duration = file_probe_format.get('duration')
         if not duration:
@@ -114,8 +117,8 @@ class PluginStreamMapper(StreamMapper):
             return ''
 
         # generate the args
-        start_args = self.__gen_start_args(settings, duration)
-        end_args = self.__gen_end_args(settings, duration)
+        start_args = self.__gen_start_args(duration)
+        end_args = self.__gen_end_args(duration)
 
         # Create an args string to be used to mark against a file
         args_string = ''
@@ -126,8 +129,7 @@ class PluginStreamMapper(StreamMapper):
         return args_string
 
     @staticmethod
-    def file_already_trimmed(path):
-        settings = Settings()
+    def file_already_trimmed(settings, path):
         directory_info = UnmanicDirectoryInfo(os.path.dirname(path))
 
         try:
@@ -173,11 +175,18 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
-    if not mapper.file_already_trimmed(abspath):
+    if not mapper.file_already_trimmed(settings, abspath):
         # Mark this file to be added to the pending tasks
         data['add_file_to_pending_tasks'] = True
         logger.debug("File '{}' should be added to task list. File has not been previously trimmed.".format(abspath))
@@ -220,6 +229,12 @@ def on_worker_process(data):
         # File probe failed, skip the rest of this test
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Fetch duration from file probe...
     file_probe_format = probe.get('format', {})
     duration = file_probe_format.get('duration')
@@ -229,9 +244,10 @@ def on_worker_process(data):
 
     # Get stream mapper
     mapper = PluginStreamMapper()
+    mapper.set_settings(settings)
     mapper.set_probe(probe)
 
-    if not mapper.file_already_trimmed(abspath):
+    if not mapper.file_already_trimmed(settings, abspath):
         # Set the input file
         mapper.set_input_file(abspath)
 
@@ -281,6 +297,12 @@ def on_postprocessor_task_results(data):
     if not data.get('task_processing_success'):
         return data
 
+    # Configure settings object (maintain compatibility with v1 plugins)
+    if data.get('library_id'):
+        settings = Settings(library_id=data.get('library_id'))
+    else:
+        settings = Settings()
+
     # Loop over the destination_files list and update the directory info file for each one
     for destination_file in data.get('destination_files'):
 
@@ -298,6 +320,7 @@ def on_postprocessor_task_results(data):
 
         # Get stream mapper
         mapper = PluginStreamMapper()
+        mapper.set_settings(settings)
         mapper.set_probe(probe)
 
         # Get trim args for the source file
