@@ -960,7 +960,6 @@
                 "xma2"
             ],
             "subtitle": [
-                "arib_caption",
                 "ass",
                 "dvb_subtitle",
                 "dvb_teletext",
@@ -1465,7 +1464,6 @@
                 "xma2"
             ],
             "subtitle": [
-                "arib_caption",
                 "ass",
                 "dvb_subtitle",
                 "dvb_teletext",
@@ -1978,7 +1976,6 @@
                 "xma2"
             ],
             "subtitle": [
-                "arib_caption",
                 "dvd_subtitle",
                 "eia_608",
                 "jacosub",

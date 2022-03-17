@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.11</span>**
+- Remove ARIB STD-B24 subtitle support from avi, mkv, mp4 destination containers
+
 **<span style="color:#56adda">0.0.10</span>**
 - Update FFmpeg helper
 - Add platform declaration
