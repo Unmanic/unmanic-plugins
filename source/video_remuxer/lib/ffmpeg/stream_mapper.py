@@ -177,10 +177,11 @@ class StreamMapper(object):
 
         # Loop over all streams found in the file probe
         for stream_info in file_probe_streams:
+            codec_type = stream_info.get('codec_type', '').lower()
             # Fore each of these streams:
 
             # If this is a video/image stream?
-            if stream_info.get('codec_type').lower() == "video":
+            if codec_type == "video":
                 # Map the video stream
                 if "video" in processing_stream_type:
                     if not self.test_stream_needs_processing(stream_info):
@@ -200,7 +201,7 @@ class StreamMapper(object):
                     continue
 
             # If this is a audio stream?
-            elif stream_info.get('codec_type').lower() == "audio":
+            elif codec_type == "audio":
                 # Map the audio stream
                 if "audio" in processing_stream_type:
                     if not self.test_stream_needs_processing(stream_info):
@@ -220,7 +221,7 @@ class StreamMapper(object):
                     continue
 
             # If this is a subtitle stream?
-            elif stream_info.get('codec_type').lower() == "subtitle":
+            elif codec_type == "subtitle":
                 # Map the subtitle stream
                 if "subtitle" in processing_stream_type:
                     if not self.test_stream_needs_processing(stream_info):
@@ -240,7 +241,7 @@ class StreamMapper(object):
                     continue
 
             # If this is a data stream?
-            elif stream_info.get('codec_type').lower() == "data":
+            elif codec_type == "data":
                 # Map the data stream
                 if "data" in processing_stream_type:
                     if not self.test_stream_needs_processing(stream_info):
@@ -260,7 +261,7 @@ class StreamMapper(object):
                     continue
 
             # If this is a attachment stream?
-            elif stream_info.get('codec_type').lower() == "attachment":
+            elif codec_type == "attachment":
                 # Map the attachment stream
                 if "attachment" in processing_stream_type:
                     if not self.test_stream_needs_processing(stream_info):
