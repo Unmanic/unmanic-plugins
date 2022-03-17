@@ -1,12 +1,11 @@
 
 
 
-<div style="background-color:#cfd;border-radius:4px;border-left:solid 5px #2b4;padding:10px;">
-<b>Tip:</b>
-<br>Ensure that your container already supports the streams contained in the source file.
-<br>Different containers support different stream codecs.
-<br>Especially note subtitle streams. To avoid issues with subtitles, consider also using a Plugin to strip subtitles from the file prior to remuxing.
-</div>
+:::tip
+Ensure that your container already supports the streams contained in the source file.
+Different containers support different stream codecs.
+Especially note subtitle streams. To avoid issues with subtitles, consider also using a Plugin to strip subtitles from the file prior to remuxing.
+:::
 
 ---
 

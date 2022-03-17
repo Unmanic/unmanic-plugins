@@ -306,7 +306,7 @@ class StreamMapper(object):
                 options[val_pos] = value
             else:
                 options += [key, value]
-        return options
+        return
 
     def streams_need_processing(self):
         """
@@ -340,6 +340,14 @@ class StreamMapper(object):
         """Set the output file for the FFmpeg args"""
         self.output_file = os.path.abspath(path)
 
+    def set_output_null(self):
+        """Set the output container to NULL for the FFmpeg args"""
+        self.output_file = '-'
+        main_options = {
+            "-f": 'null',
+        }
+        self.__build_args(self.main_options, **main_options)
+
     def set_ffmpeg_generic_options(self, *args, **kwargs):
         """
         Set FFmpeg Generic options.
@@ -353,7 +361,7 @@ class StreamMapper(object):
         :param kwargs:
         :return:
         """
-        self.generic_options = self.__build_args(self.generic_options, *args, **kwargs)
+        self.__build_args(self.generic_options, *args, **kwargs)
 
     def set_ffmpeg_main_options(self, *args, **kwargs):
         """
@@ -366,7 +374,7 @@ class StreamMapper(object):
 
         :return:
         """
-        self.main_options = self.__build_args(self.main_options, *args, **kwargs)
+        self.__build_args(self.main_options, *args, **kwargs)
 
     def set_ffmpeg_advanced_options(self, *args, **kwargs):
         """
@@ -385,7 +393,7 @@ class StreamMapper(object):
 
         :return:
         """
-        self.advanced_options = self.__build_args(self.advanced_options, *args, **kwargs)
+        self.__build_args(self.advanced_options, *args, **kwargs)
 
     def get_stream_mapping(self):
         """
@@ -438,6 +446,9 @@ class StreamMapper(object):
         # This class requires at least one output file specified with the output_file attribute
         if not self.output_file:
             raise Exception("Output file has not been set")
-        args += ['-y', self.output_file]
+        elif self.output_file == '-':
+            args += [self.output_file]
+        else:
+            args += ['-y', self.output_file]
 
         return args
