@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.sma/master/icon.png",
     "id": "sma",
     "name": "SMA Conversion/Tagging Automation Script",
+    "platform": [
+        "linux"
+    ],
     "priorities": {
         "on_library_management_file_test":2,
         "on_worker_process": 0,
