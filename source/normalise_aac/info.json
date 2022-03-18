@@ -8,10 +8,13 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.normalise_aac/master/icon.png",
     "id": "normalise_aac",
     "name": "Normalise AAC Audio Streams",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 99,
         "on_worker_process": 0
     },
     "tags": "audio,ffmpeg,library file test",
-    "version": "0.0.5"
+    "version": "0.0.6"
 }
