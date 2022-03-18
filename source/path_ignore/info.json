@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.path_ignore/master/icon.png",
     "id": "path_ignore",
     "name": "Path Ignore",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 1
     },
