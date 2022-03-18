@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_over_size/master/icon.png",
     "id": "ignore_over_size",
     "name": "Ignore files over size",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 0
     },
