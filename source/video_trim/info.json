@@ -8,11 +8,14 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_trim/master/icon.png",
     "id": "video_trim",
     "name": "Video Trim",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 99,
         "on_worker_process": 1,
         "on_postprocessor_task_results": 99
     },
     "tags": "video,audio,ffmpeg",
-    "version": "0.0.6"
+    "version": "0.0.7"
 }
