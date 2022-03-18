@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.postprocessor_script/master/icon.png",
     "id": "postprocessor_script",
     "name": "External Post-processor Script",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_postprocessor_task_results": 0
     },
