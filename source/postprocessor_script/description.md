@@ -25,6 +25,11 @@ Variables may be given in this field. See below for a list of variable types.
 ---
 
 #### Variables:
+
+:::note
+You may need to place single quotes around these variables as it may contain characters that shell may otherwise attempt to parse.
+:::
+
 ###### <span style="color:green">{output_files}</span>
 
 Will be replaced with a JSON object list of files generated.
@@ -64,9 +69,6 @@ Eg.
 ```
     --originalsize={source_file_size}
 ```
-
-#### <span style="color:gray">Note:</span>
-> You should place single quotes around this variable as it may contain characters that shell may otherwise attempt to parse.
 
 ---
 
