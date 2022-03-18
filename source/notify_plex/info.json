@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.notify_plex/master/icon.png",
     "id": "notify_plex",
     "name": "Notify Plex",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_postprocessor_task_results": 0
     },
