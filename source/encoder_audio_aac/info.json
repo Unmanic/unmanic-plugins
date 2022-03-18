@@ -8,10 +8,13 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_audio_aac/master/icon.png",
     "id": "encoder_audio_aac",
     "name": "Audio Encoder AAC",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 99,
         "on_worker_process": 0
     },
     "tags": "audio,encoder,ffmpeg,library file test",
-    "version": "0.0.3"
+    "version": "0.0.4"
 }
