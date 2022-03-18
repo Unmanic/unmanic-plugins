@@ -396,7 +396,7 @@ def on_worker_process(data):
 
             advanced_options = settings.get_setting('advanced_options').split()
             if advanced_options:
-                # Overwrite all main options
+                # Overwrite all advanced options
                 mapper.advanced_options = advanced_options
 
         else:
