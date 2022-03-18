@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.mover2/master/icon.png",
     "id": "mover2",
     "name": "Mover v2",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_postprocessor_file_movement": 0,
         "on_postprocessor_task_results": 99
