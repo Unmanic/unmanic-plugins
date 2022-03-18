@@ -8,9 +8,12 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.extract_srt_subtitles_to_files/master/icon.png",
     "id": "extract_srt_subtitles_to_files",
     "name": "Extract text subtitle streams to SRT files",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_worker_process": 2
     },
     "tags": "subtitle,ffmpeg",
-    "version": "0.0.6"
+    "version": "0.0.7"
 }
