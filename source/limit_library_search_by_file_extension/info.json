@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.limit_library_search_by_file_extension/master/icon.png",
     "id": "limit_library_search_by_file_extension",
     "name": "Limit library search by file extension",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 1
     },
