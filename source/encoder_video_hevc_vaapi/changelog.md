@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- Update FFmpeg helper
+- Add platform declaration
+
 **<span style="color:#56adda">0.0.6</span>**
 - Enabled support for v2 plugin executor
 
