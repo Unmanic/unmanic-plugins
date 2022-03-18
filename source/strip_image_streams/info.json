@@ -8,10 +8,13 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.strip_image_streams/master/icon.png",
     "id": "strip_image_streams",
     "name": "Strip all image streams from file",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 99,
         "on_worker_process": 1
     },
     "tags": "video,ffmpeg,library file test",
-    "version": "0.0.6"
+    "version": "0.0.7"
 }
