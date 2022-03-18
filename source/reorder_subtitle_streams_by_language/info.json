@@ -8,10 +8,13 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.reorder_subtitle_streams_by_language/master/icon.png",
     "id": "reorder_subtitle_streams_by_language",
     "name": "Re-order subtitle streams by language",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 99,
         "on_worker_process": 2
     },
     "tags": "subtitle,ffmpeg,library file test",
-    "version": "1.0.3"
+    "version": "1.0.4"
 }
