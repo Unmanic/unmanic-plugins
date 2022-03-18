@@ -9,7 +9,7 @@ This python module is a helper library for any Unmanic plugin that needs to buil
 It should be included in your plugin project as a submodule.
 
 ```
-git submodule add git@github.com:Josh5/unmanic.plugin.helpers.ffmpeg.git ./lib/ffmpeg
+git submodule add https://github.com/Josh5/unmanic.plugin.helpers.ffmpeg.git ./lib/ffmpeg
 ```
 
 ### Calling it in your project
