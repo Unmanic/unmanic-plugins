@@ -27,6 +27,8 @@ import os
 import subprocess
 from logging import Logger
 
+from .mimetype_overrides import MimetypeOverrides
+
 
 class FFProbeError(Exception):
     """
@@ -107,6 +109,15 @@ class Probe(object):
             allowed_mimetypes = ['audio', 'video', 'image']
         self.allowed_mimetypes = allowed_mimetypes
 
+        # Init (reset) our mimetype list
+        mimetypes.init()
+
+        # Add mimetype overrides to mimetype dictionary (replaces any existing entries)
+        mimetype_overrides = MimetypeOverrides()
+        all_mimetype_overrides = mimetype_overrides.get_all()
+        for extension in all_mimetype_overrides:
+            mimetypes.add_type(all_mimetype_overrides.get(extension), extension)
+
     def __test_valid_mimetype(self, file_path):
         """
         Test the given file path for its mimetype.
@@ -118,7 +129,6 @@ class Probe(object):
         :return:
         """
         # Only run this check against video/audio/image MIME types
-        mimetypes.init()
         file_type = mimetypes.guess_type(file_path)[0]
 
         # If the file has no MIME type then it cannot be tested
