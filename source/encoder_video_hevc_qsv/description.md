@@ -38,16 +38,15 @@ Tune the output settings based on the specifics of your input.
 #### <span style="color:blue">Encoder ratecontrol method</span>
 Select the encoder ratecontrol method. Some encoder modes are quality-based while others are bitrate-based.
 
-<div style="background-color:#eee;border-radius:4px;border-left:solid 5px #ccc;padding:10px;">
-<b>Note:</b>
-<br>Not all modes are added to this Plugin.
-<br>I have selected the most common in order to simplify the configuration of this Plugin.
-</div>
-<br>
-<div style="background-color:#cfd;border-radius:4px;border-left:solid 5px #2b4;padding:10px;">
-<b>Tip:</b>
-<br>Set a quality-based control to have FFmpeg attempt to match the quality of the source file at a lower bitrate.
-</div>
+
+:::note
+Not all modes are added to this Plugin.
+I have selected the most common in order to simplify the configuration of this Plugin.
+:::
+
+:::tip
+Set a quality-based control to have FFmpeg attempt to match the quality of the source file at a lower bitrate.
+:::
 
 - [FFmpeg QSV encoders](https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-encoders)
 
@@ -69,7 +68,7 @@ then this target will be made constant rather than just an average.
 This free text input allows you to write any FFmpeg params that you want. 
 This is for more advanced use cases where you need finer control over the file transcode.
 
-###### Note:
+:::note
 These params are added in three different places:
 1. **MAIN OPTIONS** - After the default generic options.
    ([Main Options Docs](https://ffmpeg.org/ffmpeg.html#Main-options))
@@ -95,3 +94,4 @@ ffmpeg \
     -c:a:1 copy \
     -y /path/to/output/video.mkv 
 ```
+:::
