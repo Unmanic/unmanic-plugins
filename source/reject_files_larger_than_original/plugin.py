@@ -89,7 +89,7 @@ def on_library_management_file_test(data):
         settings = Settings()
 
     if file_marked_as_failed(settings, abspath):
-        # Mark this file to be added to the pending tasks
+        # Ensure this file is not added to the pending tasks
         data['add_file_to_pending_tasks'] = False
         logger.debug("File '{}' has been previously marked as failed.".format(abspath))
 
