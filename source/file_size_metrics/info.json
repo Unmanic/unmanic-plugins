@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.file_size_metrics/master/icon.png",
     "id": "file_size_metrics",
     "name": "File Size Metrics Data Panel",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_worker_process": 1,
         "on_postprocessor_task_results": 0
