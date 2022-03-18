@@ -8,6 +8,9 @@
     "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_files_recently_modified/master/icon.png",
     "id": "ignore_files_recently_modified",
     "name": "Ignore files recently modified",
+    "platform": [
+        "all"
+    ],
     "priorities": {
         "on_library_management_file_test": 2
     },
