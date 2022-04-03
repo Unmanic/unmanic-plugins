@@ -1104,7 +1104,6 @@
                 "h263p",
                 "h264",
                 "hap",
-                "hevc",
                 "hnm4video",
                 "hq_hqa",
                 "hqx",
@@ -2002,9 +2001,7 @@
                 "scte_35",
                 "timed_id3"
             ],
-            "attachment": [
-                "ttf"
-            ]
+            "attachment": []
         },
         "default_encoder_params": {
             "video": [
