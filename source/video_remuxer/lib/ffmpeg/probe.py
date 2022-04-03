@@ -24,6 +24,7 @@
 import json
 import mimetypes
 import os
+import shutil
 import subprocess
 from logging import Logger
 
@@ -104,6 +105,10 @@ class Probe(object):
     probe_info = {}
 
     def __init__(self, logger: Logger, allowed_mimetypes=None):
+        # Ensure ffprobe is installed
+        if shutil.which('ffprobe') is None:
+            raise Exception("Unable to find executable 'ffprobe'. Please ensure that FFmpeg is installed correctly.")
+
         self.logger = logger
         if allowed_mimetypes is None:
             allowed_mimetypes = ['audio', 'video', 'image']
@@ -169,10 +174,6 @@ class Probe(object):
         except FFProbeError:
             # This will only happen if it was not a file that could be probed.
             self.logger.debug("File unable to be probed by FFProbe - '{}'".format(file_path))
-            return
-        except Exception as e:
-            # The process failed for some unknown reason. Log it.
-            self.logger.debug("Failed to set file probe - ".format(str(e)))
             return
 
     def get_probe(self):

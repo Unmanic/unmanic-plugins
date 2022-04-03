@@ -1,4 +1,9 @@
 
+**<span style="color:#56adda">0.0.12</span>**
+- Plugin should throw an exception when FFmpeg is not correctly installed
+- Prevent HEVC codec support on AVI
+- Prevent ttf codec support on MP4
+
 **<span style="color:#56adda">0.0.11</span>**
 - Remove ARIB STD-B24 subtitle support from avi, mkv, mp4 destination containers
 

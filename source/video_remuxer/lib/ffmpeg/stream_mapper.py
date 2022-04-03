@@ -22,6 +22,7 @@
 
 """
 import os
+import shutil
 from logging import Logger
 
 from .probe import Probe
@@ -54,6 +55,10 @@ class StreamMapper(object):
     format_options = []
 
     def __init__(self, logger: Logger, processing_stream_type: list):
+        # Ensure ffmpeg is installed
+        if shutil.which('ffmpeg') is None:
+            raise Exception("Unable to find executable 'ffmpeg'. Please ensure that FFmpeg is installed correctly.")
+
         self.logger = logger
         if processing_stream_type is not None:
             if any(pst for pst in processing_stream_type if
