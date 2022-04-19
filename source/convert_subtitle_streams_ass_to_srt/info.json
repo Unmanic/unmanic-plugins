@@ -15,5 +15,5 @@
         "on_worker_process": 0
     },
     "tags": "subtitle,ffmpeg,library file test",
-    "version": "0.0.4"
+    "version": "0.0.5"
 }

@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Fix for incorrect lib import
+
 **<span style="color:#56adda">0.0.4</span>**
 - Update FFmpeg helper
 - Add platform declaration
