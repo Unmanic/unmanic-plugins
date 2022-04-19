@@ -26,7 +26,7 @@ import os
 
 from unmanic.libs.unplugins.settings import PluginSettings
 
-from normalise_aac.lib.ffmpeg import StreamMapper, Probe, Parser
+from convert_subtitle_streams_ass_to_srt.lib.ffmpeg import StreamMapper, Probe, Parser
 
 # Configure plugin logger
 logger = logging.getLogger("Unmanic.Plugin.convert_subtitle_streams_ass_to_srt")
