@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.8</span>**
+- Add library tester to search for files with SRT streams
+- Update FFmpeg helper
+
 **<span style="color:#56adda">0.0.7</span>**
 - Update FFmpeg helper
 - Add platform declaration
