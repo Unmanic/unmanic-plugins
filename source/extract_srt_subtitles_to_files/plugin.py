@@ -96,6 +96,52 @@ class PluginStreamMapper(StreamMapper):
         return args
 
 
+def on_library_management_file_test(data):
+    """
+    Runner function - enables additional actions during the library management file tests.
+
+    The 'data' object argument includes:
+        library_id                      - The library that the current task is associated with
+        path                            - String containing the full path to the file being tested.
+        issues                          - List of currently found issues for not processing the file.
+        add_file_to_pending_tasks       - Boolean, is the file currently marked to be added to the queue for processing.
+        priority_score                  - Integer, an additional score that can be added to set the position of the new task in the task queue.
+        shared_info                     - Dictionary, information provided by previous plugin runners. This can be appended to for subsequent runners.
+
+    :param data:
+    :return:
+
+    """
+    # Get the path to the file
+    abspath = data.get('path')
+
+    # Get file probe
+    probe = Probe(logger, allowed_mimetypes=['video'])
+    if 'ffprobe' in data.get('shared_info', {}):
+        if not probe.set_probe(data.get('shared_info', {}).get('ffprobe')):
+            # Failed to set ffprobe from shared info.
+            # Probably due to it being for an incompatible mimetype declared above
+            return
+    elif not probe.file(abspath):
+        # File probe failed, skip the rest of this test
+        return
+    # Set file probe to shared infor for subsequent file test runners
+    if 'shared_info' in data:
+        data['shared_info'] = {}
+    data['shared_info']['ffprobe'] = probe.get_probe()
+
+    # Get stream mapper
+    mapper = PluginStreamMapper()
+    mapper.set_probe(probe)
+
+    if mapper.streams_need_processing():
+        # Mark this file to be added to the pending tasks
+        data['add_file_to_pending_tasks'] = True
+        logger.debug("File '{}' should be added to task list. Probe found streams require processing.".format(abspath))
+    else:
+        logger.debug("File '{}' does not contain streams require processing.".format(abspath))
+
+
 def on_worker_process(data):
     """
     Runner function - enables additional configured processing jobs during the worker stages of a task.
@@ -127,7 +173,7 @@ def on_worker_process(data):
     probe = Probe(logger, allowed_mimetypes=['video'])
     if not probe.file(abspath):
         # File probe failed, skip the rest of this test
-        return data
+        return
 
     # Get stream mapper
     mapper = PluginStreamMapper()
@@ -162,5 +208,3 @@ def on_worker_process(data):
         parser = Parser(logger)
         parser.set_probe(probe)
         data['command_progress_parser'] = parser.parse_progress
-
-    return data
