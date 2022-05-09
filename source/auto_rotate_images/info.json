@@ -1,0 +1,16 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Automatically rotate JPEG images based on their Exif header",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.auto_rotate_images/master/icon.png",
+    "id": "auto_rotate_images",
+    "name": "Auto Rotate Images",
+    "priorities": {
+        "on_library_management_file_test": 4,
+        "on_worker_process": 0
+    },
+    "tags": "image,library file test",
+    "version": "0.0.2"
+}
