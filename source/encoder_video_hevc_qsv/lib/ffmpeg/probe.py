@@ -24,6 +24,7 @@
 import json
 import mimetypes
 import os
+import shutil
 import subprocess
 from logging import Logger
 
@@ -104,6 +105,10 @@ class Probe(object):
     probe_info = {}
 
     def __init__(self, logger: Logger, allowed_mimetypes=None):
+        # Ensure ffprobe is installed
+        if shutil.which('ffprobe') is None:
+            raise Exception("Unable to find executable 'ffprobe'. Please ensure that FFmpeg is installed correctly.")
+
         self.logger = logger
         if allowed_mimetypes is None:
             allowed_mimetypes = ['audio', 'video', 'image']
@@ -139,10 +144,34 @@ class Probe(object):
         # Make sure the MIME type is either audio, video or image
         file_type_category = file_type.split('/')[0]
         if file_type_category not in self.allowed_mimetypes:
-            self.logger.debug("File MIME type not in 'audio', 'video' or 'image' - '{}'".format(file_path))
+            self.logger.debug("File MIME type not in [{}] - '{}'".format(', '.join(self.allowed_mimetypes), file_path))
             return False
 
         return True
+
+    @staticmethod
+    def init_probe(data, logger):
+        """
+        Fetch the Probe object given a plugin's data object
+
+        :param data:
+        :param logger:
+        :return:
+        """
+        probe = Probe(logger, allowed_mimetypes=['video'])
+        if 'ffprobe' in data.get('shared_info', {}):
+            if not probe.set_probe(data.get('shared_info', {}).get('ffprobe')):
+                # Failed to set ffprobe from shared info.
+                # Probably due to it being for an incompatible mimetype declared above
+                return
+        elif not probe.file(data.get('path')):
+            # File probe failed, skip the rest of this test
+            return
+        # Set file probe to shared infor for subsequent file test runners
+        if 'shared_info' in data:
+            data['shared_info'] = {}
+        data['shared_info']['ffprobe'] = probe.get_probe()
+        return probe
 
     def file(self, file_path):
         """
@@ -170,10 +199,17 @@ class Probe(object):
             # This will only happen if it was not a file that could be probed.
             self.logger.debug("File unable to be probed by FFProbe - '{}'".format(file_path))
             return
-        except Exception as e:
-            # The process failed for some unknown reason. Log it.
-            self.logger.debug("Failed to set file probe - ".format(str(e)))
+
+    def set_probe(self, probe_info):
+        """Sets the probe dictionary"""
+        file_path = probe_info.get('format', {}).get('filename')
+        if not file_path:
             return
+        if not self.__test_valid_mimetype(file_path):
+            return
+
+        self.probe_info = probe_info
+        return self.probe_info
 
     def get_probe(self):
         """Return the probe dictionary"""
