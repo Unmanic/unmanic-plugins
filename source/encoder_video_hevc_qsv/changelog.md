@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Use new "shared_info" object to share ffprobe data between file test plugins
+
 **<span style="color:#56adda">0.0.4</span>**
 - Update FFmpeg helper
 - Add platform declaration
