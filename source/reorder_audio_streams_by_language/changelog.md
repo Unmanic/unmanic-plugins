@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">1.1.5</span>**
+- Fix issue where the default track would still be set after a reorder
+
 **<span style="color:#56adda">1.1.4</span>**
 - Update FFmpeg helper
 - Add platform declaration
