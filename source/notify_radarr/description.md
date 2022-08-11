@@ -16,6 +16,11 @@ Radarr application API key
 Use this mode when you wish to simply trigger a refresh on a movie to re-read a modified file after Unmanic has 
 processed it.
 
+#### <span style="color:blue">Trigger Radarr file renaming</span>
+Only available if the *Trigger movie refresh on task complete* mode is selected.
+
+Trigger Radarr to re-name files according to the defined naming scheme. Useful if you've changed encodings and have these encodings in your name templates.
+
 ##### Import movie on task complete
 Use this mode when you are running Unmanic prior to importing a file into Radarr. 
 This will trigger a download import.
