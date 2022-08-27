@@ -1,0 +1,36 @@
+name: Auto generate PR branches
+
+on:
+  schedule:
+    # At 03:21 on every day-of-month. (21 3 */1 * *)
+    - cron:  '21 3 */1 * *'
+
+jobs:
+
+  generate_pr_branches:
+
+    name: Check for Plugin Updates
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        plugin_id: 
+          - notify_radarr
+
+    steps:
+    # Fetch shallow git repository
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Checkout plugin
+      uses: actions/checkout@v2
+      with:
+        repository: Unmanic/plugin.${{ matrix.plugin_id }}
+        path: ./build/plugin.${{ matrix.plugin_id }}
+
+    # Check for plugin updates and create a PR branch with any changes found
+    - name: Process updates and generate PR branches
+      run: |
+        git config --global user.email "${GITHUB_ACTOR}"
+        git config --global user.name "${GITHUB_ACTOR}@users.noreply.github.com"
+        ./.github/workflow_scripts/create_plugin_pr_branch.sh "${{ matrix.plugin_id }}"
+      shell: bash
