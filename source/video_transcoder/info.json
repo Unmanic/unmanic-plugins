@@ -4,7 +4,7 @@
         2
     ],
     "description": "Transcode the video streams of a video file",
-    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_transcoder/master/icon.png",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.video_transcoder/master/icon.png",
     "id": "video_transcoder",
     "name": "Transcode Video Files",
     "priorities": {
@@ -12,5 +12,5 @@
         "on_worker_process": 1
     },
     "tags": "video,ffmpeg",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }
