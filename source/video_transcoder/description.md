@@ -4,8 +4,8 @@
 ##### Links:
 
 - [Support](https://unmanic.app/discord)
-- [Issues/Feature Requests](https://github.com/Josh5/unmanic.plugin.video_transcoder/issues)
-- [Pull Requests](https://github.com/Josh5/unmanic.plugin.video_transcoder/pulls)
+- [Issues/Feature Requests](https://github.com/Unmanic/plugin.video_transcoder/issues)
+- [Pull Requests](https://github.com/Unmanic/plugin.video_transcoder/pulls)
 
 ---
 

@@ -6,7 +6,7 @@
 # File Created: Friday, 26th August 2022 5:06:41 pm
 # Author: Josh.5 (jsunnex@gmail.com)
 # -----
-# Last Modified: Friday, 26th August 2022 5:45:17 pm
+# Last Modified: Monday, 29th August 2022 10:34:26 pm
 # Modified By: Josh.5 (jsunnex@gmail.com)
 ###
 # !/usr/bin/env python3
@@ -68,11 +68,13 @@ class GlobalSettings:
                 "dest_container": "mkv",
             },
             "filter_settings":        {
-                "apply_smart_filters":     False,
-                "autocrop_black_bars":     False,
-                "target_resolution":       "source",
-                "apply_custom_filters":    False,
-                "custom_software_filters": "",
+                "apply_smart_filters":      False,
+                "autocrop_black_bars":      False,
+                "target_resolution":        "source",
+                "strip_data_streams":       False,
+                "strip_attachment_streams": False,
+                "apply_custom_filters":     False,
+                "custom_software_filters":  "",
             },
         }
 
@@ -177,7 +179,6 @@ class GlobalSettings:
             ]
         elif self.settings.get_setting('video_codec') == 'h264':
             # TODO: Add support for VAAPI (requires some tweaking of standard values)
-            # TODO: Enable libx264
             values['select_options'] = [
                 {
                     "value": "libx264",
@@ -323,6 +324,35 @@ class GlobalSettings:
                     "label": generate_label_resolution("8k_uhd"),
                 },
             ],
+        }
+        if not self.settings.get_setting('apply_smart_filters'):
+            values["display"] = 'hidden'
+        if self.settings.get_setting('mode') not in ['standard']:
+            values["display"] = 'hidden'
+        return values
+
+    def get_strip_data_streams_form_settings(self):
+        values = {
+            "label":       "Strip data streams",
+            "description": "Remove any data streams.\n"
+                           "These streams could contain an EPG or metadata.\n"
+                           "Certain subtitle formats are stored as data streams in some containers.\n"
+                           "Data streams are not supported by all containers.",
+            "sub_setting": True,
+        }
+        if not self.settings.get_setting('apply_smart_filters'):
+            values["display"] = 'hidden'
+        if self.settings.get_setting('mode') not in ['standard']:
+            values["display"] = 'hidden'
+        return values
+
+    def get_strip_attachment_streams_form_settings(self):
+        values = {
+            "label":       "Strip attachment streams",
+            "description": "Remove any attachment streams.\n"
+                           "These streams could contain fonts used in rendering subtitles.\n"
+                           "Attachment streams are not supported by all containers.",
+            "sub_setting": True,
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'

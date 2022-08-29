@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.2</span>**
+- Fix detection if video stream is already in the correct codec
+- Add ability to strip data and attachment streams from video files
+
 **<span style="color:#56adda">0.0.1</span>**
 - Add an "Advanced" configuration option to the plugin's settings
 - Add ability to force transcoding of a video when it is already in the desired video codec

@@ -194,10 +194,12 @@ class StreamMapper(object):
                         self.video_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.video_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.video_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('v', self.video_stream_count)
                         self.video_stream_count += 1
                         continue
                 else:
@@ -214,10 +216,12 @@ class StreamMapper(object):
                         self.audio_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.audio_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.audio_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('a', self.audio_stream_count)
                         self.audio_stream_count += 1
                         continue
                 else:
@@ -234,10 +238,12 @@ class StreamMapper(object):
                         self.subtitle_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.subtitle_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.subtitle_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('s', self.subtitle_stream_count)
                         self.subtitle_stream_count += 1
                         continue
                 else:
@@ -254,10 +260,12 @@ class StreamMapper(object):
                         self.data_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.data_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.data_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('d', self.data_stream_count)
                         self.data_stream_count += 1
                         continue
                 else:
@@ -274,10 +282,12 @@ class StreamMapper(object):
                         self.attachment_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.attachment_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.attachment_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('t', self.attachment_stream_count)
                         self.attachment_stream_count += 1
                         continue
                 else:
