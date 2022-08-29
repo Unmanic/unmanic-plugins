@@ -19,6 +19,7 @@ jobs:
       matrix:
         plugin_id: 
           - notify_radarr
+          - video_transcoder
 
     steps:
     # Fetch shallow git repository
