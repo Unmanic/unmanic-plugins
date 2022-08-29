@@ -1,9 +1,13 @@
 name: Auto generate PR branches
 
 on:
+  push:
+    # On every push to the official branch
+    branches:
+      - 'official'
   schedule:
     # At 03:21 on every day-of-month. (21 3 */1 * *)
-    - cron:  '21 3 */1 * *'
+    - cron:  '21 3 * * *'
 
 jobs:
 
