@@ -42,6 +42,7 @@ class PluginStreamMapper(StreamMapper):
         self.complex_video_filters = {}
         self.crop_value = None
         self.vaapi_encoders = ['hevc_vaapi', 'h264_vaapi']
+        self.forced_encode = False
 
     def set_default_values(self, settings, abspath, probe):
         """
@@ -257,9 +258,12 @@ class PluginStreamMapper(StreamMapper):
 
         # If the stream is a video, add a final check if the codec is already the correct format
         #   (Ignore checks if force transcode is set)
-        if stream_info.get('codec_type', '').lower() in ['video'] and not self.settings.get_setting('force_transcode'):
-            if stream_info.get('codec_name').lower() == self.settings.get_setting('video_codec'):
+        if stream_info.get('codec_type', '').lower() in ['video'] and stream_info.get(
+                'codec_name').lower() == self.settings.get_setting('video_codec'):
+            if not self.settings.get_setting('force_transcode'):
                 return False
+            else:
+                self.forced_encode = True
 
         # All other streams should be custom mapped
         return True

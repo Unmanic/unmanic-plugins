@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.3</span>**
+- Fix bug where videos would forever be re-added to the task list if force transcoding was enabled
+
 **<span style="color:#56adda">0.0.2</span>**
 - Fix detection if video stream is already in the correct codec
 - Add ability to strip data and attachment streams from video files
