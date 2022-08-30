@@ -5,7 +5,7 @@
 # File Created: Friday, 26th August 2022 8:17:10 pm
 # Author: Josh.5 (jsunnex@gmail.com)
 # -----
-# Last Modified: Saturday, 27th August 2022 2:51:47 pm
+# Last Modified: Tuesday, 30th August 2022 6:57:36 pm
 # Modified By: Josh.5 (jsunnex@gmail.com)
 ###
 #
@@ -76,6 +76,7 @@ echo -e "\n*** Installing files from plugin git repo to this repository's source
 mkdir -p "${repo_root_path}/source/${plugin_id}"
 rsync -avh --delete \
     --exclude='.git/' \
+    --exclude='.github/' \
     --exclude='.gitmodules' \
     --exclude='.idea/' \
     "${plugin_location}/" "${repo_root_path}/source/${plugin_id}"
@@ -97,14 +98,19 @@ if [[ $? -gt 0 ]]; then
     echo
     echo "No commit created. Possibly because there was nothing to commit!"
     echo "PR branch will not be pushed." 
-    exit 1
+    # export result
+    echo "failed" > result.txt
+    # Fail without an exit 1 in actions so the pipeline can faile silently 
+    exit
 fi
+echo "success" > result.txt
 popd &> /dev/null
 
 
-########################################################################
-### PUBLISH
-pushd "${repo_root_path}" &> /dev/null
-echo -e "\n*** Publish changes to origin unmanic-plugins repository"
-git push -f origin "pr-${plugin_id}"
-popd &> /dev/null
+# ########################################################################
+# ### PUBLISH
+# # NOTE: Disabled publishing here. This will be handled by another job in the workflow
+# pushd "${repo_root_path}" &> /dev/null
+# echo -e "\n*** Publish changes to origin unmanic-plugins repository"
+# git push  https://$GH_TOKEN@github.com/${CLOUDYR_REPO}.git -f "pr-${plugin_id}"
+# popd &> /dev/null

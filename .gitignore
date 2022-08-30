@@ -38,3 +38,4 @@ Thumbs.db
 
 # Temp files
 ./build/**
+./result.txt
