@@ -42,6 +42,7 @@ from video_transcoder.lib.encoders.qsv import QsvEncoder
 from video_transcoder.lib.encoders.vaapi import VaapiEncoder
 
 from unmanic.libs.unplugins.settings import PluginSettings
+from unmanic.libs.directoryinfo import UnmanicDirectoryInfo
 
 # Configure plugin logger
 logger = logging.getLogger("Unmanic.Plugin.video_transcoder")
@@ -127,6 +128,26 @@ class Settings(PluginSettings):
         }
 
 
+def file_marked_as_force_transcoded(path):
+    directory_info = UnmanicDirectoryInfo(os.path.dirname(path))
+    try:
+        has_been_force_transcoded = directory_info.get('video_transcoder', os.path.basename(path))
+    except NoSectionError as e:
+        has_been_force_transcoded = ''
+    except NoOptionError as e:
+        has_been_force_transcoded = ''
+    except Exception as e:
+        logger.debug("Unknown exception %s.", e)
+        has_been_force_transcoded = ''
+
+    if has_been_force_transcoded == 'force_transcoded':
+        # This file has already has been force transcoded
+        return True
+
+    # Default to...
+    return False
+
+
 def on_library_management_file_test(data):
     """
     Runner function - enables additional actions during the library management file tests.
@@ -171,11 +192,16 @@ def on_library_management_file_test(data):
 
     # Check if this file needs to be processed
     if mapper.streams_need_processing():
+        if file_marked_as_force_transcoded(abspath) and mapper.forced_encode:
+            logger.debug(
+                "File '%s' has been previously marked as forced transcoded. Plugin found streams require processing, but will ignore this file.",
+                abspath)
+            return
         # Mark this file to be added to the pending tasks
         data['add_file_to_pending_tasks'] = True
-        logger.debug("File '{}' should be added to task list. Plugin found streams require processing.".format(abspath))
+        logger.debug("File '%s' should be added to task list. Plugin found streams require processing.", abspath)
     else:
-        logger.debug("File '{}' does not contain streams require processing.".format(abspath))
+        logger.debug("File '%s' does not contain streams require processing.", abspath)
 
 
 def on_worker_process(data):
@@ -218,6 +244,9 @@ def on_worker_process(data):
 
     # Check if this file needs to be processed
     if mapper.streams_need_processing():
+        if file_marked_as_force_transcoded(abspath) and mapper.forced_encode:
+            # Do not process this file, it has been force transcoded once before
+            return
 
         # Set the output file
         if settings.get_setting('keep_container'):
@@ -243,4 +272,46 @@ def on_worker_process(data):
         parser.set_probe(probe)
         data['command_progress_parser'] = parser.parse_progress
 
+        if settings.get_setting('force_transcode'):
+            cache_directory = os.path.dirname(data.get('file_out'))
+            if not os.path.exists(cache_directory):
+                os.makedirs(cache_directory)
+            with open(os.path.join(cache_directory, '.force_transcode'), 'w') as f:
+                f.write('')
+
     return
+
+
+def on_postprocessor_task_results(data):
+    """
+    Runner function - provides a means for additional postprocessor functions based on the task success.
+
+    The 'data' object argument includes:
+        final_cache_path                - The path to the final cache file that was then used as the source for all destination files.
+        library_id                      - The library that the current task is associated with.
+        task_processing_success         - Boolean, did all task processes complete successfully.
+        file_move_processes_success     - Boolean, did all postprocessor movement tasks complete successfully.
+        destination_files               - List containing all file paths created by postprocessor file movements.
+        source_data                     - Dictionary containing data pertaining to the original source file.
+
+    :param data:
+    :return:
+
+    """
+    # Get settings
+    settings = Settings(library_id=data.get('library_id'))
+
+    # Get the original file's absolute path
+    original_source_path = data.get('source_data', {}).get('abspath')
+    if not original_source_path:
+        logger.error("Provided 'source_data' is missing the source file abspath data.")
+        return
+
+    # Mark the source file to be ignored on subsequent scans if 'force_transcode' was enabled
+    if settings.get_setting('force_transcode'):
+        cache_directory = data.get('final_cache_path')
+        if os.path.exists(os.path.join(cache_directory, '.force_transcode')):
+            directory_info = UnmanicDirectoryInfo(os.path.dirname(original_source_path))
+            directory_info.set('video_transcoder', os.path.basename(original_source_path), 'force_transcoded')
+            directory_info.save()
+            logger.debug("Ignore on next scan written for '%s'.", original_source_path)

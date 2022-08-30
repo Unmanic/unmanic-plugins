@@ -149,6 +149,11 @@ class GlobalSettings:
     def get_force_transcode_form_settings(self):
         values = {
             "label":       "Force transcoding even if the file is already using the desired video codec",
+            "description": "Will force a transcode of the video stream even if it matches the selected video codec.\n"
+                           "A file will only be forced to be transcoded once.\n"
+                           "After that it is flagged to prevent it being added to the pending tasks list in a loop.\n"
+                           "Note: A file previously flagged to be ignored by this will still be transcoded to apply \n"
+                           "a matching smart filter specified below.",
             "sub_setting": True,
         }
         if self.settings.get_setting('mode') not in ['basic', 'standard', 'advanced']:

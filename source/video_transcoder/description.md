@@ -27,6 +27,8 @@ For information on the available encoder settings:
 ##### Additional Information:
 
 :::note
+**Advanced**
+
 If you set the Config mode to *"Advanced"*, the input text privdes the ability to add FFmpeg commandline args in three different places:
 1. **MAIN OPTIONS** - After the default generic options.
    ([Main Options Docs](https://ffmpeg.org/ffmpeg.html#Main-options))
@@ -48,4 +50,14 @@ ffmpeg \
     -c:a:0 copy \
     -y /path/to/output/video.mkv 
 ```
+:::
+
+:::note
+**Force transcoding**
+
+Enabling the *"Force transcoding ..."* option under *"Standard"* mode will force a transcode of the video stream even if it matches the selected video codec.
+
+A file will only be forced to be transcoded once. It will then be flagged in a local `.unmanic` file to prevent it being added to the pending tasks list in a loop.
+
+However, a file previously flagged to be ignored by this will still be transcoded to apply any matching smart filters such as scaling, stripping data streams, etc.
 :::

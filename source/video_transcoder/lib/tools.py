@@ -168,7 +168,7 @@ def detect_plack_bars(abspath, probe_data):
     if findall:
         crop_value = findall[-1]
     else:
-        logger.error("Unable to parse cropdetect from FFmpeg on file {}.".format(abspath))
+        logger.error("Unable to parse cropdetect from FFmpeg on file %s.", abspath)
 
     if crop_value:
         crop_width = crop_value.split(':')[0]
@@ -177,8 +177,7 @@ def detect_plack_bars(abspath, probe_data):
         # If the crop width and crop height are the same as the current video width/height, return None
         if str(crop_width) == str(vid_width) and str(crop_height) == str(vid_height):
             # Video is already cropped to the correct resolution
-            logger.debug("File '{}' is already cropped to the resolution {}x{}.".format(abspath, crop_width,
-                                                                                        crop_height))
+            logger.debug("File '%s' is already cropped to the resolution %sx%s.", abspath, crop_width, crop_height)
             return None
 
     return crop_value
