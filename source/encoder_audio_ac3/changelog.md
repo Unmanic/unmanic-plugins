@@ -1,4 +1,9 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Update FFmpeg helper
+- Remove support for v1 plugin executor
+- Fix bug where "Write your own FFmpeg params" options were not being applied correctly to the FFmpeg command
+
 **<span style="color:#56adda">0.0.4</span>**
 - Update FFmpeg helper
 - Add platform declaration

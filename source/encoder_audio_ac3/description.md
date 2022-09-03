@@ -1,9 +1,27 @@
 
+---
+
+##### Links:
+
+- [Support](https://unmanic.app/discord)
+- [Issues/Feature Requests](https://github.com/Unmanic/plugin.encoder_audio_ac3/issues)
+- [Pull Requests](https://github.com/Unmanic/plugin.encoder_audio_ac3/pulls)
+
+---
+
+##### Description:
+
 This Plugin will automatically manage bitrate for you. 
 
 - If the stream has 2 or less channels, the bitrate will be set to 224k
 - If the stream has 4 or less channels, the bitrate will be set to 448k
 - If the stream has more than 4 channels, the bitrate will be set to 640k (max value for encoder)
+
+---
+
+##### Documentation:
+
+- [FFmpeg - High Quality Audio Recommended Bitrates](https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio#Recommendedminimumbitratestouse)
 
 ---
 
@@ -40,7 +58,7 @@ ffmpeg \
     <CUSTOM ADVANCED OPTIONS HERE> \
     -map 0:0 -map 0:1 \
     -c:v:0 copy \
-    -c:a:0 aac \
+    -c:a:0 ac3 \
     <CUSTOM AUDIO OPTIONS HERE> \
     -y /path/to/output/video.mkv 
 ```

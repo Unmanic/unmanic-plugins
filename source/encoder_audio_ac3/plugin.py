@@ -101,8 +101,35 @@ class PluginStreamMapper(StreamMapper):
         self.encoder = 'ac3'
         self.settings = None
 
-    def set_settings(self, settings):
+    def set_default_values(self, settings, abspath, probe):
+        """
+        Configure the stream mapper with defaults
+
+        :param settings:
+        :param abspath:
+        :param probe:
+        :return:
+        """
+        self.abspath = abspath
+        # Set the file probe data
+        self.set_probe(probe)
+        # Set the input file
+        self.set_input_file(abspath)
+        # Configure settings
         self.settings = settings
+
+        # Build default options of advanced mode
+        if self.settings.get_setting('advanced'):
+            # If any main options are provided, overwrite them
+            main_options = settings.get_setting('main_options').split()
+            if main_options:
+                # Overwrite all main options
+                self.main_options = main_options
+            # If any advanced options are provided, overwrite them
+            advanced_options = settings.get_setting('advanced_options').split()
+            if advanced_options:
+                # Overwrite all advanced options
+                self.advanced_options = advanced_options
 
     @staticmethod
     def calculate_bitrate(stream_info: dict):
@@ -183,9 +210,7 @@ def on_library_management_file_test(data):
 
     # Get stream mapper
     mapper = PluginStreamMapper()
-    mapper.set_settings(settings)
-
-    mapper.set_probe(probe)
+    mapper.set_default_values(settings, abspath, probe)
 
     if mapper.streams_need_processing():
         # Mark this file to be added to the pending tasks
@@ -227,15 +252,11 @@ def on_worker_process(data):
         return data
 
     # Configure settings object (maintain compatibility with v1 plugins)
-    if data.get('library_id'):
-        settings = Settings(library_id=data.get('library_id'))
-    else:
-        settings = Settings()
+    settings = Settings(library_id=data.get('library_id'))
 
     # Get stream mapper
     mapper = PluginStreamMapper()
-    mapper.set_settings(settings)
-    mapper.set_probe(probe)
+    mapper.set_default_values(settings, abspath, probe)
 
     if mapper.streams_need_processing():
         # Set the input file
@@ -255,5 +276,3 @@ def on_worker_process(data):
         parser = Parser(logger)
         parser.set_probe(probe)
         data['command_progress_parser'] = parser.parse_progress
-
-    return data
