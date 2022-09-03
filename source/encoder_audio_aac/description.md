@@ -1,8 +1,15 @@
 
-For information on the AAC encoder settings:
-[FFmpeg - AAC Encoder](https://trac.ffmpeg.org/wiki/Encode/AAC)
+---
 
---- 
+##### Links:
+
+- [Support](https://unmanic.app/discord)
+- [Issues/Feature Requests](https://github.com/Unmanic/plugin.encoder_audio_aac/issues)
+- [Pull Requests](https://github.com/Unmanic/plugin.encoder_audio_aac/pulls)
+
+---
+
+##### Description:
 
 This Plugin will automatically manage bitrate for you. 
 
@@ -11,6 +18,13 @@ As a rule of thumb, for audible transparency, use 64 kBit/s for each channel (so
 This Plugin will detect the number of channels in each stream and apply a bitrate in accordance with this rule.
 
 ---
+
+##### Documentation:
+
+For information on the available encoder settings:
+- [FFmpeg - AAC Encoder](https://trac.ffmpeg.org/wiki/Encode/AAC)
+
+--- 
 
 ### Config description:
 
@@ -50,3 +64,4 @@ ffmpeg \
     -y /path/to/output/video.mkv 
 ```
 :::
+
