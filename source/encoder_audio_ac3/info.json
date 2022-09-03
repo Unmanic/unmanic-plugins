@@ -1,11 +1,10 @@
 {
     "author": "Josh.5",
     "compatibility": [
-        1,
         2
     ],
     "description": "Ensure all audio streams are encoded with the AC3 codec using the native FFmpeg ac3 encoder.",
-    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_audio_ac3/master/icon.png",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.encoder_audio_ac3/master/icon.png",
     "id": "encoder_audio_ac3",
     "name": "Audio Encoder AC3",
     "platform": [
@@ -16,5 +15,5 @@
         "on_worker_process": 0
     },
     "tags": "audio,encoder,ffmpeg,library file test",
-    "version": "0.0.4"
+    "version": "0.0.5"
 }
