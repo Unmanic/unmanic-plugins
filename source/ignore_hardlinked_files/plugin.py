@@ -25,7 +25,7 @@ def ignore_hardlinked_files(data):
     """
 
     # Get the file extension
-    if os.stat(data.get('path')).st_nlink <= 1:
+    if os.stat(data.get('path')).st_nlink > 1:
         data['add_file_to_pending_tasks'] = True
 
     return data
