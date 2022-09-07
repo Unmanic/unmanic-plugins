@@ -3,15 +3,13 @@
     "compatibility": [
         2
     ],
-    "description": "Ignore files with a Hardlink associated to them",
+    "description": "Ignores any files with a Hardlink for transcoding. Useful for situations where you need source files in tact",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_hardlinked_files/master/icon.png",
     "id": "ignore_hardlinked_files",
     "name": "Ignore Hardlinked Files",
-    "platform": [
-        "linux"
-    ],
     "priorities": {
-        "on_library_management_file_test": 1
+        "on_library_management_file_test": 0
     },
-    "tags": "library file test",
+    "tags": "",
     "version": "0.0.1"
 }
