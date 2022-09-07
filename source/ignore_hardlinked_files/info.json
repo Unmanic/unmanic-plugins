@@ -1,0 +1,17 @@
+{
+    "author": "hstep20",
+    "compatibility": [
+        2
+    ],
+    "description": "Ignore files with a Hardlink associated to them",
+    "id": "ignore_hardlinked_files",
+    "name": "Ignore Hardlinked Files",
+    "platform": [
+        "linux"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 1
+    },
+    "tags": "library file test",
+    "version": "0.0.1"
+}
