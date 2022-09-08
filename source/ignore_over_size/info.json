@@ -5,7 +5,7 @@
         2
     ],
     "description": "Ignore files over the configured size.",
-    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_over_size/master/icon.png",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.ignore_over_size/master/icon.png",
     "id": "ignore_over_size",
     "name": "Ignore files over size",
     "platform": [
