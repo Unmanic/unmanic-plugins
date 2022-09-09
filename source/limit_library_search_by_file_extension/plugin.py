@@ -32,12 +32,19 @@ logger = logging.getLogger("Unmanic.Plugin.limit_library_search_by_file_extensio
 
 class Settings(PluginSettings):
     settings = {
-        "allowed_extensions": ''
+        "allowed_extensions":          '',
+        "add_all_matching_extensions": False,
     }
     form_settings = {
-        "allowed_extensions": {
+        "allowed_extensions":          {
             "label": "Search library only for extensions",
         },
+        "add_all_matching_extensions": {
+            "label":       "Add all matching files to pending tasks list",
+            "description": "If this option is enabled and the file matches one of the specified file extensions,\n"
+                           "this plugin will add the file to Unmanic's pending task list straight away\n"
+                           "without executing any subsequent file test plugins.",
+        }
     }
 
 
@@ -82,17 +89,18 @@ def on_library_management_file_test(data):
     # Get the path to the file
     abspath = data.get('path')
 
-    # Configure settings object (maintain compatibility with v1 plugins)
-    if data.get('library_id'):
-        settings = Settings(library_id=data.get('library_id'))
-    else:
-        settings = Settings()
+    # Configure settings object
+    settings = Settings(library_id=data.get('library_id'))
 
     # Get the list of configured extensions to search for
     allowed_extensions = settings.get_setting('allowed_extensions')
 
-    if not file_ends_in_allowed_extensions(abspath, allowed_extensions):
+    in_allowed_extensions = file_ends_in_allowed_extensions(abspath, allowed_extensions)
+    if not in_allowed_extensions:
         # Ignore this file
         data['add_file_to_pending_tasks'] = False
-
-    return data
+        return
+    elif in_allowed_extensions and settings.get_setting('add_all_matching_extensions'):
+        # Force this file to have a pending task created
+        data['add_file_to_pending_tasks'] = True
+        return

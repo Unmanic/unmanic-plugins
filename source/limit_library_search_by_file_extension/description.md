@@ -5,7 +5,15 @@ Any files with extensions not listed here will be ignored.
 
 ---
 
-#### Examples:
+##### Links:
+
+- [Support](https://unmanic.app/discord)
+- [Issues/Feature Requests](https://github.com/Unmanic/plugin.limit_library_search_by_file_extension/issues)
+- [Pull Requests](https://github.com/Unmanic/plugin.limit_library_search_by_file_extension/pulls)
+
+---
+
+##### Examples:
 
 ###### <span style="color:magenta">Only add video files</span>
 ```
