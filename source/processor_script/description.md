@@ -8,8 +8,8 @@ Enable debug logging to see the output of your configured command or script in t
 ##### Links:
 
 - [Support](https://unmanic.app/discord)
-- [Issues/Feature Requests](https://github.com/Unmanic/plugin.limit_library_search_by_file_extension/issues)
-- [Pull Requests](https://github.com/Unmanic/plugin.limit_library_search_by_file_extension/pulls)
+- [Issues/Feature Requests](https://github.com/Unmanic/plugin.processor_script/issues)
+- [Pull Requests](https://github.com/Unmanic/plugin.processor_script/pulls)
 
 
 ---
