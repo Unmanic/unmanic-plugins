@@ -37,7 +37,8 @@ class Settings(PluginSettings):
     }
     form_settings = {
         "allowed_extensions":          {
-            "label": "Search library only for extensions",
+            "label":       "Search library only for extensions",
+            "description": "A comma separated list of file extensions."
         },
         "add_all_matching_extensions": {
             "label":       "Add all matching files to pending tasks list",
@@ -66,7 +67,7 @@ def file_ends_in_allowed_extensions(path, allowed_extensions):
         return False
 
     # Check if it ends with one of the allowed search extensions
-    if file_extension in allowed_extensions:
+    if file_extension and file_extension in allowed_extensions.split(','):
         return True
 
     logger.debug("File '{}' does not end in the specified file extensions '{}'.".format(path, allowed_extensions))
@@ -99,8 +100,9 @@ def on_library_management_file_test(data):
     if not in_allowed_extensions:
         # Ignore this file
         data['add_file_to_pending_tasks'] = False
-        return
     elif in_allowed_extensions and settings.get_setting('add_all_matching_extensions'):
         # Force this file to have a pending task created
         data['add_file_to_pending_tasks'] = True
-        return
+        logger.debug(
+            "File '{}' should be added to task list. " \
+            "File matches specified file extension and plugin is configured to add all matching files.".format(abspath))
