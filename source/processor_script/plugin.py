@@ -347,7 +347,7 @@ def on_worker_process(data):
         '{source_file_size}':   str(os.path.getsize(data.get('file_in'))),
         '{original_file_path}': str(data.get('original_file_path')),
         '{original_file_size}': str(os.path.getsize(data.get('original_file_path'))),
-        '{data_json_file}':     data_json_file
+        '{data_json_file}':     data_json_file,
     }
 
     # Substitute all variables in the cmd and args strings
