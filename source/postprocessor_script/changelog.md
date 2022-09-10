@@ -1,4 +1,11 @@
 
+**<span style="color:#56adda">0.0.6</span>**
+- Add support for Bash script inputs in the plugin settings
+- Add support for Python script inputs in the plugin settings
+- Add support for NodeJS script inputs in the plugin settings
+- Add support for installing custom dependencies for NodeJS and Python scripts
+- Remove support for Unmanic v1 PluginHandler compatibility
+
 **<span style="color:#56adda">0.0.5</span>**
 - Fix issue with the replace of {source_file_size}
 
