@@ -6,8 +6,8 @@
 # File Created: Friday, 26th August 2022 5:06:41 pm
 # Author: Josh.5 (jsunnex@gmail.com)
 # -----
-# Last Modified: Monday, 29th August 2022 10:34:26 pm
-# Modified By: Josh.5 (jsunnex@gmail.com)
+# Last Modified: Friday, 13th January 2023 2:56:32 pm
+# Modified By: Josh Sunnex (jsunnex@gmail.com)
 ###
 # !/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -130,18 +130,25 @@ class GlobalSettings:
     def get_video_codec_form_settings(self):
         values = {
             "label":          "Video Codec",
-            "input_type":     "select",
-            "select_options": [
-                {
-                    "value": "h264",
-                    "label": "H264",
-                },
-                {
-                    "value": "hevc",
-                    "label": "HEVC/H265",
-                },
-            ],
+            "description":    "Specify the name of the video codec that your video library should be. Eg. 'h264', 'hevc'.",
         }
+        if self.settings.get_setting('mode') not in ['advanced']:
+            values = {
+                "label":          "Video Codec",
+                "description":    "Select the video codec that your video library should be.",
+                "input_type":     "select",
+                "select_options": [
+                    {
+                        "value": "h264",
+                        "label": "H264",
+                    },
+                    {
+                        "value": "hevc",
+                        "label": "HEVC/H265",
+                    },
+                ],
+            }
+            self.__set_default_option(values['select_options'], 'video_codec')
         if self.settings.get_setting('mode') not in ['basic', 'standard', 'advanced']:
             values["display"] = 'hidden'
         return values
@@ -164,9 +171,26 @@ class GlobalSettings:
         values = {
             "label":          "Video Encoder",
             "input_type":     "select",
-            "select_options": [],
+            "select_options": [
+                {
+                    "value": "libx264",
+                    "label": "CPU - libx264",
+                },
+            ],
         }
-        if self.settings.get_setting('video_codec') == 'hevc':
+        if self.settings.get_setting('video_codec') == 'h264':
+            # TODO: Add support for VAAPI (requires some tweaking of standard values)
+            values['select_options'] = [
+                {
+                    "value": "libx264",
+                    "label": "CPU - libx264",
+                },
+                {
+                    "value": "h264_qsv",
+                    "label": "QSV - h264_qsv",
+                },
+            ]
+        elif self.settings.get_setting('video_codec') == 'hevc':
             # TODO: Only enable VAAPI for Linux
             values['select_options'] = [
                 {
@@ -180,18 +204,6 @@ class GlobalSettings:
                 {
                     "value": "hevc_vaapi",
                     "label": "VAAPI - hevc_vaapi",
-                },
-            ]
-        elif self.settings.get_setting('video_codec') == 'h264':
-            # TODO: Add support for VAAPI (requires some tweaking of standard values)
-            values['select_options'] = [
-                {
-                    "value": "libx264",
-                    "label": "CPU - libx264",
-                },
-                {
-                    "value": "h264_qsv",
-                    "label": "QSV - h264_qsv",
                 },
             ]
         self.__set_default_option(values['select_options'], 'video_encoder')

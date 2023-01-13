@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.4</span>**
+- Add ability to specify a codec in plain text in advanced mode
+
 **<span style="color:#56adda">0.0.3</span>**
 - Fix bug where videos would forever be re-added to the task list if force transcoding was enabled
 
