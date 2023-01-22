@@ -30,7 +30,7 @@ def on_postprocessor_task_results(data):
     :param data:
     :return:
     """
-    if data.get('task_processing_success') and data.get('task_processing_success'):
+    if data.get('task_processing_success') and data.get('file_move_processes_success'):
         notify(data.get('source_data'))
 
     return data
