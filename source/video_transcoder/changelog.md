@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Improvements to ffmpeg command generator
+- Fix issue where input file was added before additional main options
+
 **<span style="color:#56adda">0.0.4</span>**
 - Add ability to specify a codec in plain text in advanced mode
 

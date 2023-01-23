@@ -150,15 +150,16 @@ class Probe(object):
         return True
 
     @staticmethod
-    def init_probe(data, logger):
+    def init_probe(data, logger, allowed_mimetypes=None):
         """
         Fetch the Probe object given a plugin's data object
 
         :param data:
         :param logger:
+        :param allowed_mimetypes:
         :return:
         """
-        probe = Probe(logger, allowed_mimetypes=['video'])
+        probe = Probe(logger, allowed_mimetypes=allowed_mimetypes)
         if 'ffprobe' in data.get('shared_info', {}):
             if not probe.set_probe(data.get('shared_info', {}).get('ffprobe')):
                 # Failed to set ffprobe from shared info.
@@ -168,7 +169,7 @@ class Probe(object):
             # File probe failed, skip the rest of this test
             return
         # Set file probe to shared infor for subsequent file test runners
-        if 'shared_info' in data:
+        if 'shared_info' not in data:
             data['shared_info'] = {}
         data['shared_info']['ffprobe'] = probe.get_probe()
         return probe
