@@ -160,15 +160,21 @@ class Probe(object):
         :return:
         """
         probe = Probe(logger, allowed_mimetypes=allowed_mimetypes)
-        if 'ffprobe' in data.get('shared_info', {}):
-            if not probe.set_probe(data.get('shared_info', {}).get('ffprobe')):
-                # Failed to set ffprobe from shared info.
-                # Probably due to it being for an incompatible mimetype declared above
+        # Start by fetching probe data from 'shared_info'.
+        ffprobe_data = data.get('shared_info', {}).get('ffprobe')
+        if ffprobe_data:
+            if not probe.set_probe(ffprobe_data):
+                # Failed to set ffprobe from 'shared_info'.
+                # Probably due to it being for an incompatible mimetype declared above.
                 return
-        elif not probe.file(data.get('path')):
-            # File probe failed, skip the rest of this test
+            return probe
+        # No 'shared_info' ffprobe exists. Attempt to probe file.
+        if not probe.file(data.get('path')):
+            # File probe failed, skip the rest of this test.
+            # Again, probably due to it being for an incompatible mimetype.
             return
-        # Set file probe to shared infor for subsequent file test runners
+        # Successfully probed file.
+        # Set file probe to 'shared_info' for subsequent file test runners.
         if 'shared_info' not in data:
             data['shared_info'] = {}
         data['shared_info']['ffprobe'] = probe.get_probe()

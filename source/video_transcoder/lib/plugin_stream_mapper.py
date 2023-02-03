@@ -234,7 +234,7 @@ class PluginStreamMapper(StreamMapper):
         """
         # If force transcode is enabled, then process everything regardless of the current codec
         # Ignore image video streams (will just copy them)
-        if stream_info.get('codec_name').lower() in tools.image_video_codecs:
+        if stream_info.get('codec_name', '').lower() in tools.image_video_codecs:
             return False
 
         # Check if video filters need to be applied (build_filter_chain)
@@ -259,7 +259,7 @@ class PluginStreamMapper(StreamMapper):
         # If the stream is a video, add a final check if the codec is already the correct format
         #   (Ignore checks if force transcode is set)
         if stream_info.get('codec_type', '').lower() in ['video'] and stream_info.get(
-                'codec_name').lower() == self.settings.get_setting('video_codec'):
+                'codec_name', '').lower() == self.settings.get_setting('video_codec'):
             if not self.settings.get_setting('force_transcode'):
                 return False
             else:
