@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.0.5</span>**
+- Process audio and subtitles
+- Change to negative metadata stream selection
 
 **<span style="color:#56adda">0.0.4</span>**
 - Update FFmpeg helper
