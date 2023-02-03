@@ -173,6 +173,9 @@ def on_library_management_file_test(data):
 
     # Get file probe
     probe = Probe.init_probe(data, logger, allowed_mimetypes=['video'])
+    if not probe:
+        # File not able to be probed by ffprobe
+        return
 
     # Get stream mapper
     mapper = plugin_stream_mapper.PluginStreamMapper()
