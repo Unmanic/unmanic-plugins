@@ -25,26 +25,55 @@ import logging
 
 from unmanic.libs.unplugins.settings import PluginSettings
 
-from remove_audio_stream_by_language.lib.ffmpeg import StreamMapper, Probe, Parser
+from remove_stream_by_language.lib.ffmpeg import StreamMapper, Probe, Parser
 
 # Configure plugin logger
-logger = logging.getLogger("Unmanic.Plugin.remove_audio_stream_by_language")
+logger = logging.getLogger("Unmanic.Plugin.remove_stream_by_language")
 
 
 class Settings(PluginSettings):
     settings = {
-        "languages": ''
-    }
-    form_settings = {
-        "languages": {
-            "label": "Languages to remove",
-        },
+        "languages": '',
+        "advanced":              False,
+        "main_options":          '',
+        "advanced_options":      ''
     }
 
+
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
+        self.form_settings = {
+            "languages": {
+                "label": "Languages to remove",
+            },
+            "advanced": {
+                "label": "Write your own FFmpeg params",
+            },
+            "main_options":          self.__set_main_options_form_settings(),
+            "advanced_options":      self.__set_advanced_options_form_settings()
+        }
+
+    def __set_main_options_form_settings(self):
+        values = {
+            "label":      "Write your own main options",
+            "input_type": "textarea",
+        }
+        if not self.get_setting('advanced'):
+            values["display"] = 'hidden'
+        return values
+
+    def __set_advanced_options_form_settings(self):
+        values = {
+            "label":      "Write your own advanced options",
+            "input_type": "textarea",
+        }
+        if not self.get_setting('advanced'):
+            values["display"] = 'hidden'
+        return values
 
 class PluginStreamMapper(StreamMapper):
     def __init__(self):
-        super(PluginStreamMapper, self).__init__(logger, ['audio'])
+        super(PluginStreamMapper, self).__init__(logger, ['audio','subtitle'])
         self.settings = None
 
     def set_settings(self, settings):
@@ -62,14 +91,12 @@ class PluginStreamMapper(StreamMapper):
                     return True
         else:
             logger.warning(
-                "Audio stream #{} in file '{}' has no 'language' tag. Ignoring".format(stream_id, self.input_file))
+                "Stream #{} in file '{}' has no 'language' tag. Ignoring".format(stream_id, self.input_file))
         return False
 
     def test_stream_needs_processing(self, stream_info: dict):
         """Only add streams that have language task that match our list"""
-        if self.test_tags_for_search_string(stream_info.get('tags'), stream_info.get('index')):
-            return True
-        return False
+        return self.test_tags_for_search_string(stream_info.get('tags'), stream_info.get('index'))
 
     def custom_stream_mapping(self, stream_info: dict, stream_id: int):
         """Remove this stream"""
@@ -178,6 +205,22 @@ def on_worker_process(data):
     if mapper.streams_need_processing():
         # Set the output file
         mapper.set_output_file(data.get('file_out'))
+
+        if settings.get_setting('advanced'):
+            mapper.main_options += settings.get_setting('main_options').split()
+            mapper.advanced_options += settings.get_setting('advanced_options').split()
+
+        # clear stream mappings, copy everything
+        mapper.stream_mapping = ['-map', '0']
+        mapper.stream_encoding = ['-c', 'copy']
+        # set negative stream mappings to remove languages
+
+        language_list = settings.get_setting('languages')
+        languages = list(filter(None, language_list.split(',')))
+        for language in languages:
+            language = language.strip()
+            if language and language.lower() :
+                mapper.stream_mapping += ['-map', '-0:m:language:{}'.format(language)]
 
         # Get generated ffmpeg args
         ffmpeg_args = mapper.get_ffmpeg_args()
