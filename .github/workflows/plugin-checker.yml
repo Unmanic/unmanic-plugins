@@ -20,7 +20,7 @@ jobs:
     steps:
     # Checkout
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -134,7 +134,7 @@ jobs:
       run: echo 'true' > success_file.txt
     - name: Upload success file
       if: success()
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: success_file
         path: success_file.txt
@@ -148,7 +148,7 @@ jobs:
 
     # Fetch and read sucess file
     - name: Download success file from previous job
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         path: ./artifacts/
     - name: Read success file
@@ -161,7 +161,9 @@ jobs:
     # Checkout
     - name: Checkout
       if: steps.previous_jobs_success.outputs.IS_SUCCESS == 'true'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
     # Ensure repo is checked out
     - name: Check repo for config file
@@ -190,13 +192,13 @@ jobs:
     # Setup python environment
     - name: Set up Python 3.8
       if: success()
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
 
     # Setup node environment
     - name: Set up node 16
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: '16'
 
@@ -209,7 +211,7 @@ jobs:
 
     # Deploy to repo branch
     - name: Deploy repository
-      if: success() && (github.ref == 'refs/heads/master')
+      if: success() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/official')
       uses: s0/git-publish-subdir-action@develop
       env:
         REPO: self
