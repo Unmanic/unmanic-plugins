@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+      - 'pr-**'
       - '!template'
   pull_request:
     branches:
