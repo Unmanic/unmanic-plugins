@@ -21,10 +21,9 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
-
-import logging
-import pprint
 import json
+import logging
+import jsonata
 
 from unmanic.libs.unplugins.settings import PluginSettings
 
@@ -41,13 +40,13 @@ class Settings(PluginSettings):
         "add_all_matching_values": False,
     }
     form_settings = {
-        "stream_field":          {
+        "stream_field":            {
             "label":       "The FFprobe field to match against",
-            "description": "The name of the FFprobe field to match against with the search strings below."
+            "description": "A JSONata query to match name of the FFprobe field to match against with the search strings below."
         },
         "allowed_values":          {
             "label":       "Search strings",
-            "description": "A comma separated list of strings to match in the stipulated FFprobe field above."
+            "description": "A comma separated list of strings to match agianst the JSONata query results."
         },
         "add_all_matching_values": {
             "label":       "Add all matching files to pending tasks list",
@@ -61,7 +60,7 @@ class Settings(PluginSettings):
         super(Settings, self).__init__(*args, **kwargs)
 
 
-def file_ends_in_allowed_values(probe_info, allowed_values):
+def file_ends_in_allowed_values(probe_info, stream_field, allowed_values):
     """
     Check if the file's video codec is in the list of values being searched for
 
@@ -78,19 +77,28 @@ def file_ends_in_allowed_values(probe_info, allowed_values):
     if not file_probe_streams:
         return False
 
-    # Loop over all streams found in the file probe
-    for stream_info in file_probe_streams:
-        codec_type = stream_info.get('codec_type', '').lower()
-        # If this is a video/image stream?
-        if codec_type == "video":
-            codec_name = stream_info.get('codec_name', '').lower()
-            logger.debug("File '%s' contains video codec '%s'.", file_path, codec_name)
-            # Check if it ends with one of the allowed_values
-            if codec_name and codec_name in allowed_values.split(','):
+    # If the config is empty (not yet configured) ignore everything
+    if not allowed_values:
+        logger.debug("Plugin has not yet been configured with allowed values. Blocking everything.")
+        return False
+
+    try:
+        context = jsonata.Context()
+        discovered_values = context(stream_field, probe_info)
+    except ValueError as e:
+        logger.debug("Failed to match the JSONata query to in the FFprobe data of the file '%s'.", file_path)
+        #logger.debug("Exception:", exc_info=e)
+        return False
+
+    for allowed_value in allowed_values.split(','):
+        # Ignore empty values (if plugin is configured with a trailing ','
+        if allowed_value:
+            if allowed_value in discovered_values:
+                logger.debug("File '%s' contains one of the configured values '%s'.", file_path, allowed_value)
                 return True
 
     # File is not in the allowed video values
-    logger.debug("File '%s' does not contain one of the specified video values '%s'.", file_path, allowed_values)
+    logger.debug("File '%s' does not contain one of the specified values '%s'.", file_path, allowed_values)
     return False
 
 
@@ -118,15 +126,16 @@ def on_library_management_file_test(data):
     abspath = data.get('path')
 
     # Get file probe
-    probe = Probe.init_probe(data, logger, allowed_mimetypes=['video'])
+    probe = Probe.init_probe(data, logger, allowed_mimetypes=['audio', 'video'])
     if not probe:
         # File not able to be probed by ffprobe
         return
 
     # Get the list of configured values to search for
+    stream_field = settings.get_setting('stream_field')
     allowed_values = settings.get_setting('allowed_values')
 
-    in_allowed_values = file_ends_in_allowed_values(probe.get_probe(), allowed_values)
+    in_allowed_values = file_ends_in_allowed_values(probe.get_probe(), stream_field, allowed_values)
     if not in_allowed_values:
         # Ignore this file
         data['add_file_to_pending_tasks'] = False
