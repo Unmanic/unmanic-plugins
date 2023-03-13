@@ -1,0 +1,19 @@
+{
+    "author": "j7126",
+    "compatibility": [
+        2
+    ],
+    "description": "Removes any video streams that use configured codecs.",
+    "icon": "https://raw.githubusercontent.com/j7126/unmanic-remove_streams_by_codec/master/icon.png",
+    "id": "remove_streams_by_codec",
+    "name": "Remove streams based on codec",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 50,
+        "on_worker_process": 1
+    },
+    "tags": "ffmpeg,library file test",
+    "version": "0.0.1"
+}
