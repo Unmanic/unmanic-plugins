@@ -30,6 +30,7 @@ deletelogo=true
 deletetxt=true
 lockfile=""
 workdir=""
+usehw=false
 
 while [[ $# -gt 0 ]]
 do
@@ -41,6 +42,10 @@ case $key in
     ;;
     --keep-meta)
     deletemeta=false
+    shift
+    ;;
+    --use-hw)
+    usehw=true
     shift
     ;;
     --ffmpeg=*)
@@ -139,7 +144,11 @@ fi
 
 
 if [ ! -f "$edlfile" ]; then
-  $comskipPath $comskipoutput --ini="$comskipini" "$infile"
+  if [ "$usehw" == false ]; then
+    $comskipPath $comskipoutput --ini="$comskipini" "$infile"
+  else
+    $comskipPath $comskipoutput --cuvid --ini="$comskipini" "$infile"
+  fi
 fi
 
 start=0

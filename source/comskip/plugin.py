@@ -42,6 +42,7 @@ class Settings(PluginSettings):
         'config':              '',
         'enable_comchap':      False,
         'enable_comcut':       False,
+        'use_hw':              False,
     }
 
     def __init__(self, *args, **kwargs):
@@ -57,6 +58,7 @@ class Settings(PluginSettings):
             },
             "enable_comchap":      self.__set_enable_comchap_form_settings(),
             "enable_comcut":       self.__set_enable_comcut_form_settings(),
+            "use_hw":              self.__set_use_hw_form_settings(),
         }
 
     def __set_allowed_extensions_form_settings(self):
@@ -85,6 +87,11 @@ class Settings(PluginSettings):
             values["display"] = 'hidden'
         return values
 
+    def __set_use_hw_form_settings(self):
+        values = {
+            "label": "Use h/w accelerated Commercial Skipping",
+        }
+        return values
 
 def file_ends_in_allowed_extensions(path, allowed_extensions):
     """
@@ -198,13 +205,24 @@ def build_comskip_args(abspath, settings):
     config_file = comskip_config_file(settings)
     file_dirname = os.path.dirname(abspath)
     file_sans_ext = os.path.splitext(os.path.basename(abspath))[0]
-    return [
-        'comskip',
-        '--ini={}'.format(config_file),
-        '--output={}'.format(file_dirname),
-        '--output-filename={}'.format(file_sans_ext),
-        abspath
-    ]
+    use_hw = settings.get_setting('use_hw')
+    if not use_hw:
+        return [
+            'comskip',
+            '--ini={}'.format(config_file),
+            '--output={}'.format(file_dirname),
+            '--output-filename={}'.format(file_sans_ext),
+            abspath
+        ]
+    else:
+        return [
+            'comskip',
+            '--cuvid',
+            '--ini={}'.format(config_file),
+            '--output={}'.format(file_dirname),
+            '--output-filename={}'.format(file_sans_ext),
+            abspath
+        ]
 
 
 def build_comchap_args(abspath, file_out, settings):
@@ -213,15 +231,28 @@ def build_comchap_args(abspath, file_out, settings):
     # Ensure comchap is executable
     st = os.stat(comchap_path)
     os.chmod(comchap_path, st.st_mode | stat.S_IEXEC)
-    args = [
-        comchap_path,
-        '--comskip-ini={}'.format(config_file),
-        '--keep-edl',
-        '--keep-meta',
-        '--verbose',
-        abspath,
-        file_out,
-    ]
+    use_hw = settings.get_setting('use_hw')
+    if not use_hw:
+        args = [
+            comchap_path,
+            '--comskip-ini={}'.format(config_file),
+            '--keep-edl',
+            '--keep-meta',
+            '--verbose',
+            abspath,
+            file_out,
+        ]
+    else:
+        args = [
+            comchap_path,
+            '--comskip-ini={}'.format(config_file),
+            '--use-hw',
+            '--keep-edl',
+            '--keep-meta',
+            '--verbose',
+            abspath,
+            file_out,
+        ]
     return args
 
 
@@ -231,14 +262,28 @@ def build_comcut_args(abspath, file_out, settings):
     # Ensure comcut is executable
     st = os.stat(comcut_path)
     os.chmod(comcut_path, st.st_mode | stat.S_IEXEC)
-    args = [
-        comcut_path,
-        '--comskip-ini={}'.format(config_file),
-        '--keep-edl',
-        '--keep-meta',
-        abspath,
-        file_out,
-    ]
+    use_hw = settings.get_setting('use_hw')
+    if not use_hw:
+        args = [
+            comchap_path,
+            '--comskip-ini={}'.format(config_file),
+            '--keep-edl',
+            '--keep-meta',
+            '--verbose',
+            abspath,
+            file_out,
+        ]
+    else:
+        args = [
+            comchap_path,
+            '--comskip-ini={}'.format(config_file),
+            '--use-hw',
+            '--keep-edl',
+            '--keep-meta',
+            '--verbose',
+            abspath,
+            file_out,
+        ]
     return args
 
 

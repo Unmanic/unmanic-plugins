@@ -61,5 +61,7 @@ Chapters are still added to the resulting file.
 <br>Ensure you are happy with your Comskip configuration before letting loose on your library.
 </div>
 
+#### <span style="color:blue">Use hardware acceleration for commercial detection</span>
+Uses hardware acceleration for commercial detection - compatible only with Nvidia NVDEC currently.
 
-
+Do not select if you do not have a compatible Nvidia GPU.
