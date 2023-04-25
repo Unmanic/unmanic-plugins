@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- Added h/w accelerated comskip option using cuvid
+
 **<span style="color:#56adda">0.0.6</span>**
 - Enabled support for v2 plugin executor
 
