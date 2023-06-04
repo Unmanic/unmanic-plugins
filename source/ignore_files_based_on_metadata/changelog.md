@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.4</span>**
+- generalized use of stream tags for audio and video streams too
+
 **<span style="color:#56adda">0.0.3</span>**
 - add test to check attachment streams tags
 
