@@ -1,4 +1,6 @@
 
+**<span style="color:#56adda">0.0.4</span>**
+- fix file scan test audio stream counter
 
 **<span style="color:#56adda">0.0.3</span>**
 - add separate loop test for existing 2 channel stereo streams
