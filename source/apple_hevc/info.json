@@ -1,0 +1,15 @@
+{
+    "author": "k29t59dh",
+    "compatibility": [
+        2
+    ],
+    "description": "Convert hev1 HEVC to Apple-compatible hvc1 HEVC",
+    "icon": "https://raw.githubusercontent.com/k29t59dh/unmanic-plugins/d9d75c70b2b9fec167ab51a18340dcbf3168a46b/source/apple_hevc/icon.png",
+    "id": "apple_hevc",
+    "name": "Apple HEVC",
+    "priorities": {
+        "on_worker_process": 0
+    },
+    "tags": "apple, mac, hvc1, hev1, hevc, 265",
+    "version": "0.0.1"
+}
