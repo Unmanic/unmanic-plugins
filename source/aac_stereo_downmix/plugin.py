@@ -78,9 +78,6 @@ class PluginStreamMapper(StreamMapper):
         custom_options  += self.settings.get_setting('formula')
         stream_encoding += custom_options.split()
 
-        #logger.info("Custom options: '{}' ".format(custom_options))
-        #logger.info("Stream encoding: '{}'".format(stream_encoding))
-
         return {
             'stream_mapping':  ['-map', '0:a:{}'.format(stream_id)],
             'stream_encoding': stream_encoding,
