@@ -81,6 +81,10 @@ def on_library_management_file_test(data):
         # File probe failed, skip the rest of this test
         return data
 
+    if not 'mp4' in probe.get('format', {}).get('format_name', [ ]):
+        logger.debug("File '{}' is type '{}' - plugin requires mp4.".format(abspath, probe.get('format', {}).get('format_name', [ ])))
+        return data
+        
     # Configure settings object (maintain compatibility with v1 plugins)
     if data.get('library_id'):
         settings = Settings(library_id=data.get('library_id'))
