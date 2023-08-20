@@ -59,11 +59,6 @@ class PluginStreamMapper(StreamMapper):
         self.settings = settings
 
 
-    @staticmethod
-    def calculate_bitrate(stream_info: dict):
-        channels = stream_info.get('channels', 2)
-        return int(channels) * 64
-
     def test_stream_needs_processing(self, stream_info: dict):
         # if stream is already AAC and stereo (or mono) it doesn't need downmixing
         if stream_info.get('codec_name').lower() in [self.codec] and stream_info.get('channels', 2) <= 2:
