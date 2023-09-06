@@ -15,5 +15,5 @@
         "on_postprocessor_task_results": 0
     },
     "tags": "post-processor",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }
