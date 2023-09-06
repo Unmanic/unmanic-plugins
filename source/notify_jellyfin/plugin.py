@@ -37,11 +37,15 @@ class Settings(PluginSettings):
 
 def update_jellyfin(jellyfin_url, jellyfin_apikey):
     headers = {'X-MediaBrowser-Token': jellyfin_apikey}
-    r = requests.post(jellyfin_url + "/Library/Refresh", headers=headers)
+    try:
+        r = requests.post(jellyfin_url + "/Library/Refresh", headers=headers)
+    except (ConnectionRefusedError, requests.exceptions.ConnectionError) as error:
+        logger.error("Error Connecting to Jellyfin - unable to reach or unauthorized")
+        
     if r.status_code == 204:
-        logger.info("Notifying Jellyfin ({}) to update its library.".format(jellyfin_url))
+        logger.info("Notifying Jellyfin ('{}') to update its library.".format(jellyfin_url))
     else:
-        logger.error("Error notifying Jellyfin - Error Code:({}).".format(r.status_code))
+        logger.error("Error notifying Jellyfin - Error Code:('{}').".format(r.status_code))
 
 def on_postprocessor_task_results(data):
     """
