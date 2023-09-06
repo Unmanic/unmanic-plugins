@@ -38,6 +38,8 @@ class Settings(PluginSettings):
         "channels":              '',
         "codec_name":            '',
         "use_libfdk_aac":         False,
+        "remove_original_multichannel_audio": False,
+        "make_xtra_stereo_default": True,
     }
 
     def __init__(self, *args, **kwargs):
@@ -54,6 +56,13 @@ class Settings(PluginSettings):
             },
             "use_libfdk_aac":               {
                 "label": "check if you want to use libfdk_aac (requires ffmpeg 5), otherwise aac is used",
+            },
+            "remove_original_multichannel_audio":               {
+                "label": "check if you want to remove the original multichannel audio stream",
+            },
+
+            "make_xtra_stereo_default":      {
+                "label": "check if you want the new stereo audio to be the default audio upon playing"
             }
         }
 
@@ -62,21 +71,26 @@ def stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams
     stream = audio_stream
     for  i in range(0, len(probe_streams)):
         if "codec_type" in probe_streams[i] and probe_streams[i]["codec_type"] == "audio":
-            if probe_streams[i]["codec_name"] == "aac" and probe_streams[i]["channels"] == 2 and probe_streams[i]["channel_layout"] == "stereo": return stream
-
+            if "tags" in probe_streams[i] and "title" in probe_streams[i]["tags"] and probe_streams[i]["tags"]["title"] == 'Commentary':
+                continue
+            try:
+                if probe_streams[i]["codec_name"] == "aac" and probe_streams[i]["channels"] == 2 and probe_streams[i]["channel_layout"] == "stereo" and probe_streams[i]["tags"]["language"] == stream_language: return stream
+            except KeyError:
+                if probe_streams[i]["codec_name"] == "aac" and probe_streams[i]["channels"] == 2 and probe_streams[i]["channel_layout"] == "stereo": return stream
 
     for i in range(0, len(probe_streams)):
         if "codec_type" in probe_streams[i] and probe_streams[i]["codec_type"] == "audio":
+            logger.debug("i '{}', probe_streams[i][codec_type]: '{}', probe_streams[i][channels]: '{}', probe_streams[i][tags][language]: '{}', probe_streams[i][codec_name]: '{}'".format(i, probe_streams[i]["codec_type"], probe_streams[i]["channels"], probe_streams[i]["tags"]["language"], probe_streams[i]["codec_name"]))
             audio_stream += 1
-            if stream_language == '' or channels == '' or codec_name == '':
+            if channels == '' or codec_name == '':
                 if  int(probe_streams[i]["channels"]) > 4:
                     stream = audio_stream
                     break
             else:
-                if str(probe_streams[i]["channels"]) == channels and probe_streams[i]["tags"]["language"] == stream_language and probe_streams[i]["codec_name"] == codec_name:
+                if str(probe_streams[i]["channels"]) == channels and ("language" in probe_streams[i]["tags"] and probe_streams[i]["tags"]["language"] == stream_language) and probe_streams[i]["codec_name"] == codec_name:
                     stream = audio_stream
                     break
-
+    logger.debug("stream: '{}'".format(stream))
     return stream
 
 
@@ -119,9 +133,13 @@ def on_library_management_file_test(data):
     codec_name = settings.get_setting('codec_name').lower()
 
     stream = stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams)
+    logger.debug("stream to stereo encode: '{}'".format(stream))
     if stream >= 0:
         data['add_file_to_pending_tasks'] = True
-        logger.debug("Audio stream '{}' is '{}' and has '{}' channels and is encoded with '{}'".format(stream, stream_language, channels, codec_name))
+        if stream_language == '' or channels == '' or codec_name == '':
+            logger.debug("Audio stream '{}' is multichannel audio - convert stream".format(stream))
+        else:
+            logger.debug("Audio stream '{}' is '{}' and has '{}' channels and is encoded with '{}' - convert stream".format(stream, stream_language, channels, codec_name))
     else:
         data['add_file_to_pending_tasks'] = False
         logger.debug("do not add file '{}' to task list - no matching streams".format(abspath))
@@ -180,12 +198,27 @@ def on_worker_process(data):
     codec_name = settings.get_setting('codec_name').lower()
     encoder = 'aac'
     if settings.get_setting('use_libfdk_aac'): encoder = 'libfdk_aac'
+    remove_original = settings.get_setting('remove_original_multichannel_audio')
+    set_default_audio_to_new_stream = settings.get_setting('make_xtra_stereo_default')
 
     stream = stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams)
     if stream >= 0:
 
         # Get generated ffmpeg args
-        ffmpeg_args = ['-hide_banner', '-loglevel', 'info', '-i', str(abspath), '-max_muxing_queue_size', '9999', '-map', '0', '-c', 'copy', '-map', '0:a:'+str(stream), '-c:a:'+str(new_audio_stream), encoder, '-ac', '2', '-b:a:'+str(new_audio_stream), '128k', '-y', str(outpath)]
+        if not remove_original:
+            ffmpeg_args = ['-hide_banner', '-loglevel', 'info', '-i', str(abspath), '-max_muxing_queue_size', '9999', '-map', '0', '-c', 'copy', '-map', '0:a:'+str(stream), '-c:a:'+str(new_audio_stream), encoder, '-ac', '2', '-b:a:'+str(new_audio_stream), '128k']
+        else:
+            ffmpeg_args = ['-hide_banner', '-loglevel', 'info', '-i', str(abspath), '-max_muxing_queue_size', '9999', '-map', '0:s?', '-c:s', 'copy', '-map', '0:d?', '-c:d', 'copy', '-map', '0:t?', '-c:t', 'copy', '-map', '0:v', '-c:v', 'copy']
+            for astream in range(0, total_audio_streams+1):
+                if astream ==  stream:
+                    ffmpeg_args += ['-map', '0:a:'+str(stream), '-c:a:'+str(stream), encoder, '-ac', '2', '-b:a:'+str(stream), '128k']
+                    new_audio_stream = astream
+                else:
+                    ffmpeg_args += ['-map', '0:a:'+str(astream), '-c:a:'+str(astream), 'copy']
+        if set_default_audio_to_new_stream:
+            ffmpeg_args += ['-disposition:a', '-default', '-disposition:a:'+str(new_audio_stream), 'default', '-y', str(outpath)]
+        else:
+            ffmpeg_args += ['-y', str(outpath)]
 
         logger.debug("ffmpeg args: '{}'".format(ffmpeg_args))
 
@@ -197,3 +230,4 @@ def on_worker_process(data):
         parser = Parser(logger)
         parser.set_probe(probe_data)
         data['command_progress_parser'] = parser.parse_progress
+
