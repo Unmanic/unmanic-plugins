@@ -1,3 +1,7 @@
+**<span style="color:#56adda">0.0.9</span>**
+- Add settings to specify:
+  - Which languages to extract
+  - Whether to include "title" in output file name 
 
 **<span style="color:#56adda">0.0.8</span>**
 - Add library tester to search for files with SRT streams
