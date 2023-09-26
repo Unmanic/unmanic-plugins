@@ -1,4 +1,16 @@
 
+**<span style="color:#56adda">1.1.10</span>**
+- 2nd fix stream order test comparing new order with original order
+
+**<span style="color:#56adda">1.1.9</span>**
+- fix stream order test comparing new order with original order
+
+**<span style="color:#56adda">1.1.8</span>**
+- fix disposition to unset default from all streams, then set first audio matched as default
+
+**<span style="color:#56adda">1.1.7</span>**
+- Fix library scan issue where 'en' seemed hardcoded
+
 **<span style="color:#56adda">1.1.6</span>**
 - Fix issue where all tracks were being set as default
 
