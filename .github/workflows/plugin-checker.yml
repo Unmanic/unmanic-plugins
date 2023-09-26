@@ -31,6 +31,26 @@ jobs:
     # | |___| | | \__ \ |_| | | |  __/ |  __/| | |  __/\__ \  __/ | | | |_ 
     # |_____|_| |_|___/\__,_|_|  \___| |_|   |_|  \___||___/\___|_| |_|\__|
     #                                                                      
+    - name: Check all plugins exist in source directory
+      if: success() || failure()
+      run: |
+        success=0
+        for root_dir in ./*; do
+            if [ -d "${root_dir:?}" ]; then
+                # Ignore docs directory
+                [ "$(basename ${root_dir:?})" == "docs" ] && continue
+                # The only other directory should be "source"
+                if [ "$(basename ${root_dir:?})" != "source" ]; then
+                    echo "FAIL - Found an unexpected directory in '${root_dir:?}'. All plugins should be added to './source/'."
+                    success=1
+                fi
+            fi
+        done
+        if [ ${success} -gt 0 ]; then
+            exit 1
+        else
+            echo "PASS - Found a correct directory structure in the project root."
+        fi
     - name: Check .gitignore in all plugin folders
       if: success() || failure()
       run: |
