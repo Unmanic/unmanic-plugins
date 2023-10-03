@@ -113,7 +113,7 @@ class PluginStreamMapper(StreamMapper):
             subtitle_tag = "{}.{}".format(subtitle_tag, stream_info.get('index'))
 
         # Ensure subtitle tag does not contain whitespace or slashes
-        subtitle_tag = re.sub('\s|/|\\', '-', subtitle_tag)
+        subtitle_tag = re.sub('\s|/|\\\\', '-', subtitle_tag)
 
         self.sub_streams.append(
             {
