@@ -265,22 +265,20 @@ def build_comcut_args(abspath, file_out, settings):
     use_hw = settings.get_setting('use_hw')
     if not use_hw:
         args = [
-            comchap_path,
+            comcut_path,
             '--comskip-ini={}'.format(config_file),
             '--keep-edl',
             '--keep-meta',
-            '--verbose',
             abspath,
             file_out,
         ]
     else:
         args = [
-            comchap_path,
+            comcut_path,
             '--comskip-ini={}'.format(config_file),
             '--use-hw',
             '--keep-edl',
             '--keep-meta',
-            '--verbose',
             abspath,
             file_out,
         ]

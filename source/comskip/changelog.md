@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.8</span>**
+- fix comcut_path in build_comcut_args - was wrong due to copy/paste error
+
 **<span style="color:#56adda">0.0.7</span>**
 - Added h/w accelerated comskip option using cuvid
 
