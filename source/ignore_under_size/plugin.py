@@ -27,7 +27,7 @@ import logging
 from unmanic.libs.unplugins.settings import PluginSettings
 
 # Configure plugin logger
-logger = logging.getLogger("Unmanic.Plugin.ignore_under_size")
+logger = logging.getLogger("Unmanic.Plugin.ignore_video_file_under_size")
 
 
 class Settings(PluginSettings):
