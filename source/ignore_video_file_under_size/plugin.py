@@ -28,6 +28,7 @@ from enum import Enum
 import humanfriendly
 import subprocess
 import logging
+import mimetypes
 from unmanic.libs.unplugins.settings import PluginSettings
 
 # Configure plugin logger
@@ -150,7 +151,7 @@ def on_library_management_file_test(data):
     """
     file_path = data.get('path')
     logger.debug("Checking file %s", file_path)
-    file_mime_type = subprocess.check_output(["file", "--mime-type", file_path], text=True)
+    file_mime_type = mimetypes.guess_type(file_path)[0]
     if "video" not in file_mime_type:
         file_extension = os.path.splitext(file_path)[1]
         if file_extension in ["mkv", "mp4", "mov", "avi", "wmv", "flv", "avchd"]:
