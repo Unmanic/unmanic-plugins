@@ -28,6 +28,7 @@ from enum import Enum
 import humanfriendly
 import subprocess
 import logging
+import mimetypes
 from unmanic.libs.unplugins.settings import PluginSettings
 
 # Configure plugin logger
@@ -148,6 +149,18 @@ def on_library_management_file_test(data):
     :return:
 
     """
+    file_path = data.get('path')
+    logger.debug("Checking file %s", file_path)
+    file_mime_type = mimetypes.guess_type(file_path)[0]
+    if "video" not in file_mime_type:
+        file_extension = os.path.splitext(file_path)[1]
+        if file_extension in ["mkv", "mp4", "mov", "avi", "wmv", "flv", "avchd"]:
+            raise AssertionError(f"File {file_path} was a known video type "
+                                 f"but mime type was {file_mime_type} was not recognized")
+        logger.debug("File with extension %s is not a video file (was %s), skipping",
+                     file_extension, file_mime_type)
+        return data
+
     # Configure settings object (maintain compatibility with v1 plugins)
     if data.get('library_id'):
         settings = Settings(library_id=data.get('library_id'))
@@ -163,7 +176,6 @@ def on_library_management_file_test(data):
     if minimum_file_size_per_second == 0:
         return data
 
-    file_path = data.get('path')
     video_data = get_video_data(file_path)
     actual_file_size_per_second = get_time_normalized_file_size(file_path, video_data)
     minimum_file_size_per_second = normalize_by_resolution(minimum_file_size_per_second, video_data)
