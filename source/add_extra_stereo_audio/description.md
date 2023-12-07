@@ -44,6 +44,9 @@ Check if you wish to remove the identified/specified multichannel audio stream -
 #### <span style="color:blue">new stereo audio to be the default audio upon playing</span>
 Check if you wish to make the new stereo audio be the default audio - if unchecked, default audio is not changed
 
+#### <span style="color:blue">Create sterero audio stream if no valid language tags</span>
+Check if you wish to generate a stereo audio track even if there are no valid lanugage tags - otherwise valid language tags are required.
+
 :::note
 This plugin will create a stereo aac or libfdk_aac stream as an additional stereo stream.
 It will search for the first stream matching the search parameters and encode that as an
@@ -52,8 +55,8 @@ additional 2 channel stereo audio using aac or, if selected, libfdk_aac (ffmpeg 
 If either channels or codec name search parameters are left blank, this plugin will select the first stream with a
 number of audio channels > 4 and language matching specified language and encode that as the additional 2 channel stereo stream
 
-For this plugin to work successfully, audio streams must have proper language tags - particularly
-the stream that is to be re-encoded as an additional stereo stream
+For this plugin to work best, audio streams must have proper language tags - particularly
+the stream that is to be re-encoded as an additional stereo stream. If you wish for audio streams to be generated where no language tags are present, enable the force_if_no_lang option.
 
 If you opt to remove the original multichannel audio stream, the stereo audio stream will occupy it's
 place and all other streams will be left intact
