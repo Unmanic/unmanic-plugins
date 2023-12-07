@@ -40,6 +40,7 @@ class Settings(PluginSettings):
         "use_libfdk_aac":         False,
         "remove_original_multichannel_audio": False,
         "make_xtra_stereo_default": True,
+        "force_if_no_lang" : False,
     }
 
     def __init__(self, *args, **kwargs):
@@ -60,27 +61,31 @@ class Settings(PluginSettings):
             "remove_original_multichannel_audio":               {
                 "label": "check if you want to remove the original multichannel audio stream",
             },
-
             "make_xtra_stereo_default":      {
                 "label": "check if you want the new stereo audio to be the default audio upon playing"
+            },
+            "force_if_no_lang":      {
+                "label": "If the video file has no language tags on the audio stream, create a stereo stream with what you have"
             }
         }
 
-def stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams):
+def stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams, force_if_no_lang):
     audio_stream = -1
     stream = audio_stream
     for  i in range(0, len(probe_streams)):
         if "codec_type" in probe_streams[i] and probe_streams[i]["codec_type"] == "audio":
-            if "tags" in probe_streams[i] and "title" in probe_streams[i]["tags"] and probe_streams[i]["tags"]["title"] == 'Commentary':
                 continue
-            try:
-                if probe_streams[i]["codec_name"] == "aac" and probe_streams[i]["channels"] == 2 and probe_streams[i]["channel_layout"] == "stereo" and probe_streams[i]["tags"]["language"] == stream_language: return stream
-            except KeyError:
-                if probe_streams[i]["codec_name"] == "aac" and probe_streams[i]["channels"] == 2 and probe_streams[i]["channel_layout"] == "stereo": return stream
+        try:
+            if "tags" in probe_streams[i] and "language" in probe_streams[i]["tags"] and probe_streams[i]["codec_name"] == "aac" and probe_streams[i]["channels"] == 2 and probe_streams[i]["channel_layout"] == "stereo" and probe_streams[i]["tags"]["language"] == stream_language: return stream
+        except KeyError:
+            if probe_streams[i]["codec_name"] == "aac" and probe_streams[i]["channels"] == 2 and probe_streams[i]["channel_layout"] == "stereo": return stream
 
     for i in range(0, len(probe_streams)):
         if "codec_type" in probe_streams[i] and probe_streams[i]["codec_type"] == "audio":
-            logger.debug("i '{}', probe_streams[i][codec_type]: '{}', probe_streams[i][channels]: '{}', probe_streams[i][tags][language]: '{}', probe_streams[i][codec_name]: '{}'".format(i, probe_streams[i]["codec_type"], probe_streams[i]["channels"], probe_streams[i]["tags"]["language"], probe_streams[i]["codec_name"]))
+            try:
+                logger.debug("i '{}', probe_streams[i][codec_type]: '{}', probe_streams[i][channels]: '{}', probe_streams[i][tags][language]: '{}', probe_streams[i][codec_name]: '{}'".format(i, probe_streams[i]["codec_type"], probe_streams[i]["channels"], probe_streams[i]["tags"]["language"], probe_streams[i]["codec_name"]))
+            except KeyError:
+                logger.debug("i '{}', probe_streams[i][codec_type]: '{}', probe_streams[i][channels]: '{}', probe_streams[i][codec_name]: '{}'".format(i, probe_streams[i]["codec_type"], probe_streams[i]["channels"], probe_streams[i]["codec_name"]))
             audio_stream += 1
             if channels == '' or codec_name == '':
                 if  int(probe_streams[i]["channels"]) > 4:
@@ -90,6 +95,10 @@ def stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams
                 if str(probe_streams[i]["channels"]) == channels and ("language" in probe_streams[i]["tags"] and probe_streams[i]["tags"]["language"] == stream_language) and probe_streams[i]["codec_name"] == codec_name:
                     stream = audio_stream
                     break
+                else :
+                    if str(probe_streams[i]["channels"]) == channels and "language" not in probe_streams[i]["tags"] and force_if_no_lang:
+                        stream = audio_stream
+                        break
     logger.debug("stream: '{}'".format(stream))
     return stream
 
@@ -131,8 +140,9 @@ def on_library_management_file_test(data):
     stream_language = settings.get_setting('stream_language').lower()
     channels = settings.get_setting('channels')
     codec_name = settings.get_setting('codec_name').lower()
+    force_if_no_lang = settings.get_setting('force_if_no_lang')
 
-    stream = stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams)
+    stream = stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams, force_if_no_lang)
     logger.debug("stream to stereo encode: '{}'".format(stream))
     if stream >= 0:
         data['add_file_to_pending_tasks'] = True
@@ -200,8 +210,9 @@ def on_worker_process(data):
     if settings.get_setting('use_libfdk_aac'): encoder = 'libfdk_aac'
     remove_original = settings.get_setting('remove_original_multichannel_audio')
     set_default_audio_to_new_stream = settings.get_setting('make_xtra_stereo_default')
+    force_if_no_lang = settings.get_setting('force_if_no_lang')
 
-    stream = stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams)
+    stream = stream_to_stereo_encode(stream_language, channels, codec_name, probe_streams, force_if_no_lang)
     if stream >= 0:
 
         # Get generated ffmpeg args
