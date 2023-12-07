@@ -1,6 +1,6 @@
 
 **<span style="color:#56adda">0.0.10</span>**
-- Fiexed an issue where if thhe audio stream had no language tag the debug logger would cause an exception
+- Fixed an issue where if the audio stream had no language tag the debug logger would cause an exception
 - Added ability to generate an audio stream for video files if no language tags are present in the audio streams
 
 **<span style="color:#56adda">0.0.9</span>**
