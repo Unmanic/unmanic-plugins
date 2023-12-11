@@ -89,6 +89,8 @@ class VideoData:
                 self.height = stream_data["height"]
             if "duration" in stream_data:
                 self.duration = float(stream_data["duration"])
+            elif "format" in json.loads(data) and "duration" in json.loads(data)["format"]:
+                self.duration = float(format_data["duration"])
 
         if not self.width:
             raise AssertionError("Unable to determine video width")
@@ -104,7 +106,7 @@ def get_video_data(path: str) -> VideoData:
         args=[
             "ffprobe",
             "-v", "error",
-            "-show_entries", "stream=duration,width,height",
+            "-show_entries", "stream=duration,width,height:format=duration",
             "-print_format", "json",
             path
         ],
