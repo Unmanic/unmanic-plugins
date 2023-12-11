@@ -90,7 +90,7 @@ class VideoData:
             if "duration" in stream_data:
                 self.duration = float(stream_data["duration"])
             elif "format" in json.loads(data) and "duration" in json.loads(data)["format"]:
-                self.duration = float(format_data["duration"])
+                self.duration = float(json.loads(data)["format"]["duration"])
 
         if not self.width:
             raise AssertionError("Unable to determine video width")
