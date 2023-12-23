@@ -351,7 +351,7 @@ def on_postprocessor_task_results(data):
 
     # Map variables to be replaced in cmd and args
     abspath = data.get('source_data', {}).get('abspath')
-    source_size = os.path.getsize(abspath)
+    source_size = os.path.getsize(abspath) if os.path.exists(abspath) else None
     variable_map = {
         '{library_id}':       str(data.get('library_id')),
         '{final_cache_path}': str(data.get('final_cache_path')),

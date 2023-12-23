@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- Fix plugin when run along side another plugin that moves or removes the source file
+
 **<span style="color:#56adda">0.0.6</span>**
 - Add support for Bash script inputs in the plugin settings
 - Add support for Python script inputs in the plugin settings
