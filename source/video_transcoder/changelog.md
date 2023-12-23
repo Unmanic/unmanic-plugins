@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.8</span>**
+- update ffmpeg helper library to latest version
+
 **<span style="color:#56adda">0.0.7</span>**
 - Handle circumstance where file probe has no 'codec_name'
 - Improve library scan speed when used with other plugins that use ffprobe

@@ -137,7 +137,7 @@ class StreamMapper(object):
         """
         Overwrite this function to test a stream.
         Return 'True' if it needs to be process.
-        Return 'False' if it should just be copied over to the new file
+        Return 'False' if it should just be copied over to the new file.
 
         :param stream_info:
         :return: bool
@@ -233,8 +233,19 @@ class StreamMapper(object):
                         self.audio_stream_count += 1
                         continue
                 else:
-                    self.__copy_stream_mapping('a', self.audio_stream_count)
-                    self.audio_stream_count += 1
+                    if self.settings.get_setting('mode') == 'advanced':
+                        amaps = self.settings.get_setting('custom_options').split()
+                        self.logger.debug("Advanced Mode Video Settings with custom audio encoding: '%s'", amaps)
+                        if '-c:a' not in amaps:
+                            self.logger.debug("-c:a not detected in custom mappings: '%s'", amaps)
+                            self.__copy_stream_mapping('a', self.audio_stream_count)
+                        else:
+                            self.logger.debug("-c:a detected in custom mappings: '%s'", amaps)
+                            self.stream_mapping += ['-map', '0:{}:{}'.format('a', self.audio_stream_count)]
+                        self.audio_stream_count += 1
+                    else:
+                        self.__copy_stream_mapping('a', self.audio_stream_count)
+                        self.audio_stream_count += 1
                     continue
 
             # If this is a subtitle stream?
@@ -255,8 +266,19 @@ class StreamMapper(object):
                         self.subtitle_stream_count += 1
                         continue
                 else:
-                    self.__copy_stream_mapping('s', self.subtitle_stream_count)
-                    self.subtitle_stream_count += 1
+                    if self.settings.get_setting('mode') == 'advanced':
+                        submaps = self.settings.get_setting('custom_options').split()
+                        self.logger.debug("Advanced Mode Video Settings with custom subtitle encoding: '%s'", submaps)
+                        if '-c:s' not in submaps:
+                            self.logger.debug("-c:s not detected in custom mappings: '%s'", submaps)
+                            self.__copy_stream_mapping('s', self.subtitle_stream_count)
+                        else:
+                            self.logger.debug("-c:s detected in custom mappings: '%s'", submaps)
+                            self.stream_mapping += ['-map', '0:{}:{}'.format('s', self.subtitle_stream_count)]
+                        self.subtitle_stream_count += 1
+                    else:
+                        self.__copy_stream_mapping('s', self.subtitle_stream_count)
+                        self.subtitle_stream_count += 1
                     continue
 
             # If this is a data stream?
