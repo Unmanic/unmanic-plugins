@@ -23,16 +23,26 @@
 """
 """
 Notes:
+    - Listing available encoder options:
+        ffmpeg -h encoder=h264_qsv
+        ffmpeg -h encoder=hevc_qsv
+        ffmpeg -h encoder=av1_qsv
     - Good breakdown on FFmpeg general args for QSV HW accel: 
         https://gist.github.com/jackleaks/776d2de2688d238c95ed7eafb3d5bae8
 """
 
 
 class QsvEncoder:
-    encoders = [
-        "h264_qsv",
-        "hevc_qsv",
-    ]
+    provides = {
+        "h264_qsv": {
+            "codec": "h264",
+            "label": "QSV - h264_qsv",
+        },
+        "hevc_qsv": {
+            "codec": "hevc",
+            "label": "QSV - hevc_qsv",
+        }
+    }
 
     def __init__(self, settings):
         self.settings = settings
@@ -40,13 +50,13 @@ class QsvEncoder:
     @staticmethod
     def options():
         return {
-            "qsv_decoding_method":        "cpu",
-            "preset":                     "slow",
-            "tune":                       "film",
-            "encoder_ratecontrol_method": "LA_ICQ",
-            "constant_quantizer_scale":   "25",
-            "constant_quality_scale":     "23",
-            "average_bitrate":            "5",
+            "qsv_decoding_method":            "cpu",
+            "qsv_preset":                     "slow",
+            "qsv_tune":                       "film",
+            "qsv_encoder_ratecontrol_method": "LA_ICQ",
+            "qsv_constant_quantizer_scale":   "25",
+            "qsv_constant_quality_scale":     "23",
+            "qsv_average_bitrate":            "5",
         }
 
     @staticmethod
@@ -102,6 +112,9 @@ class QsvEncoder:
                 filter_args.append('scale_qsv=w={}:h={}'.format(scale_values[0], scale_values[1]))
         return generic_kwargs, advanced_kwargs, filter_args
 
+    def encoder_details(self, encoder):
+        return self.provides.get(encoder, {})
+
     def args(self, stream_id):
         stream_encoding = []
 
@@ -110,33 +123,32 @@ class QsvEncoder:
             defaults = self.options()
             # Use default LA_ICQ mode
             stream_encoding += [
-                '-preset', str(defaults.get('preset')),
-                '-global_quality', str(defaults.get('constant_quality_scale')), '-look_ahead', '1',
+                '-preset', str(defaults.get('qsv_preset')),
+                '-global_quality', str(defaults.get('qsv_constant_quality_scale')), '-look_ahead', '1',
             ]
             return stream_encoding
 
         # Add the preset and tune
-        if self.settings.get_setting('preset'):
-            stream_encoding += ['-preset', str(self.settings.get_setting('preset'))]
-        if self.settings.get_setting('tune') and self.settings.get_setting('tune') != 'auto':
-            stream_encoding += ['-tune', str(self.settings.get_setting('tune'))]
+        if self.settings.get_setting('qsv_preset'):
+            stream_encoding += ['-preset', str(self.settings.get_setting('qsv_preset'))]
+        if self.settings.get_setting('qsv_tune') and self.settings.get_setting('qsv_tune') != 'auto':
+            stream_encoding += ['-tune', str(self.settings.get_setting('qsv_tune'))]
 
-        # TODO: Split this into encoder specific functions
-        if self.settings.get_setting('encoder_ratecontrol_method'):
-            if self.settings.get_setting('encoder_ratecontrol_method') in ['CQP', 'LA_ICQ', 'ICQ']:
+        if self.settings.get_setting('qsv_encoder_ratecontrol_method'):
+            if self.settings.get_setting('qsv_encoder_ratecontrol_method') in ['CQP', 'LA_ICQ', 'ICQ']:
                 # Configure QSV encoder with a quality-based mode
-                if self.settings.get_setting('encoder_ratecontrol_method') == 'CQP':
+                if self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'CQP':
                     # Set values for constant quantizer scale
                     stream_encoding += [
-                        '-q', str(self.settings.get_setting('constant_quantizer_scale')),
+                        '-q', str(self.settings.get_setting('qsv_constant_quantizer_scale')),
                     ]
-                elif self.settings.get_setting('encoder_ratecontrol_method') in ['LA_ICQ', 'ICQ']:
+                elif self.settings.get_setting('qsv_encoder_ratecontrol_method') in ['LA_ICQ', 'ICQ']:
                     # Set the global quality
                     stream_encoding += [
-                        '-global_quality', str(self.settings.get_setting('constant_quality_scale')),
+                        '-global_quality', str(self.settings.get_setting('qsv_constant_quality_scale')),
                     ]
                     # Set values for constant quality scale
-                    if self.settings.get_setting('encoder_ratecontrol_method') == 'LA_ICQ':
+                    if self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'LA_ICQ':
                         # Add lookahead
                         stream_encoding += [
                             '-look_ahead', '1',
@@ -145,17 +157,17 @@ class QsvEncoder:
                 # Configure the QSV encoder with a bitrate-based mode
                 # Set the max and average bitrate (used by all bitrate-based modes)
                 stream_encoding += [
-                    '-b:v:{}'.format(stream_id), '{}M'.format(self.settings.get_setting('average_bitrate')),
+                    '-b:v:{}'.format(stream_id), '{}M'.format(self.settings.get_setting('qsv_average_bitrate')),
                 ]
-                if self.settings.get_setting('encoder_ratecontrol_method') == 'LA':
+                if self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'LA':
                     # Add lookahead
                     stream_encoding += [
                         '-look_ahead', '1',
                     ]
-                elif self.settings.get_setting('encoder_ratecontrol_method') == 'CBR':
+                elif self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'CBR':
                     # Add 'maxrate' with the same value to make CBR mode
                     stream_encoding += [
-                        '-maxrate', '{}M'.format(self.settings.get_setting('average_bitrate')),
+                        '-maxrate', '{}M'.format(self.settings.get_setting('qsv_average_bitrate')),
                     ]
         return stream_encoding
 
@@ -194,11 +206,12 @@ class QsvEncoder:
                 }
             ]
         }
+        self.__set_default_option(values['select_options'], 'qsv_decoding_method', 'cpu')
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
 
-    def get_preset_form_settings(self):
+    def get_qsv_preset_form_settings(self):
         values = {
             "label":          "Encoder quality preset",
             "sub_setting":    True,
@@ -234,11 +247,12 @@ class QsvEncoder:
                 },
             ],
         }
+        self.__set_default_option(values['select_options'], 'qsv_preset')
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
 
-    def get_tune_form_settings(self):
+    def get_qsv_tune_form_settings(self):
         values = {
             "label":          "Tune for a particular type of source or situation",
             "sub_setting":    True,
@@ -274,12 +288,12 @@ class QsvEncoder:
                 },
             ],
         }
-        self.__set_default_option(values['select_options'], 'tune')
+        self.__set_default_option(values['select_options'], 'qsv_tune')
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
 
-    def get_encoder_ratecontrol_method_form_settings(self):
+    def get_qsv_encoder_ratecontrol_method_form_settings(self):
         values = {
             "label":          "Encoder ratecontrol method",
             "sub_setting":    True,
@@ -311,12 +325,12 @@ class QsvEncoder:
                 },
             ]
         }
-        self.__set_default_option(values['select_options'], 'encoder_ratecontrol_method', default_option='LA_ICQ')
+        self.__set_default_option(values['select_options'], 'qsv_encoder_ratecontrol_method', default_option='LA_ICQ')
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
 
-    def get_constant_quantizer_scale_form_settings(self):
+    def get_qsv_constant_quantizer_scale_form_settings(self):
         # Lower is better
         values = {
             "label":          "Constant quantizer scale",
@@ -329,11 +343,11 @@ class QsvEncoder:
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
-        if self.settings.get_setting('encoder_ratecontrol_method') != 'CQP':
+        if self.settings.get_setting('qsv_encoder_ratecontrol_method') != 'CQP':
             values["display"] = "hidden"
         return values
 
-    def get_constant_quality_scale_form_settings(self):
+    def get_qsv_constant_quality_scale_form_settings(self):
         # Lower is better
         values = {
             "label":          "Constant quality scale",
@@ -346,11 +360,11 @@ class QsvEncoder:
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
-        if self.settings.get_setting('encoder_ratecontrol_method') not in ['LA_ICQ', 'ICQ']:
+        if self.settings.get_setting('qsv_encoder_ratecontrol_method') not in ['LA_ICQ', 'ICQ']:
             values["display"] = "hidden"
         return values
 
-    def get_average_bitrate_form_settings(self):
+    def get_qsv_average_bitrate_form_settings(self):
         values = {
             "label":          "Bitrate",
             "sub_setting":    True,
@@ -363,6 +377,6 @@ class QsvEncoder:
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
-        if self.settings.get_setting('encoder_ratecontrol_method') not in ['VBR', 'LA', 'CBR']:
+        if self.settings.get_setting('qsv_encoder_ratecontrol_method') not in ['VBR', 'LA', 'CBR']:
             values["display"] = "hidden"
         return values

@@ -89,10 +89,16 @@ def get_configured_device(settings):
 
 
 class NvencEncoder:
-    encoders = [
-        "h264_nvenc",
-        "hevc_nvenc",
-    ]
+    provides = {
+        "h264_nvenc": {
+            "codec": "h264",
+            "label": "NVENC - h264_nvenc",
+        },
+        "hevc_nvenc": {
+            "codec": "hevc",
+            "label": "NVENC - hevc_nvenc",
+        }
+    }
 
     def __init__(self, settings):
         self.settings = settings
@@ -154,6 +160,13 @@ class NvencEncoder:
                 scale_values = smart_filter.get('scale')
                 filters.append('scale_cuda={}:-1'.format(scale_values[0]))
         return filters
+
+    def encoder_details(self, encoder):
+        hardware_devices = list_available_cuda_devices()
+        if not hardware_devices:
+            # Return no options. No hardware device was found
+            return {}
+        return self.provides.get(encoder, {})
 
     def args(self, stream_info, stream_id):
         generic_kwargs = {}

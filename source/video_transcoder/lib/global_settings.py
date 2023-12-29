@@ -21,11 +21,18 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
-import os
 import subprocess
-import sys
 
 from video_transcoder.lib import tools
+
+supported_codecs = {
+    "h264": {
+        "label": "H264"
+    },
+    "hevc": {
+        "label": "HEVC/H265"
+    },
+}
 
 
 class GlobalSettings:
@@ -143,17 +150,15 @@ class GlobalSettings:
                 "label":          "Video Codec",
                 "description":    "Select the video codec that your video library should be.",
                 "input_type":     "select",
-                "select_options": [
-                    {
-                        "value": "h264",
-                        "label": "H264",
-                    },
-                    {
-                        "value": "hevc",
-                        "label": "HEVC/H265",
-                    },
-                ],
+                "select_options": [],
             }
+            for key in supported_codecs:
+                values['select_options'].append(
+                    {
+                        "value": key,
+                        "label": supported_codecs.get(key, {}).get('label'),
+                    }
+                )
             self.__set_default_option(values['select_options'], 'video_codec')
         if self.settings.get_setting('mode') not in ['basic', 'standard', 'advanced']:
             values["display"] = 'hidden'
@@ -177,63 +182,19 @@ class GlobalSettings:
         values = {
             "label":          "Video Encoder",
             "input_type":     "select",
-            "select_options": [
-                {
-                    "value": "libx264",
-                    "label": "CPU - libx264",
-                },
-            ],
+            "select_options": [],
         }
-        if self.settings.get_setting('video_codec') == 'h264':
-            values['select_options'] = [
+        for encoder_name in self.settings.encoders:
+            encoder_lib = self.settings.encoders.get(encoder_name)
+            encoder_details = encoder_lib.encoder_details(encoder_name)
+            if encoder_details.get('codec') != self.settings.get_setting('video_codec'):
+                continue
+            values['select_options'].append(
                 {
-                    "value": "libx264",
-                    "label": "CPU - libx264",
-                },
-                {
-                    "value": "h264_qsv",
-                    "label": "QSV - h264_qsv",
-                },
-            ]
-            if os.name == 'posix' and sys.platform == 'linux':
-                values['select_options'] += [
-                    {
-                        "value": "h264_vaapi",
-                        "label": "VAAPI - h264_vaapi",
-                    },
-                ]
-            if self.__is_nvidia_gpu_present():
-                values['select_options'] += [
-                    {
-                        "value": "h264_nvenc",
-                        "label": "NVENC - h264_nvenc",
-                    },
-                ]
-        elif self.settings.get_setting('video_codec') == 'hevc':
-            values['select_options'] = [
-                {
-                    "value": "libx265",
-                    "label": "CPU - libx265",
-                },
-                {
-                    "value": "hevc_qsv",
-                    "label": "QSV - hevc_qsv",
-                },
-            ]
-            if os.name == 'posix' and sys.platform == 'linux':
-                values['select_options'] += [
-                    {
-                        "value": "hevc_vaapi",
-                        "label": "VAAPI - hevc_vaapi",
-                    },
-                ]
-            if self.__is_nvidia_gpu_present():
-                values['select_options'] += [
-                    {
-                        "value": "hevc_nvenc",
-                        "label": "NVENC - hevc_nvenc",
-                    },
-                ]
+                    "value": encoder_name,
+                    "label": encoder_details.get('label'),
+                }
+            )
         self.__set_default_option(values['select_options'], 'video_encoder')
         if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'

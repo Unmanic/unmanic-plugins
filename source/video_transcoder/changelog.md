@@ -1,4 +1,9 @@
 
+**<span style="color:#56adda">0.1.0</span>**
+- Stable release
+- Prefix QSV config options in plugin settings file to isolate them from libx encoder settings (users will need to reconfigure some QSV settings)
+- Prefix VAAPI config options in plugin settings file to isolate them from libx encoder settings (users will need to reconfigure some VAAPI settings)
+
 **<span style="color:#56adda">0.0.10</span>**
 - Add support for QSV HW accelerated decoding
 - Add support for the scale_qsv filter when using qsv encoding
