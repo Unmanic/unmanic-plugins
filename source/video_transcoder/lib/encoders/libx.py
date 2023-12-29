@@ -32,7 +32,7 @@ class LibxEncoder:
         "libx265": {
             "codec": "hevc",
             "label": "CPU - libx265",
-        }
+        },
     }
 
     def __init__(self, settings):
