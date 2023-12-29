@@ -24,10 +24,10 @@
 import logging
 
 from video_transcoder.lib import tools
-from video_transcoder.lib.encoders import vaapi
 from video_transcoder.lib.encoders.libx import LibxEncoder
 from video_transcoder.lib.encoders.qsv import QsvEncoder
 from video_transcoder.lib.encoders.vaapi import VaapiEncoder
+from video_transcoder.lib.encoders.nvenc import NvencEncoder
 from video_transcoder.lib.ffmpeg import StreamMapper
 
 # Configure plugin logger
@@ -41,7 +41,6 @@ class PluginStreamMapper(StreamMapper):
         self.settings = None
         self.complex_video_filters = {}
         self.crop_value = None
-        self.vaapi_encoders = ['hevc_vaapi', 'h264_vaapi']
         self.forced_encode = False
 
     def set_default_values(self, settings, abspath, probe):
@@ -101,12 +100,15 @@ class PluginStreamMapper(StreamMapper):
             generic_kwargs, advanced_kwargs = QsvEncoder.generate_default_args(self.settings)
             self.set_ffmpeg_generic_options(**generic_kwargs)
             self.set_ffmpeg_advanced_options(**advanced_kwargs)
-        elif self.settings.get_setting('video_encoder') in self.vaapi_encoders:
+        elif self.settings.get_setting('video_encoder') in VaapiEncoder.encoders:
             generic_kwargs, advanced_kwargs = VaapiEncoder.generate_default_args(self.settings)
             self.set_ffmpeg_generic_options(**generic_kwargs)
             self.set_ffmpeg_advanced_options(**advanced_kwargs)
+        elif self.settings.get_setting('video_encoder') in NvencEncoder.encoders:
+            generic_kwargs, advanced_kwargs = NvencEncoder.generate_default_args(self.settings)
+            self.set_ffmpeg_generic_options(**generic_kwargs)
+            self.set_ffmpeg_advanced_options(**advanced_kwargs)
             # TODO: Disable any options not compatible with this encoder
-        # TODO: Add NVENC args
 
     def scale_resolution(self, stream_info: dict):
         def get_test_resolution(settings):
@@ -177,10 +179,17 @@ class PluginStreamMapper(StreamMapper):
         if self.settings.get_setting('video_encoder') in QsvEncoder.encoders:
             # Add filtergraph required for using QSV encoding
             hardware_filters += QsvEncoder.generate_filtergraphs()
-        elif self.settings.get_setting('video_encoder') in self.vaapi_encoders:
+        elif self.settings.get_setting('video_encoder') in VaapiEncoder.encoders:
             # Add filtergraph required for using VAAPI encoding
             hardware_filters += VaapiEncoder.generate_filtergraphs()
             # If we are using software filters, then disable vaapi surfaces.
+            # Instead, putput software frames
+            if software_filters:
+                self.set_ffmpeg_generic_options(**{'-hwaccel_output_format': 'nv12'})
+        elif self.settings.get_setting('video_encoder') in NvencEncoder.encoders:
+            # Add filtergraph required for using CUDA encoding
+            hardware_filters += NvencEncoder.generate_filtergraphs()
+            # If we are using software filters, then disable cuda surfaces.
             # Instead, putput software frames
             if software_filters:
                 self.set_ffmpeg_generic_options(**{'-hwaccel_output_format': 'nv12'})
@@ -238,9 +247,11 @@ class PluginStreamMapper(StreamMapper):
             return False
 
         # Check if video filters need to be applied (build_filter_chain)
+        codec_type = stream_info.get('codec_type', '').lower()
+        codec_name = stream_info.get('codec_name', '').lower()
         if self.settings.get_setting('apply_smart_filters'):
             # Video filters
-            if stream_info.get('codec_type', '').lower() in ['video']:
+            if codec_type in ['video']:
                 # Check if autocrop filter needs to be applied
                 if self.settings.get_setting('autocrop_black_bars') and self.crop_value:
                     return True
@@ -250,7 +261,7 @@ class PluginStreamMapper(StreamMapper):
                     if vid_width:
                         return True
             # Data/Attachment filters
-            if stream_info.get('codec_type', '').lower() in ['data', 'attachment']:
+            if codec_type in ['data', 'attachment']:
                 # Enable removal of data and attachment streams
                 if self.settings.get_setting('remove_data_and_attachment_streams'):
                     # Remove it
@@ -258,8 +269,7 @@ class PluginStreamMapper(StreamMapper):
 
         # If the stream is a video, add a final check if the codec is already the correct format
         #   (Ignore checks if force transcode is set)
-        if stream_info.get('codec_type', '').lower() in ['video'] and stream_info.get(
-                'codec_name', '').lower() == self.settings.get_setting('video_codec'):
+        if codec_type in ['video'] and codec_name == self.settings.get_setting('video_codec'):
             if not self.settings.get_setting('force_transcode'):
                 return False
             else:
@@ -286,7 +296,7 @@ class PluginStreamMapper(StreamMapper):
         codec_type = stream_info.get('codec_type', '').lower()
         stream_specifier = '{}:{}'.format(ident.get(codec_type), stream_id)
         map_identifier = '0:{}'.format(stream_specifier)
-        if stream_info.get('codec_type', '').lower() in ['video']:
+        if codec_type in ['video']:
             if self.settings.get_setting('mode') == 'advanced':
                 stream_encoding = ['-c:{}'.format(stream_specifier)]
                 stream_encoding += self.settings.get_setting('custom_options').split()
@@ -311,7 +321,12 @@ class PluginStreamMapper(StreamMapper):
                 elif self.settings.get_setting('video_encoder') in VaapiEncoder.encoders:
                     vaapi_encoder = VaapiEncoder(self.settings)
                     stream_encoding += vaapi_encoder.args(stream_id)
-        elif stream_info.get('codec_type', '').lower() in ['data']:
+                elif self.settings.get_setting('video_encoder') in NvencEncoder.encoders:
+                    nvenc_encoder = NvencEncoder(self.settings)
+                    generic_kwargs, stream_encoding_args = nvenc_encoder.args(stream_info, stream_id)
+                    self.set_ffmpeg_generic_options(**generic_kwargs)
+                    stream_encoding += stream_encoding_args
+        elif codec_type in ['data']:
             if not self.settings.get_setting('apply_smart_filters'):
                 # If smart filters are not enabled, return 'False' to let the default mapping just copy the data stream
                 return False
@@ -323,7 +338,7 @@ class PluginStreamMapper(StreamMapper):
                 }
             # Resort to returning 'False' to let the default mapping just copy the data stream
             return False
-        elif stream_info.get('codec_type', '').lower() in ['attachment']:
+        elif codec_type in ['attachment']:
             if not self.settings.get_setting('apply_smart_filters'):
                 # If smart filters are not enabled, return 'False' to let the default mapping just copy the attachment
                 #   stream

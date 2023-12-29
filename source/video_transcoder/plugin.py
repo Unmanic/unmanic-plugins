@@ -40,6 +40,7 @@ from video_transcoder.lib.global_settings import GlobalSettings
 from video_transcoder.lib.encoders.libx import LibxEncoder
 from video_transcoder.lib.encoders.qsv import QsvEncoder
 from video_transcoder.lib.encoders.vaapi import VaapiEncoder
+from video_transcoder.lib.encoders.nvenc import NvencEncoder
 
 from unmanic.libs.unplugins.settings import PluginSettings
 from unmanic.libs.directoryinfo import UnmanicDirectoryInfo
@@ -59,6 +60,8 @@ class Settings(PluginSettings):
             "hevc_qsv":   QsvEncoder(self),
             "h264_qsv":   QsvEncoder(self),
             "hevc_vaapi": VaapiEncoder(self),
+            "h264_vaapi": VaapiEncoder(self),
+            "h264_nvenc": NvencEncoder(self),
         }
         self.global_settings = GlobalSettings(self)
         self.form_settings = self.__build_form_settings_object()
@@ -103,10 +106,12 @@ class Settings(PluginSettings):
         libx_options = LibxEncoder.options()
         qsv_options = QsvEncoder.options()
         vaapi_options = VaapiEncoder.options()
+        nvenc_options = NvencEncoder.options()
         return {
             **libx_options,
             **qsv_options,
-            **vaapi_options
+            **vaapi_options,
+            **nvenc_options
         }
 
     def __build_settings_object(self):
@@ -141,7 +146,7 @@ def file_marked_as_force_transcoded(path):
         has_been_force_transcoded = ''
 
     if has_been_force_transcoded == 'force_transcoded':
-        # This file has already has been force transcoded
+        # This file has already been force transcoded
         return True
 
     # Default to...

@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-###
-# File: global_settings.py
-# Project: lib
-# File Created: Friday, 26th August 2022 5:06:41 pm
-# Author: Josh.5 (jsunnex@gmail.com)
-# -----
-# Last Modified: Friday, 13th January 2023 2:56:32 pm
-# Modified By: Josh Sunnex (jsunnex@gmail.com)
-###
-# !/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
     plugins.global_settings.py
@@ -32,6 +21,10 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
+import os
+import subprocess
+import sys
+
 from video_transcoder.lib import tools
 
 
@@ -94,6 +87,19 @@ class GlobalSettings:
         if self.settings.get_setting(key) not in available_options:
             self.settings.set_setting(key, default_option)
 
+    @staticmethod
+    def __is_nvidia_gpu_present():
+        try:
+            # Run the nvidia-smi command
+            subprocess.run("nvidia-smi", stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            return True
+        except FileNotFoundError:
+            # nvidia-smi executable not found
+            return False
+        except subprocess.CalledProcessError:
+            # nvidia-smi command failed, likely no NVIDIA GPU present
+            return False
+
     def get_mode_form_settings(self):
         return {
             "label":          "Config mode",
@@ -129,8 +135,8 @@ class GlobalSettings:
 
     def get_video_codec_form_settings(self):
         values = {
-            "label":          "Video Codec",
-            "description":    "Specify the name of the video codec that your video library should be. Eg. 'h264', 'hevc'.",
+            "label":       "Video Codec",
+            "description": "Specify the name of the video codec that your video library should be. Eg. 'h264', 'hevc'.",
         }
         if self.settings.get_setting('mode') not in ['advanced']:
             values = {
@@ -179,7 +185,6 @@ class GlobalSettings:
             ],
         }
         if self.settings.get_setting('video_codec') == 'h264':
-            # TODO: Add support for VAAPI (requires some tweaking of standard values)
             values['select_options'] = [
                 {
                     "value": "libx264",
@@ -190,8 +195,21 @@ class GlobalSettings:
                     "label": "QSV - h264_qsv",
                 },
             ]
+            if os.name == 'posix' and sys.platform == 'linux':
+                values['select_options'] += [
+                    {
+                        "value": "h264_vaapi",
+                        "label": "VAAPI - h264_vaapi",
+                    },
+                ]
+            if self.__is_nvidia_gpu_present():
+                values['select_options'] += [
+                    {
+                        "value": "h264_nvenc",
+                        "label": "NVENC - h264_nvenc",
+                    },
+                ]
         elif self.settings.get_setting('video_codec') == 'hevc':
-            # TODO: Only enable VAAPI for Linux
             values['select_options'] = [
                 {
                     "value": "libx265",
@@ -201,11 +219,21 @@ class GlobalSettings:
                     "value": "hevc_qsv",
                     "label": "QSV - hevc_qsv",
                 },
-                {
-                    "value": "hevc_vaapi",
-                    "label": "VAAPI - hevc_vaapi",
-                },
             ]
+            if os.name == 'posix' and sys.platform == 'linux':
+                values['select_options'] += [
+                    {
+                        "value": "hevc_vaapi",
+                        "label": "VAAPI - hevc_vaapi",
+                    },
+                ]
+            if self.__is_nvidia_gpu_present():
+                values['select_options'] += [
+                    {
+                        "value": "hevc_nvenc",
+                        "label": "NVENC - hevc_nvenc",
+                    },
+                ]
         self.__set_default_option(values['select_options'], 'video_encoder')
         if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'
