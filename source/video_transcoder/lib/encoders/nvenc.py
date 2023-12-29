@@ -21,6 +21,12 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
+"""
+Notes:
+    - Listing available encoder options:
+        ffmpeg -h encoder=h264_nvenc
+        ffmpeg -h encoder=hevc_nvenc
+"""
 import logging
 import re
 import subprocess
@@ -101,9 +107,9 @@ class NvencEncoder:
             "nvenc_profile":                       "main",
             "nvenc_encoder_ratecontrol_method":    "auto",
             "nvenc_encoder_ratecontrol_lookahead": 0,
-            "enable_spatial_aq":                   False,
-            "enable_temporal_aq":                  False,
-            "aq_strength":                         8,
+            "nvenc_enable_spatial_aq":             False,
+            "nvenc_enable_temporal_aq":            False,
+            "nvenc_aq_strength":                   8,
         }
 
     @staticmethod
@@ -133,13 +139,21 @@ class NvencEncoder:
         return generic_kwargs, advanced_kwargs
 
     @staticmethod
-    def generate_filtergraphs():
+    def generate_filtergraphs(software_filters, hw_smart_filters):
         """
         Generate the required filter for enabling NVENC HW acceleration
 
         :return:
         """
-        return []
+        filters = []
+        if software_filters:
+            # Software filters mean the decoder was outputting nv12 surfaces. We need to upload back to cuda first
+            filters.append('hwupload_cuda')
+        for smart_filter in hw_smart_filters:
+            if smart_filter.get('scale'):
+                scale_values = smart_filter.get('scale')
+                filters.append('scale_cuda={}:-1'.format(scale_values[0]))
+        return filters
 
     def args(self, stream_info, stream_id):
         generic_kwargs = {}
@@ -180,11 +194,11 @@ class NvencEncoder:
             ]
 
         # Apply adaptive quantization
-        if self.settings.get_setting('enable_spatial_aq'):
+        if self.settings.get_setting('nvenc_enable_spatial_aq'):
             stream_encoding += ['-spatial-aq', '1']
-        if self.settings.get_setting('enable_spatial_aq') or self.settings.get_setting('enable_temporal_aq'):
-            stream_encoding += ['-aq-strength:v:{}'.format(stream_id), str(self.settings.get_setting('aq_strength'))]
-        if self.settings.get_setting('enable_temporal_aq'):
+        if self.settings.get_setting('nvenc_enable_spatial_aq') or self.settings.get_setting('nvenc_enable_temporal_aq'):
+            stream_encoding += ['-aq-strength:v:{}'.format(stream_id), str(self.settings.get_setting('nvenc_aq_strength'))]
+        if self.settings.get_setting('nvenc_enable_temporal_aq'):
             stream_encoding += ['-temporal-aq', '1']
 
         # If CUVID is enabled, return generic_kwargs
@@ -427,7 +441,7 @@ class NvencEncoder:
             values["display"] = "hidden"
         return values
 
-    def get_enable_spatial_aq_form_settings(self):
+    def get_nvenc_enable_spatial_aq_form_settings(self):
         values = {
             "label":       "Enable Spatial Adaptive Quantization",
             "description": "This adjusts the quantization parameter within each frame based on spatial complexity.\n"
@@ -438,7 +452,7 @@ class NvencEncoder:
             values["display"] = 'hidden'
         return values
 
-    def get_enable_temporal_aq_form_settings(self):
+    def get_nvenc_enable_temporal_aq_form_settings(self):
         values = {
             "label":       "Enable Temporal Adaptive Quantization",
             "description": "This adjusts the quantization parameter across frames, based on the motion and temporal complexity.\n"
@@ -449,7 +463,7 @@ class NvencEncoder:
             values["display"] = 'hidden'
         return values
 
-    def get_aq_strength_form_settings(self):
+    def get_nvenc_aq_strength_form_settings(self):
         # Lower is better
         values = {
             "label":          "Strength of the adaptive quantization",
@@ -465,6 +479,6 @@ class NvencEncoder:
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
-        if not self.settings.get_setting('enable_spatial_aq'):
+        if not self.settings.get_setting('nvenc_enable_spatial_aq'):
             values["display"] = "hidden"
         return values

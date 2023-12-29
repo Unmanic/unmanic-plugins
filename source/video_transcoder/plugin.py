@@ -102,16 +102,31 @@ class Settings(PluginSettings):
 
         :return:
         """
+        # Initial options forces the order they appear in the settings list
+        # We need this because some encoders have settings that
+        initial_options_order = {
+            "nvenc_device":               "",
+            "nvenc_decoding_method":      "",
+            "qsv_decoding_method":        "",
+            "preset":                     "",
+            "tune":                       "",
+            "profile":                    "",
+            "encoder_ratecontrol_method": "",
+            "constant_quantizer_scale":   "",
+            "constant_quality_scale":     "",
+            "average_bitrate":            "",
+        }
         # Fetch all encoder settings from encoder libs
         libx_options = LibxEncoder.options()
         qsv_options = QsvEncoder.options()
         vaapi_options = VaapiEncoder.options()
         nvenc_options = NvencEncoder.options()
         return {
+            **initial_options_order,
             **libx_options,
             **qsv_options,
             **vaapi_options,
-            **nvenc_options
+            **nvenc_options,
         }
 
     def __build_settings_object(self):

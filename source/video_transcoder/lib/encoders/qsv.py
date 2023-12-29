@@ -40,6 +40,7 @@ class QsvEncoder:
     @staticmethod
     def options():
         return {
+            "qsv_decoding_method":        "cpu",
             "preset":                     "slow",
             "tune":                       "film",
             "encoder_ratecontrol_method": "LA_ICQ",
@@ -63,16 +64,43 @@ class QsvEncoder:
             "-filter_hw_device": "hw",
         }
         advanced_kwargs = {}
+        # Check if we are using a HW accelerated decoder> Modify args as required
+        if settings.get_setting('qsv_decoding_method') in ['qsv']:
+            generic_kwargs = {
+                "-hwaccel":               "qsv",
+                "-hwaccel_output_format": "qsv",
+                "-init_hw_device":        "qsv=hw",
+                "-filter_hw_device":      "hw",
+            }
         return generic_kwargs, advanced_kwargs
 
     @staticmethod
-    def generate_filtergraphs():
+    def generate_filtergraphs(settings, software_filters, hw_smart_filters):
         """
         Generate the required filter for enabling QSV HW acceleration
 
         :return:
         """
-        return ["hwupload=extra_hw_frames=64,format=qsv"]
+        generic_kwargs = {}
+        advanced_kwargs = {}
+        filter_args = []
+        # If we are using software filters, then disable qsv surfaces.
+        # Instead, output software frames
+        if software_filters:
+            # If we are decoding with QSV, then output to software frames
+            if settings.get_setting('qsv_decoding_method') in ['qsv']:
+                generic_kwargs['-hwaccel_output_format'] = 'nv12'
+            # Add filter to upload software frames to QSV for QSV filters
+            filter_args.append('hwupload=extra_hw_frames=64,format=qsv')
+        # If we have no software filters, but we are decoding in software, then we still need to upload surfaces to QSV
+        elif settings.get_setting('qsv_decoding_method') not in ['qsv']:
+            filter_args.append('hwupload=extra_hw_frames=64,format=qsv')
+        # Loop over any HW smart filters to be applied and add them as required.
+        for smart_filter in hw_smart_filters:
+            if smart_filter.get('scale'):
+                scale_values = smart_filter.get('scale')
+                filter_args.append('scale_qsv=w={}:h={}'.format(scale_values[0], scale_values[1]))
+        return generic_kwargs, advanced_kwargs, filter_args
 
     def args(self, stream_id):
         stream_encoding = []
@@ -146,6 +174,29 @@ class QsvEncoder:
                 default_option = option.get('value')
         if self.settings.get_setting(key) not in available_options:
             self.settings.set_setting(key, default_option)
+
+    def get_qsv_decoding_method_form_settings(self):
+        values = {
+            "label":          "Enable HW Accelerated Decoding",
+            "description":    "Warning: Ensure your device supports decoding the source video codec or it will fail.\n"
+                              "This enables full hardware transcode with QSV, using only GPU memory for the entire video transcode.\n"
+                              "If filters are configured in the plugin, decoder will output NV12 software surfaces which are slightly slower.",
+            "sub_setting":    True,
+            "input_type":     "select",
+            "select_options": [
+                {
+                    "value": "cpu",
+                    "label": "Disabled - Use CPU to decode of video source (provides best compatibility)",
+                },
+                {
+                    "value": "qsv",
+                    "label": "QSV - Enable QSV decoding",
+                }
+            ]
+        }
+        if self.settings.get_setting('mode') not in ['standard']:
+            values["display"] = "hidden"
+        return values
 
     def get_preset_form_settings(self):
         values = {
