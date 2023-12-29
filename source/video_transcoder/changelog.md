@@ -1,4 +1,9 @@
 
+**<span style="color:#56adda">0.0.10</span>**
+- Add support for QSV HW accelerated decoding
+- Add support for the scale_qsv filter when using qsv encoding
+- Add support for the scale_cuda filter when using nvenc
+
 **<span style="color:#56adda">0.0.9</span>**
 - Add support for the h264_vaapi encoder
 - Add support for the h264_nvenc encoder

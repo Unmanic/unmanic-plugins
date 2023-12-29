@@ -158,16 +158,20 @@ class PluginStreamMapper(StreamMapper):
         hardware_filters = []
 
         # Apply smart filters first
+        required_hw_smart_filters = []
         if self.settings.get_setting('apply_smart_filters'):
             if self.settings.get_setting('autocrop_black_bars') and self.crop_value:
                 software_filters.append('crop={}'.format(self.crop_value))
             if self.settings.get_setting('target_resolution') not in ['source']:
                 vid_width, vid_height = self.scale_resolution(stream_info)
-                # TODO: ignore this if hardware encoding is enabled and the hardware has the ability to perform
-                #  the scaling filter
                 if vid_width:
                     # Apply scale with only width to keep aspect ratio
-                    software_filters.append('scale={}:-1'.format(vid_width))
+                    if self.settings.get_setting('video_encoder') in QsvEncoder.encoders:
+                        required_hw_smart_filters.append({'scale': [vid_width, vid_height]})
+                    elif self.settings.get_setting('video_encoder') in NvencEncoder.encoders:
+                        required_hw_smart_filters.append({'scale': [vid_width, vid_height]})
+                    else:
+                        software_filters.append('scale={}:-1'.format(vid_width))
 
         # Apply custom software filters
         if self.settings.get_setting('apply_custom_filters'):
@@ -178,19 +182,23 @@ class PluginStreamMapper(StreamMapper):
         # Check for hardware encoders that required video filters
         if self.settings.get_setting('video_encoder') in QsvEncoder.encoders:
             # Add filtergraph required for using QSV encoding
-            hardware_filters += QsvEncoder.generate_filtergraphs()
+            generic_kwargs, advanced_kwargs, filter_args = QsvEncoder.generate_filtergraphs(self.settings, software_filters,
+                                                                                            required_hw_smart_filters)
+            self.set_ffmpeg_generic_options(**generic_kwargs)
+            self.set_ffmpeg_advanced_options(**advanced_kwargs)
+            hardware_filters += filter_args
         elif self.settings.get_setting('video_encoder') in VaapiEncoder.encoders:
             # Add filtergraph required for using VAAPI encoding
             hardware_filters += VaapiEncoder.generate_filtergraphs()
             # If we are using software filters, then disable vaapi surfaces.
-            # Instead, putput software frames
+            # Instead, output software frames
             if software_filters:
                 self.set_ffmpeg_generic_options(**{'-hwaccel_output_format': 'nv12'})
         elif self.settings.get_setting('video_encoder') in NvencEncoder.encoders:
             # Add filtergraph required for using CUDA encoding
-            hardware_filters += NvencEncoder.generate_filtergraphs()
+            hardware_filters += NvencEncoder.generate_filtergraphs(software_filters, required_hw_smart_filters)
             # If we are using software filters, then disable cuda surfaces.
-            # Instead, putput software frames
+            # Instead, output software frames
             if software_filters:
                 self.set_ffmpeg_generic_options(**{'-hwaccel_output_format': 'nv12'})
 
