@@ -5,7 +5,7 @@
 # File Created: Friday, 26th August 2022 8:17:10 pm
 # Author: Josh.5 (jsunnex@gmail.com)
 # -----
-# Last Modified: Tuesday, 30th August 2022 6:57:36 pm
+# Last Modified: Saturday, 30th December 2023 2:19:03 am
 # Modified By: Josh.5 (jsunnex@gmail.com)
 ###
 #
@@ -74,6 +74,7 @@ pushd "${repo_root_path}" &> /dev/null
 # Install/update plugin files
 echo -e "\n*** Installing files from plugin git repo to this repository's source directory"
 mkdir -p "${repo_root_path}/source/${plugin_id}"
+ls -la "${plugin_location}/"
 rsync -avh --delete \
     --exclude='.git/' \
     --exclude='.github/' \
@@ -81,7 +82,7 @@ rsync -avh --delete \
     --exclude='.idea/' \
     "${plugin_location}/" "${repo_root_path}/source/${plugin_id}"
 # Read plugin version
-plugin_version=$(cat ${plugin_location}/info.json | jq -rc '.version')
+plugin_version=$(cat "${repo_root_path}/source/${plugin_id}/info.json" | jq -rc '.version')
 [[ ${plugin_version} == "null" ]] && echo "Failed to fetch the plugin's version from the info.json file. Exit!" && exit 1;
 popd &> /dev/null
 
