@@ -54,15 +54,7 @@ class Settings(PluginSettings):
     def __init__(self, *args, **kwargs):
         super(Settings, self).__init__(*args, **kwargs)
         self.settings = self.__build_settings_object()
-        self.encoders = {
-            "libx265":    LibxEncoder(self),
-            "libx264":    LibxEncoder(self),
-            "hevc_qsv":   QsvEncoder(self),
-            "h264_qsv":   QsvEncoder(self),
-            "hevc_vaapi": VaapiEncoder(self),
-            "h264_vaapi": VaapiEncoder(self),
-            "h264_nvenc": NvencEncoder(self),
-        }
+        self.encoders = self.__available_encoders()
         self.global_settings = GlobalSettings(self)
         self.form_settings = self.__build_form_settings_object()
 
@@ -96,6 +88,19 @@ class Settings(PluginSettings):
             return_values[setting] = setting_form_settings
         return return_values
 
+    def __available_encoders(self):
+        return_encoders = {}
+        encoder_libs = [
+            LibxEncoder,
+            QsvEncoder,
+            VaapiEncoder,
+            NvencEncoder,
+        ]
+        for encoder_lib in encoder_libs:
+            for encoder in encoder_lib.provides:
+                return_encoders[encoder] = encoder_lib(self)
+        return return_encoders
+
     def __encoder_settings_object(self):
         """
         Returns a list of encoder settings for FFmpeg
@@ -104,25 +109,12 @@ class Settings(PluginSettings):
         """
         # Initial options forces the order they appear in the settings list
         # We need this because some encoders have settings that
-        initial_options_order = {
-            "nvenc_device":               "",
-            "nvenc_decoding_method":      "",
-            "qsv_decoding_method":        "",
-            "preset":                     "",
-            "tune":                       "",
-            "profile":                    "",
-            "encoder_ratecontrol_method": "",
-            "constant_quantizer_scale":   "",
-            "constant_quality_scale":     "",
-            "average_bitrate":            "",
-        }
         # Fetch all encoder settings from encoder libs
         libx_options = LibxEncoder.options()
         qsv_options = QsvEncoder.options()
         vaapi_options = VaapiEncoder.options()
         nvenc_options = NvencEncoder.options()
         return {
-            **initial_options_order,
             **libx_options,
             **qsv_options,
             **vaapi_options,

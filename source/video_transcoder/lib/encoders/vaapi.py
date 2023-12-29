@@ -47,10 +47,16 @@ def list_available_vaapi_devices():
 
 
 class VaapiEncoder:
-    encoders = [
-        "h264_vaapi",
-        "hevc_vaapi",
-    ]
+    provides = {
+        "h264_vaapi": {
+            "codec": "h264",
+            "label": "VAAPI - h264_vaapi",
+        },
+        "hevc_vaapi": {
+            "codec": "hevc",
+            "label": "VAAPI - hevc_vaapi",
+        }
+    }
 
     def __init__(self, settings):
         self.settings = settings
@@ -58,12 +64,12 @@ class VaapiEncoder:
     @staticmethod
     def options():
         return {
-            "encoder_ratecontrol_method": "ICQ",
-            "constant_quantizer_scale":   "25",
-            "constant_quality_scale":     "23",
-            "average_bitrate":            "5",
-            "vaapi_device":               "none",
-            "enabled_hw_decoding":        True,
+            "vaapi_device":                     "none",
+            "vaapi_enabled_hw_decoding":        True,
+            "vaapi_encoder_ratecontrol_method": "ICQ",
+            "vaapi_constant_quantizer_scale":   "25",
+            "vaapi_constant_quality_scale":     "23",
+            "vaapi_average_bitrate":            "5",
         }
 
     @staticmethod
@@ -93,7 +99,7 @@ class VaapiEncoder:
             hardware_device = hardware_devices[0]
 
         # Check if we are using a VAAPI decoder also...
-        if settings.get_setting('enabled_hw_decoding'):
+        if settings.get_setting('vaapi_enabled_hw_decoding'):
             # Set a named global device that can be used with various params
             dev_id = 'vaapi0'
             # Configure args such that when the input may or may not be able to be decoded with hardware we can do:
@@ -126,6 +132,9 @@ class VaapiEncoder:
         """
         return ["format=nv12|vaapi,hwupload"]
 
+    def encoder_details(self, encoder):
+        return self.provides.get(encoder, {})
+
     def args(self, stream_id):
         stream_encoding = []
 
@@ -135,27 +144,27 @@ class VaapiEncoder:
             return stream_encoding
 
         stream_encoding += [
-            '-rc_mode', str(self.settings.get_setting('encoder_ratecontrol_method')),
+            '-rc_mode', str(self.settings.get_setting('vaapi_encoder_ratecontrol_method')),
         ]
-        if self.settings.get_setting('encoder_ratecontrol_method') in ['CQP', 'ICQ']:
-            if self.settings.get_setting('encoder_ratecontrol_method') in ['CQP']:
+        if self.settings.get_setting('vaapi_encoder_ratecontrol_method') in ['CQP', 'ICQ']:
+            if self.settings.get_setting('vaapi_encoder_ratecontrol_method') in ['CQP']:
                 stream_encoding += [
-                    '-q', str(self.settings.get_setting('constant_quantizer_scale')),
+                    '-q', str(self.settings.get_setting('vaapi_constant_quantizer_scale')),
                 ]
-            elif self.settings.get_setting('encoder_ratecontrol_method') in ['ICQ']:
+            elif self.settings.get_setting('vaapi_encoder_ratecontrol_method') in ['ICQ']:
                 stream_encoding += [
-                    '-global_quality', str(self.settings.get_setting('constant_quality_scale')),
+                    '-global_quality', str(self.settings.get_setting('vaapi_constant_quality_scale')),
                 ]
         else:
             # Configure the encoder with a bitrate-based mode
             # Set the max and average bitrate (used by all bitrate-based modes)
             stream_encoding += [
-                '-b:v:{}'.format(stream_id), '{}M'.format(self.settings.get_setting('average_bitrate')),
+                '-b:v:{}'.format(stream_id), '{}M'.format(self.settings.get_setting('vaapi_average_bitrate')),
             ]
-            if self.settings.get_setting('encoder_ratecontrol_method') == 'CBR':
+            if self.settings.get_setting('vaapi_encoder_ratecontrol_method') == 'CBR':
                 # Add 'maxrate' with the same value to make CBR mode
                 stream_encoding += [
-                    '-maxrate', '{}M'.format(self.settings.get_setting('average_bitrate')),
+                    '-maxrate', '{}M'.format(self.settings.get_setting('vaapi_average_bitrate')),
                 ]
         return stream_encoding
 
@@ -206,17 +215,17 @@ class VaapiEncoder:
             values["display"] = "hidden"
         return values
 
-    def get_enabled_hw_decoding_form_settings(self):
+    def get_vaapi_enabled_hw_decoding_form_settings(self):
         values = {
             "label":       "Enable HW Decoding",
             "sub_setting": True,
-            "description": "Will fallback to software decoding and hardware encoding when the input is not be hardware decodable.",
+            "description": "Will fallback to software decoding and hardware encoding when the input codec is not supported.",
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
 
-    def get_encoder_ratecontrol_method_form_settings(self):
+    def get_vaapi_encoder_ratecontrol_method_form_settings(self):
         values = {
             "label":          "Encoder ratecontrol method",
             "sub_setting":    True,
@@ -249,12 +258,12 @@ class VaapiEncoder:
         #     "value": "AVBR",
         #     "label": "AVBR - Average variable bitrate mode",
         # },
-        self.__set_default_option(values['select_options'], 'encoder_ratecontrol_method', default_option='CQP')
+        self.__set_default_option(values['select_options'], 'vaapi_encoder_ratecontrol_method', default_option='CQP')
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
 
-    def get_constant_quantizer_scale_form_settings(self):
+    def get_vaapi_constant_quantizer_scale_form_settings(self):
         # Lower is better
         values = {
             "label":          "Constant quantizer scale",
@@ -267,11 +276,11 @@ class VaapiEncoder:
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
-        if self.settings.get_setting('encoder_ratecontrol_method') != 'CQP':
+        if self.settings.get_setting('vaapi_encoder_ratecontrol_method') != 'CQP':
             values["display"] = "hidden"
         return values
 
-    def get_constant_quality_scale_form_settings(self):
+    def get_vaapi_constant_quality_scale_form_settings(self):
         # Lower is better
         values = {
             "label":          "Constant quality scale",
@@ -284,11 +293,11 @@ class VaapiEncoder:
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
-        if self.settings.get_setting('encoder_ratecontrol_method') not in ['LA_ICQ', 'ICQ']:
+        if self.settings.get_setting('vaapi_encoder_ratecontrol_method') not in ['LA_ICQ', 'ICQ']:
             values["display"] = "hidden"
         return values
 
-    def get_average_bitrate_form_settings(self):
+    def get_vaapi_average_bitrate_form_settings(self):
         values = {
             "label":          "Bitrate",
             "sub_setting":    True,
@@ -301,6 +310,6 @@ class VaapiEncoder:
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
-        if self.settings.get_setting('encoder_ratecontrol_method') not in ['VBR', 'LA', 'CBR']:
+        if self.settings.get_setting('vaapi_encoder_ratecontrol_method') not in ['VBR', 'LA', 'CBR']:
             values["display"] = "hidden"
         return values
