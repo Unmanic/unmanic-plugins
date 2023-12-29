@@ -140,7 +140,15 @@ for item in os.listdir(repo_source_path):
         print("    Compressing {}...".format(plugin_zip))
         zip_file = zipfile.ZipFile(plugin_zip, 'w', zipfile.ZIP_DEFLATED)
         for root, dirs, files in os.walk(item_path):
+            rel_path = os.path.relpath(root, item_path)
+            if '.git' in rel_path.split(os.path.sep):
+                continue
+            if '.github' in rel_path.split(os.path.sep):
+                continue
             for file in files:
+                # Skip files starting with .git
+                if file.startswith('.git'):
+                    continue
                 absname = os.path.abspath(os.path.join(root, file))
                 arcname = absname[len(item_path) + 1:]
                 print('      - Zipping: {} >>> {} | ({})'.format(os.path.join(root, file), arcname, plugin_zip))
