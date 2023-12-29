@@ -214,7 +214,7 @@ class LibxEncoder:
             values["select_options"] = [
                 {
                     "value": "auto",
-                    "label": "Auto – Let FFmpeg automatically select the required profile (recommended)",
+                    "label": "Auto – Let ffmpeg automatically select the required profile (recommended)",
                 },
                 {
                     "value": "baseline",
@@ -245,7 +245,7 @@ class LibxEncoder:
             values["select_options"] = [
                 {
                     "value": "auto",
-                    "label": "Auto – Let FFmpeg automatically select the required profile (recommended)",
+                    "label": "Auto – Let ffmpeg automatically select the required profile (recommended)",
                 },
                 {
                     "value": "main",
@@ -324,7 +324,7 @@ class LibxEncoder:
         values["select_options"] = [
             {
                 "value": "auto",
-                "label": "Auto – Let FFmpeg automatically select the required profile (recommended)",
+                "label": "Auto – Let ffmpeg automatically select the required profile (recommended)",
             },
         ]
         self.__set_default_option(values['select_options'], 'profile')

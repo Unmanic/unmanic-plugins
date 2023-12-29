@@ -90,7 +90,7 @@ class QsvEncoder:
         # Add the preset and tune
         if self.settings.get_setting('preset'):
             stream_encoding += ['-preset', str(self.settings.get_setting('preset'))]
-        if self.settings.get_setting('tune'):
+        if self.settings.get_setting('tune') and self.settings.get_setting('tune') != 'auto':
             stream_encoding += ['-tune', str(self.settings.get_setting('tune'))]
 
         # TODO: Split this into encoder specific functions

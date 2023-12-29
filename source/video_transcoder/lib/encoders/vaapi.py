@@ -92,7 +92,7 @@ class VaapiEncoder:
         if not hardware_device:
             hardware_device = hardware_devices[0]
 
-        # Check if we are using a VAAPI encoder also...
+        # Check if we are using a VAAPI decoder also...
         if settings.get_setting('enabled_hw_decoding'):
             # Set a named global device that can be used with various params
             dev_id = 'vaapi0'
