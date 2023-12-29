@@ -55,7 +55,7 @@ class VaapiEncoder:
         "hevc_vaapi": {
             "codec": "hevc",
             "label": "VAAPI - hevc_vaapi",
-        }
+        },
     }
 
     def __init__(self, settings):

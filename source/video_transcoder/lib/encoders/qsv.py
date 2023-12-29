@@ -41,7 +41,11 @@ class QsvEncoder:
         "hevc_qsv": {
             "codec": "hevc",
             "label": "QSV - hevc_qsv",
-        }
+        },
+        "av1_qsv":  {
+            "codec": "av1",
+            "label": "QSV - av1_qsv",
+        },
     }
 
     def __init__(self, settings):

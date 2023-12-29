@@ -97,7 +97,7 @@ class NvencEncoder:
         "hevc_nvenc": {
             "codec": "hevc",
             "label": "NVENC - hevc_nvenc",
-        }
+        },
     }
 
     def __init__(self, settings):
