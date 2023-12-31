@@ -33,26 +33,27 @@ Notes:
 
 
 class QsvEncoder:
-    provides = {
-        "h264_qsv": {
-            "codec": "h264",
-            "label": "QSV - h264_qsv",
-        },
-        "hevc_qsv": {
-            "codec": "hevc",
-            "label": "QSV - hevc_qsv",
-        },
-        "av1_qsv":  {
-            "codec": "av1",
-            "label": "QSV - av1_qsv",
-        },
-    }
 
     def __init__(self, settings):
         self.settings = settings
 
-    @staticmethod
-    def options():
+    def provides(self):
+        return {
+            "h264_qsv": {
+                "codec": "h264",
+                "label": "QSV - h264_qsv",
+            },
+            "hevc_qsv": {
+                "codec": "hevc",
+                "label": "QSV - hevc_qsv",
+            },
+            "av1_qsv":  {
+                "codec": "av1",
+                "label": "QSV - av1_qsv",
+            },
+        }
+
+    def options(self):
         return {
             "qsv_decoding_method":            "cpu",
             "qsv_preset":                     "slow",
@@ -63,8 +64,7 @@ class QsvEncoder:
             "qsv_average_bitrate":            "5",
         }
 
-    @staticmethod
-    def generate_default_args(settings):
+    def generate_default_args(self):
         """
         Generate a list of args for using a QSV decoder
 
@@ -79,7 +79,7 @@ class QsvEncoder:
         }
         advanced_kwargs = {}
         # Check if we are using a HW accelerated decoder> Modify args as required
-        if settings.get_setting('qsv_decoding_method') in ['qsv']:
+        if self.settings.get_setting('qsv_decoding_method') in ['qsv']:
             generic_kwargs = {
                 "-hwaccel":               "qsv",
                 "-hwaccel_output_format": "qsv",
@@ -88,8 +88,7 @@ class QsvEncoder:
             }
         return generic_kwargs, advanced_kwargs
 
-    @staticmethod
-    def generate_filtergraphs(settings, software_filters, hw_smart_filters):
+    def generate_filtergraphs(self, settings, software_filters, hw_smart_filters):
         """
         Generate the required filter for enabling QSV HW acceleration
 
@@ -117,7 +116,8 @@ class QsvEncoder:
         return generic_kwargs, advanced_kwargs, filter_args
 
     def encoder_details(self, encoder):
-        return self.provides.get(encoder, {})
+        provides = self.provides()
+        return provides.get(encoder, {})
 
     def args(self, stream_id):
         stream_encoding = []

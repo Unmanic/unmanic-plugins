@@ -24,22 +24,23 @@
 
 
 class LibxEncoder:
-    provides = {
-        "libx264": {
-            "codec": "h264",
-            "label": "CPU - libx264",
-        },
-        "libx265": {
-            "codec": "hevc",
-            "label": "CPU - libx265",
-        },
-    }
 
     def __init__(self, settings):
         self.settings = settings
 
-    @staticmethod
-    def options():
+    def provides(self):
+        return {
+            "libx264": {
+                "codec": "h264",
+                "label": "CPU - libx264",
+            },
+            "libx265": {
+                "codec": "hevc",
+                "label": "CPU - libx265",
+            },
+        }
+
+    def options(self):
         return {
             "preset":                     "slow",
             "tune":                       "disabled",
@@ -49,12 +50,10 @@ class LibxEncoder:
             "average_bitrate":            "5",
         }
 
-    @staticmethod
-    def generate_default_args(settings):
+    def generate_default_args(self):
         """
         Generate a list of args for using a libx decoder
 
-        :param settings:
         :return:
         """
         # No default args required
@@ -62,8 +61,7 @@ class LibxEncoder:
         advanced_kwargs = {}
         return generic_kwargs, advanced_kwargs
 
-    @staticmethod
-    def generate_filtergraphs():
+    def generate_filtergraphs(self):
         """
         Generate the required filter for this encoder
         No filters are required for libx encoders
@@ -73,7 +71,8 @@ class LibxEncoder:
         return []
 
     def encoder_details(self, encoder):
-        return self.provides.get(encoder, {})
+        provides = self.provides()
+        return provides.get(encoder, {})
 
     def args(self, stream_id):
         stream_encoding = []

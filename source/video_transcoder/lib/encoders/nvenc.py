@@ -89,22 +89,23 @@ def get_configured_device(settings):
 
 
 class NvencEncoder:
-    provides = {
-        "h264_nvenc": {
-            "codec": "h264",
-            "label": "NVENC - h264_nvenc",
-        },
-        "hevc_nvenc": {
-            "codec": "hevc",
-            "label": "NVENC - hevc_nvenc",
-        },
-    }
 
     def __init__(self, settings):
         self.settings = settings
 
-    @staticmethod
-    def options():
+    def provides(self):
+        return {
+            "h264_nvenc": {
+                "codec": "h264",
+                "label": "NVENC - h264_nvenc",
+            },
+            "hevc_nvenc": {
+                "codec": "hevc",
+                "label": "NVENC - hevc_nvenc",
+            },
+        }
+
+    def options(self):
         return {
             "nvenc_device":                        "none",
             "nvenc_decoding_method":               "cpu",
@@ -118,34 +119,31 @@ class NvencEncoder:
             "nvenc_aq_strength":                   8,
         }
 
-    @staticmethod
-    def generate_default_args(settings):
+    def generate_default_args(self):
         """
         Generate a list of args for using a NVENC decoder
 
         REF: https://trac.ffmpeg.org/wiki/HWAccelIntro#NVDECCUVID
 
-        :param settings:
         :return:
         """
-        hardware_device = get_configured_device(settings)
+        hardware_device = get_configured_device(self.settings)
 
         generic_kwargs = {}
         advanced_kwargs = {}
         # Check if we are using a HW accelerated decoder also
-        if settings.get_setting('nvenc_decoding_method') in ['cuda', 'nvdec', 'cuvid']:
+        if self.settings.get_setting('nvenc_decoding_method') in ['cuda', 'nvdec', 'cuvid']:
             generic_kwargs = {
                 "-hwaccel_device":   hardware_device.get('hwaccel_device'),
-                "-hwaccel":          settings.get_setting('nvenc_decoding_method'),
+                "-hwaccel":          self.settings.get_setting('nvenc_decoding_method'),
                 "-init_hw_device":   "cuda=hw",
                 "-filter_hw_device": "hw",
             }
-            if settings.get_setting('nvenc_decoding_method') in ['cuda', 'nvdec']:
+            if self.settings.get_setting('nvenc_decoding_method') in ['cuda', 'nvdec']:
                 generic_kwargs["-hwaccel_output_format"] = "cuda"
         return generic_kwargs, advanced_kwargs
 
-    @staticmethod
-    def generate_filtergraphs(software_filters, hw_smart_filters):
+    def generate_filtergraphs(self, software_filters, hw_smart_filters):
         """
         Generate the required filter for enabling NVENC HW acceleration
 
@@ -166,7 +164,8 @@ class NvencEncoder:
         if not hardware_devices:
             # Return no options. No hardware device was found
             return {}
-        return self.provides.get(encoder, {})
+        provides = self.provides()
+        return provides.get(encoder, {})
 
     def args(self, stream_info, stream_id):
         generic_kwargs = {}

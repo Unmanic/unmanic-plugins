@@ -97,19 +97,6 @@ class GlobalSettings:
         if self.settings.get_setting(key) not in available_options:
             self.settings.set_setting(key, default_option)
 
-    @staticmethod
-    def __is_nvidia_gpu_present():
-        try:
-            # Run the nvidia-smi command
-            subprocess.run("nvidia-smi", stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            return True
-        except FileNotFoundError:
-            # nvidia-smi executable not found
-            return False
-        except subprocess.CalledProcessError:
-            # nvidia-smi command failed, likely no NVIDIA GPU present
-            return False
-
     def get_mode_form_settings(self):
         return {
             "label":          "Config mode",
