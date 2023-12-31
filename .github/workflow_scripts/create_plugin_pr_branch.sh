@@ -5,7 +5,7 @@
 # File Created: Friday, 26th August 2022 8:17:10 pm
 # Author: Josh.5 (jsunnex@gmail.com)
 # -----
-# Last Modified: Saturday, 30th December 2023 2:19:03 am
+# Last Modified: Monday, 1st January 2024 12:09:13 pm
 # Modified By: Josh.5 (jsunnex@gmail.com)
 ###
 #
@@ -75,7 +75,7 @@ pushd "${repo_root_path}" &> /dev/null
 echo -e "\n*** Installing files from plugin git repo to this repository's source directory"
 mkdir -p "${repo_root_path}/source/${plugin_id}"
 ls -la "${plugin_location}/"
-rsync -avh --delete \
+rsync -avhi --delete \
     --exclude='.git/' \
     --exclude='.github/' \
     --exclude='.gitmodules' \
