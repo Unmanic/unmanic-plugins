@@ -96,9 +96,10 @@ class Settings(PluginSettings):
             VaapiEncoder,
             NvencEncoder,
         ]
-        for encoder_lib in encoder_libs:
-            for encoder in encoder_lib.provides:
-                return_encoders[encoder] = encoder_lib(self)
+        for encoder_class in encoder_libs:
+            encoder_lib = encoder_class(self)
+            for encoder in encoder_lib.provides():
+                return_encoders[encoder] = encoder_lib
         return return_encoders
 
     def __encoder_settings_object(self):
@@ -110,10 +111,10 @@ class Settings(PluginSettings):
         # Initial options forces the order they appear in the settings list
         # We need this because some encoders have settings that
         # Fetch all encoder settings from encoder libs
-        libx_options = LibxEncoder.options()
-        qsv_options = QsvEncoder.options()
-        vaapi_options = VaapiEncoder.options()
-        nvenc_options = NvencEncoder.options()
+        libx_options = LibxEncoder(self.settings).options()
+        qsv_options = QsvEncoder(self.settings).options()
+        vaapi_options = VaapiEncoder(self.settings).options()
+        nvenc_options = NvencEncoder(self.settings).options()
         return {
             **libx_options,
             **qsv_options,
