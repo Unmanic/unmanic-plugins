@@ -5,7 +5,7 @@
 # File Created: Friday, 26th August 2022 8:17:10 pm
 # Author: Josh.5 (jsunnex@gmail.com)
 # -----
-# Last Modified: Monday, 1st January 2024 12:09:13 pm
+# Last Modified: Monday, 1st January 2024 12:17:54 pm
 # Modified By: Josh.5 (jsunnex@gmail.com)
 ###
 #
@@ -75,12 +75,23 @@ pushd "${repo_root_path}" &> /dev/null
 echo -e "\n*** Installing files from plugin git repo to this repository's source directory"
 mkdir -p "${repo_root_path}/source/${plugin_id}"
 ls -la "${plugin_location}/"
-rsync -avhi --delete \
-    --exclude='.git/' \
-    --exclude='.github/' \
-    --exclude='.gitmodules' \
-    --exclude='.idea/' \
-    "${plugin_location}/" "${repo_root_path}/source/${plugin_id}"
+rm -rf "${repo_root_path}/source/${plugin_id}"/*
+find "${plugin_location}" \( -type d -or -type f \) | grep -vE '(\.git|\.github|\.gitmodules|\.idea)' | while read -r file; do
+    # Construct the relative path
+    relative_path="${file#${plugin_location}/}"
+    dest_path="${repo_root_path}/source/${plugin_id}/${relative_path}"
+    if [ -d "${file}" ]; then
+        mkdir -p "${dest_path}"
+    elif [ -f "${file}" ]; then
+        cp -fv "${file}" "${dest_path}"
+    fi
+done
+# rsync -avhi --delete \
+#     --exclude='.git/' \
+#     --exclude='.github/' \
+#     --exclude='.gitmodules' \
+#     --exclude='.idea/' \
+#     "${plugin_location}/" "${repo_root_path}/source/${plugin_id}"
 # Read plugin version
 plugin_version=$(cat "${repo_root_path}/source/${plugin_id}/info.json" | jq -rc '.version')
 [[ ${plugin_version} == "null" ]] && echo "Failed to fetch the plugin's version from the info.json file. Exit!" && exit 1;
