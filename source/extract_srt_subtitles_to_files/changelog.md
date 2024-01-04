@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.0.11</span>**
+- Update ffmpeg helper to support progress display
+
 **<span style="color:#56adda">0.0.9</span>**
 - Add settings to specify:
   - Which languages to extract

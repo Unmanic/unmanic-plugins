@@ -1,0 +1,3 @@
+[submodule "source/extract_srt_subtitles_to_files/lib/ffmpeg"]
+path = source/extract_srt_subtitles_to_files/lib/ffmpeg
+url = git@github.com:Josh5/unmanic.plugin.helpers.ffmpeg.git
