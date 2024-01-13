@@ -1,5 +1,5 @@
 
-**<span style="color:#56adda">0.0.12</span>**
+**<span style="color:#56adda">0.0.13</span>**
 - fix stream_to_stereo_encode so it doesn't identify incorrect stream in case of files with mixture of tagged and untagged languages
 
 **<span style="color:#56adda">0.0.12</span>**
