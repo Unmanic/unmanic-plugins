@@ -1,4 +1,20 @@
 
+**<span style="color:#56adda">0.0.12</span>**
+- fix stream_to_stereo_encode so it doesn't identify incorrect stream in case of files with mixture of tagged and untagged languages
+
+**<span style="color:#56adda">0.0.12</span>**
+- make commentary check a substring test
+- added missing language check in case where channels or codec_name are left blank
+
+**<span style="color:#56adda">0.0.11</span>**
+- add option to move stereo stream to first audio stream
+- remove setting of add to task list of False so subsequent plugins will execute
+- add iso639 module to get language name from code
+- add metadata stream title to stereo stream based on language, codec, and "STEREO"
+
+**<span style="color:#56adda">0.0.10</span>**
+- fix stream to encode to guard against streams with no audio language tags
+
 **<span style="color:#56adda">0.0.9</span>**
 - unspecified stream parameters now can only be channels and codec, language must be specified
 
