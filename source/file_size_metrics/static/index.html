@@ -1,172 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>
+      (function (window, document) {
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.has("theme") && params.get("theme") === "dark") {
+          document
+            .getElementsByTagName("html")[0]
+            .classList.replace("light", "dark");
+        }
+      })(window, document);
+    </script>
+
     <title>File Size Metrics | Unmanic</title>
     <link rel="shortcut icon" href="static/favicon.ico">
 
     <link rel="stylesheet" type="text/css"
           href="./static/vendor/datatables.net-dt/css/jquery.dataTables.min.css?{cache_buster}">
-
-    <style>
-        .hidden {
-            display: none;
-        }
-
-        table.dataTable {
-            background-color: #ffffff;
-        }
-
-        table.dataTable td {
-            word-break: break-word;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        /* Float four columns side by side */
-        .column {
-            float: left;
-            width: 50%;
-            padding: 0 10px;
-        }
-
-        /* Remove extra left and right margins, due to padding */
-        .row {
-            margin: 0 -5px;
-        }
-
-        /* Clear floats after the columns */
-        .row:after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-
-        /* Responsive columns */
-        @media screen and (max-width: 600px) {
-            .column {
-                width: 100%;
-                display: block;
-                margin-bottom: 20px;
-            }
-        }
-
-        /*Cards*/
-        .card {
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-            /*padding: 16px;*/
-            text-align: center;
-            background-color: #ffffff;
-        }
-
-        .collapsible {
-            background-color: #777;
-            color: white;
-            cursor: pointer;
-            padding-left: 18px;
-            padding-right: 18px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 15px;
-            height: 35px;
-        }
-
-        button.collapsible::after {
-            content: "\2212";
-            color: white;
-            font-weight: bold;
-            float: right;
-            margin-left: 5px;
-
-        }
-
-        button.collapsible.active::after {
-            content: '\002B';
-        }
-
-        .active, .collapsible:hover {
-            background-color: #555;
-        }
-
-        .content {
-            padding: 0 18px;
-            display: none;
-            overflow: hidden;
-            background-color: #ffffff;
-        }
-
-        /*Back to top*/
-        .top-of-page-link svg {
-            -webkit-filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .3));
-            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .3));
-        }
-
-        .top-of-page-link {
-            transition: .2s;
-            position: fixed;
-            bottom: 0.2rem;
-            right: 1rem;
-            z-index: 15;
-        }
-
-        /*Custom*/
-        .car-header {
-            display: block;
-            min-height: 40px;
-            height: 100px;
-            text-align: left;
-            margin-top: 5px;
-        }
-
-        .view-btn {
-            background-color: #009fdd !important;
-            border-radius: 5px;
-            font-size: 17px;
-            font-family: 'Source Sans Pro', sans-serif;
-            padding: 6px 18px;
-            color: #FFFFFF;
-            border: none;
-            display: inline-block;
-            vertical-align: middle;
-            overflow: hidden;
-            text-decoration: none;
-            text-align: center;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .top-content {
-            position: fixed;
-            z-index: 15;
-            width: 100%;
-        }
-
-        .charts {
-            max-height: 550px;
-        }
-
-        .tables {
-            padding-top: 550px;
-        }
-
-        /* Responsive columns */
-        @media screen and (max-width: 600px) {
-            .top-content {
-                position: inherit;
-            }
-
-            .tables {
-                padding-top: 0;
-            }
-        }
-
-    </style>
-
+    <link rel="stylesheet" type="text/css" href="./static/css/style.css" />
 </head>
 <body id="top-of-page">
 
