@@ -313,7 +313,7 @@ def on_postprocessor_task_results(data):
 
     # Mark the source file to be ignored on subsequent scans if 'force_transcode' was enabled
     if settings.get_setting('force_transcode'):
-        cache_directory = data.get('final_cache_path')
+        cache_directory = os.path.dirname(data.get('final_cache_path'))
         if os.path.exists(os.path.join(cache_directory, '.force_transcode')):
             directory_info = UnmanicDirectoryInfo(os.path.dirname(original_source_path))
             directory_info.set('video_transcoder', os.path.basename(original_source_path), 'force_transcoded')
