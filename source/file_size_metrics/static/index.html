@@ -7,17 +7,20 @@
     <link rel="shortcut icon" href="static/favicon.ico">
 
     <link rel="stylesheet" type="text/css"
-          href="./static/vendor/datatables/media/css/jquery.dataTables.min.css?{cache_buster}">
+          href="./static/vendor/datatables.net-dt/css/jquery.dataTables.min.css?{cache_buster}">
 
     <style>
         .hidden {
             display: none;
         }
 
+        table.dataTable {
+            background-color: #ffffff;
+        }
+
         table.dataTable td {
             word-break: break-word;
         }
-
 
         * {
             box-sizing: border-box;
@@ -219,7 +222,7 @@
 
     <hr>
 
-    <table id="history_completed_tasks_table" class="dataTable" style="width:100%">
+    <table id="history_completed_tasks_table" class="dataTable display" style="width:100%">
         <thead>
         <tr>
             <!--Headers are overwritten in JS datatable config-->
@@ -260,7 +263,7 @@
 
 <!--DATATABLE-->
 <script type="text/javascript"
-        src="./static/vendor/datatables/media/js/jquery.dataTables.min.js?{cache_buster}"></script>
+        src="./static/vendor/datatables.net/js/jquery.dataTables.min.js?{cache_buster}"></script>
 
 <!--CHARTS-->
 <script type="text/javascript" src="./static/vendor/highcharts/highcharts.js?{cache_buster}"></script>

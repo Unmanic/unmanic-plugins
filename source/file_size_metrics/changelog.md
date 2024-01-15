@@ -1,3 +1,5 @@
+**<span style="color:#56adda">0.0.9</span>**
+- Update DataTables plugin in preparation of supporting dark mode
 
 **<span style="color:#56adda">0.0.8</span>**
 - Update Plugin for Unmanic v2 PluginHandler compatibility
