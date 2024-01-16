@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.0.10</span>**
+- Initial version of dark mode support
+
 **<span style="color:#56adda">0.0.9</span>**
 - Update DataTables plugin in preparation of supporting dark mode
 
