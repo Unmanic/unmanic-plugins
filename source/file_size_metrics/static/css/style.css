@@ -6,7 +6,10 @@
   --q-primary: #002e5c;
   --q-secondary: #009fdd;
   --q-text: #000000;
+  --q-subtext: #838383;
   --q-warning: #f2c037;
+  --q-positive: #21ba45;
+  --q-negative: #c10015;
 }
 
 .dark {
@@ -17,7 +20,10 @@
   --q-primary: #009fdd;
   --q-secondary: #002e5c;
   --q-text: #ffffff;
+  --q-subtext: #bababa;
   --q-warning: #b5902a;
+  --q-positive: #21ba45;
+  --q-negative: #c10015;
 }
 
 .hidden {

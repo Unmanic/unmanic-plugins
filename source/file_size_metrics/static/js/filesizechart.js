@@ -26,8 +26,12 @@ const CompletedTasksFileSizeDiffChart = (function () {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
-  const positive = "#009fdd";
-  const negative = "#C10015";
+  const default_bar_colour = "#555";
+  const positive_bar_colour = "var(--q-positive)";
+  const negative_bar_colour = "var(--q-negative)";
+  const text_colour = "var(--q-text)";
+  const subtext_colour = "var(--q-subtext)";
+  const chart_background = "var(--q-card)";
 
   let chart_title = "(Select a task from the table below)";
   let source_file_size = 0;
@@ -36,29 +40,95 @@ const CompletedTasksFileSizeDiffChart = (function () {
   let destination_total_size = 0;
 
   const individualChart = Highcharts.chart("file_size_chart", {
+    chart: {
+      backgroundColor: chart_background,
+    },
     title: {
       text: "",
+      style: {
+        color: text_colour,
+      },
     },
     subtitle: {
       text: chart_title,
+      style: {
+        color: subtext_colour,
+      },
     },
-    colors: ["#555555", "#cccccc"],
+    colors: [default_bar_colour, positive_bar_colour],
     xAxis: {
       categories: ["Original", "New"],
+      labels: {
+        style: {
+          color: text_colour,
+        },
+      },
+      lineColor: text_colour,
+    },
+    yAxis: {
+      labels: {
+        style: {
+          color: text_colour,
+        },
+      },
+      title: {
+        text: "Sizes",
+        style: {
+          color: subtext_colour,
+        },
+      },
+    },
+    legend: {
+      itemStyle: {
+        color: text_colour,
+      },
     },
     series: [],
   });
 
   const totalChart = Highcharts.chart("total_size_chart", {
+    chart: {
+      backgroundColor: chart_background,
+    },
     title: {
       text: "",
+      style: {
+        color: text_colour,
+      },
     },
     subtitle: {
       text: "Displaying the total file size changed on disk by Unmanic processing files",
+      style: {
+        color: subtext_colour,
+      },
     },
-    colors: ["#555555", "#cccccc"],
+    colors: [default_bar_colour, positive_bar_colour],
     xAxis: {
       categories: ["Before", "After"],
+      labels: {
+        style: {
+          color: text_colour,
+        },
+      },
+      lineColor: text_colour,
+    },
+    yAxis: {
+      labels: {
+        style: {
+          color: text_colour,
+        },
+      },
+      title: {
+        text: "Sizes",
+        style: {
+          color: subtext_colour,
+        },
+      },
+    },
+    legend: {
+      itemStyle: {
+        color: text_colour,
+      },
     },
     series: [],
   });
@@ -67,25 +137,24 @@ const CompletedTasksFileSizeDiffChart = (function () {
     // If the destination file size is greater than the source, then mark it
     // negative, otherwise positive
     let reduced = true;
-    let destination_bar_colour = positive;
+    let destination_bar_colour = positive_bar_colour;
     let percent_changed =
       100 - (destination_file_size / source_file_size) * 100;
-
     if (destination_file_size >= source_file_size) {
       reduced = false;
-      destination_bar_colour = negative;
+      destination_bar_colour = negative_bar_colour;
       percent_changed = 100 - (source_file_size / destination_file_size) * 100;
     }
-
     source_file_size = Number(source_file_size);
     destination_file_size = Number(destination_file_size);
 
     individualChart.update({
       chart: {
+        backgroundColor: chart_background,
         type: "bar",
         width: null,
       },
-      colors: ["#555555", destination_bar_colour],
+      colors: [default_bar_colour, destination_bar_colour],
       title: {
         text:
           Highcharts.numberFormat(percent_changed, 2) +
@@ -109,33 +178,36 @@ const CompletedTasksFileSizeDiffChart = (function () {
       {
         name: "New",
         data: [0, destination_file_size],
+        borderColor: chart_background,
       },
       {
         name: "Original",
         data: [source_file_size, 0],
+        borderColor: chart_background,
       },
     ];
 
     for (let i = individualChart.series.length - 1; i >= 0; i--) {
-      individualChart.series[i].remove();
+      individualChart.series[i].remove(false);
     }
 
     for (let y = newSeriesData.length - 1; y >= 0; y--) {
-      individualChart.addSeries(newSeriesData[y]);
+      individualChart.addSeries(newSeriesData[y], false);
     }
+
+    individualChart.redraw();
   };
 
   const updateTotalChart = function () {
     // If the destination file size is greater than the source, then mark it
     // negative, otherwise positive
     let change_text = "decrease";
-    let destination_bar_colour = positive;
+    let destination_bar_colour = positive_bar_colour;
     let difference_in_total_file_sizes =
       source_total_size - destination_total_size;
-
     if (destination_total_size > source_total_size) {
       change_text = "increase";
-      destination_bar_colour = negative;
+      destination_bar_colour = negative_bar_colour;
       difference_in_total_file_sizes =
         destination_total_size - source_total_size;
     }
@@ -145,6 +217,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
 
     totalChart.update({
       chart: {
+        backgroundColor: chart_background,
         type: "bar",
         width: null,
       },
@@ -152,7 +225,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
         text: `${formatBytes(difference_in_total_file_sizes)}
           total ${change_text} in file size`,
       },
-      colors: ["#555555", destination_bar_colour],
+      colors: [default_bar_colour, destination_bar_colour],
       tooltip: {
         formatter: function () {
           return `<strong>${this.series.name}</strong>
@@ -166,20 +239,24 @@ const CompletedTasksFileSizeDiffChart = (function () {
       {
         name: "After",
         data: [0, destination_total_size],
+        borderColor: chart_background,
       },
       {
         name: "Before",
         data: [source_total_size, 0],
+        borderColor: chart_background,
       },
     ];
 
     for (let i = totalChart.series.length - 1; i >= 0; i--) {
-      totalChart.series[i].remove();
+      totalChart.series[i].remove(false);
     }
 
     for (let y = newSeriesData.length - 1; y >= 0; y--) {
-      totalChart.addSeries(newSeriesData[y]);
+      totalChart.addSeries(newSeriesData[y], false);
     }
+
+    totalChart.redraw();
   };
 
   const fetchConversionDetails = function (taskId) {
