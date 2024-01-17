@@ -14,20 +14,20 @@ const CompletedTasksFileSizeDiffChart = (function () {
       return "0 Bytes";
     }
 
-    // Rather than using `let k = 1024;` (base 2) use `let k = 1000;` (base 10)
+    // Rather than using `k = 1024;` (base 2) use `k = 1000;` (base 10)
     // This way the end result will better fit in with the high chart logic
     // Using Base 2 will lead to the chart sections showing a rounded number and
     // the bar showing something different
-    let k = 1000;
-    let dm = 2;
-    let sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    let i = Math.floor(Math.log(bytes) / Math.log(k));
+    const k = 1000;
+    const dm = 2;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
-  let positive = "#009fdd";
-  let negative = "#C10015";
+  const positive = "#009fdd";
+  const negative = "#C10015";
 
   let chart_title = "(Select a task from the table below)";
   let source_file_size = 0;
@@ -64,7 +64,8 @@ const CompletedTasksFileSizeDiffChart = (function () {
   });
 
   const updateIndividualChart = function () {
-    // If the destination file size is greater than the source, then mark it negative, otherwise positive
+    // If the destination file size is greater than the source, then mark it
+    // negative, otherwise positive
     let reduced = true;
     let destination_bar_colour = positive;
     let percent_changed =
@@ -97,18 +98,14 @@ const CompletedTasksFileSizeDiffChart = (function () {
       },
       tooltip: {
         formatter: function () {
-          return (
-            "<b>" +
-            this.series.name +
-            "</b><br/>" +
-            "File Size: " +
-            formatBytes(Math.abs(this.point.y))
-          );
+          return `<strong>${this.series.name}</strong>
+            <br>
+            File Size: ${formatBytes(Math.abs(this.point.y))}`;
         },
       },
     });
 
-    let newSeriesData = [
+    const newSeriesData = [
       {
         name: "New",
         data: [0, destination_file_size],
@@ -152,27 +149,20 @@ const CompletedTasksFileSizeDiffChart = (function () {
         width: null,
       },
       title: {
-        text:
-          formatBytes(difference_in_total_file_sizes) +
-          " total " +
-          change_text +
-          " in file size",
+        text: `${formatBytes(difference_in_total_file_sizes)}
+          total ${change_text} in file size`,
       },
       colors: ["#555555", destination_bar_colour],
       tooltip: {
         formatter: function () {
-          return (
-            "<b>" +
-            this.series.name +
-            "</b><br/>" +
-            "File Size: " +
-            formatBytes(Math.abs(this.point.y))
-          );
+          return `<strong>${this.series.name}</strong>
+            <br>
+            File Size: ${formatBytes(Math.abs(this.point.y))}`;
         },
       },
     });
 
-    let newSeriesData = [
+    const newSeriesData = [
       {
         name: "After",
         data: [0, destination_total_size],
@@ -193,13 +183,13 @@ const CompletedTasksFileSizeDiffChart = (function () {
   };
 
   const fetchConversionDetails = function (taskId) {
-    jQuery.get("conversionDetails/?task_id=" + taskId, function (data) {
+    jQuery.get(`conversionDetails/?task_id=${taskId}`, function (data) {
       // Update/set the conversion details list
       let source_abspath = "";
       let destination_abspath = "";
 
       for (let i = 0; i < data.length; i++) {
-        let item = data[i];
+        const item = data[i];
 
         if (item.type === "source") {
           source_file_size = Number(item.size);
@@ -213,9 +203,10 @@ const CompletedTasksFileSizeDiffChart = (function () {
 
       updateIndividualChart();
 
-      let html = 'Original File Path: "' + source_abspath + '"';
-      html += "<br>";
-      html += 'New File Path: "' + destination_abspath + '"';
+      const html = `Original File Path: "${source_abspath}"
+        <br>
+        New File Path: "${destination_abspath}"`;
+
       $("#selected_task_name").html(html);
     });
   };
@@ -230,7 +221,8 @@ const CompletedTasksFileSizeDiffChart = (function () {
   };
 
   const watch = function () {
-    let selectedTaskId = $("#selected_task_id");
+    const selectedTaskId = $("#selected_task_id");
+
     selectedTaskId
       .on("change", function () {
         if (this.value !== "") {
