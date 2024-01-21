@@ -32,6 +32,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
   const text_colour = "var(--q-text)";
   const subtext_colour = "var(--q-subtext)";
   const chart_background = "var(--q-card)";
+  const chartHeight = 300;
 
   let chart_title = "(Select a task from the table below)";
   let source_file_size = 0;
@@ -42,6 +43,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
   const individualChart = Highcharts.chart("file_size_chart", {
     chart: {
       backgroundColor: chart_background,
+      height: chartHeight,
     },
     title: {
       text: "",
@@ -57,7 +59,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
     },
     colors: [default_bar_colour, positive_bar_colour],
     xAxis: {
-      categories: ["Original", "New"],
+      type: "category",
       labels: {
         style: {
           color: text_colour,
@@ -79,9 +81,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
       },
     },
     legend: {
-      itemStyle: {
-        color: text_colour,
-      },
+      enabled: false,
     },
     series: [],
   });
@@ -89,6 +89,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
   const totalChart = Highcharts.chart("total_size_chart", {
     chart: {
       backgroundColor: chart_background,
+      height: chartHeight,
     },
     title: {
       text: "",
@@ -104,7 +105,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
     },
     colors: [default_bar_colour, positive_bar_colour],
     xAxis: {
-      categories: ["Before", "After"],
+      type: "category",
       labels: {
         style: {
           color: text_colour,
@@ -126,9 +127,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
       },
     },
     legend: {
-      itemStyle: {
-        color: text_colour,
-      },
+      enabled: false,
     },
     series: [],
   });
@@ -140,11 +139,13 @@ const CompletedTasksFileSizeDiffChart = (function () {
     let destination_bar_colour = positive_bar_colour;
     let percent_changed =
       100 - (destination_file_size / source_file_size) * 100;
+
     if (destination_file_size >= source_file_size) {
       reduced = false;
       destination_bar_colour = negative_bar_colour;
       percent_changed = 100 - (source_file_size / destination_file_size) * 100;
     }
+
     source_file_size = Number(source_file_size);
     destination_file_size = Number(destination_file_size);
 
@@ -174,27 +175,27 @@ const CompletedTasksFileSizeDiffChart = (function () {
       },
     });
 
-    const newSeriesData = [
-      {
-        name: "New",
-        data: [0, destination_file_size],
-        borderColor: chart_background,
-      },
-      {
-        name: "Original",
-        data: [source_file_size, 0],
-        borderColor: chart_background,
-      },
-    ];
+    const newSeriesData = {
+      borderWidth: 0,
+      colorByPoint: true,
+      name: "Size",
+      data: [
+        {
+          name: "Original",
+          y: source_file_size,
+        },
+        {
+          name: "New",
+          y: destination_file_size,
+        },
+      ],
+    };
 
     for (let i = individualChart.series.length - 1; i >= 0; i--) {
       individualChart.series[i].remove(false);
     }
 
-    for (let y = newSeriesData.length - 1; y >= 0; y--) {
-      individualChart.addSeries(newSeriesData[y], false);
-    }
-
+    individualChart.addSeries(newSeriesData, false);
     individualChart.redraw();
   };
 
@@ -205,6 +206,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
     let destination_bar_colour = positive_bar_colour;
     let difference_in_total_file_sizes =
       source_total_size - destination_total_size;
+
     if (destination_total_size > source_total_size) {
       change_text = "increase";
       destination_bar_colour = negative_bar_colour;
@@ -235,27 +237,27 @@ const CompletedTasksFileSizeDiffChart = (function () {
       },
     });
 
-    const newSeriesData = [
-      {
-        name: "After",
-        data: [0, destination_total_size],
-        borderColor: chart_background,
-      },
-      {
-        name: "Before",
-        data: [source_total_size, 0],
-        borderColor: chart_background,
-      },
-    ];
+    const newSeriesData = {
+      borderWidth: 0,
+      colorByPoint: true,
+      name: "Size",
+      data: [
+        {
+          name: "Before",
+          y: source_total_size,
+        },
+        {
+          name: "After",
+          y: destination_total_size,
+        },
+      ],
+    };
 
     for (let i = totalChart.series.length - 1; i >= 0; i--) {
       totalChart.series[i].remove(false);
     }
 
-    for (let y = newSeriesData.length - 1; y >= 0; y--) {
-      totalChart.addSeries(newSeriesData[y], false);
-    }
-
+    totalChart.addSeries(newSeriesData, false);
     totalChart.redraw();
   };
 
