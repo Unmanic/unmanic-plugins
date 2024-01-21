@@ -293,10 +293,10 @@ class Data(object):
         for task in task_results:
             start_time = ''
             if task.get('start_time'):
-                start_time = task.get('start_time').isoformat()
+                start_time = task.get('start_time').strftime('%Y-%m-%d %H:%M:%S')
             finish_time = ''
             if task.get('finish_time'):
-                finish_time = task.get('finish_time').isoformat()
+                finish_time = task.get('finish_time').strftime('%Y-%m-%d %H:%M:%S')
             # Set params as required in template
             item = {
                 'id':           task.get('id'),
