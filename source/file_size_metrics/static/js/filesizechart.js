@@ -34,7 +34,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
   const chart_background = "var(--q-card)";
   const chartHeight = 300;
 
-  let chart_title = "(Select a task from the table below)";
+  let chart_title = "(Select a task from the table)";
   let source_file_size = 0;
   let destination_file_size = 0;
   let source_total_size = 0;

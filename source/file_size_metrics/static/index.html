@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script>
       (function (window, document) {
@@ -17,143 +17,188 @@
     </script>
 
     <title>File Size Metrics | Unmanic</title>
-    <link rel="shortcut icon" href="static/favicon.ico">
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="../../icons/favicon-128x128.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="../../icons/favicon-96x96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="../../icons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="../../icons/favicon-16x16.png"
+    />
 
-    <link rel="stylesheet" type="text/css"
-          href="./static/vendor/datatables.net-dt/css/jquery.dataTables.min.css?{cache_buster}">
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="./static/vendor/datatables.net-dt/css/jquery.dataTables.min.css?{cache_buster}"
+    />
     <link rel="stylesheet" type="text/css" href="./static/css/style.css" />
-</head>
-<body id="top-of-page">
+  </head>
+  <body id="top-of-page">
+    <!-- ######## BEGIN PAGE CONTENT -->
 
-<!-- ######## BEGIN PAGE CONTENT -->
-
-<div class="top-content">
-    <div class="charts">
-
-        <div class="row">
-
-            <div class="column">
-                <div class="card">
-                    <div class="card-content">
-                        <button type="button" class="collapsible">
-                            Individual File Size Change
-                        </button>
-                        <div class="content" style="display:block;">
-                            <span id="selected_task_name"
-                                  class="car-header">(Select a task from the table below)</span>
-                            <input id="selected_task_id" type="hidden" name="selected_task_id" value=""/>
-                            <div id="task_details">
-                                <div id="file_size_chart">
-                                    There was an issue showing this chart
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="top-content">
+      <div class="charts">
+        <div class="card">
+          <div class="collapsible card-header active">
+            Total File Size Changed
+          </div>
+          <div class="card-content">
+            <div class="content" style="display: block">
+              <div id="total_size_chart">
+                There was an issue showing this chart
+              </div>
             </div>
-
-            <div class="column">
-                <div class="card">
-                    <div class="card-content">
-                        <button type="button" class="collapsible">
-                            Total File Size Changed
-                        </button>
-                        <div class="content" style="display:block;">
-                            <span class="car-header"></span>
-                            <div id="total_size_chart">
-                                There was an issue showing this chart
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+          </div>
         </div>
-
+      </div>
     </div>
-</div>
 
-<div class="tables">
-
-    <hr>
-
-    <table id="history_completed_tasks_table" class="dataTable display" style="width:100%">
+    <div class="tables">
+      <table id="history_completed_tasks_table" class="dataTable display">
         <thead>
-        <tr>
-            <!--Headers are overwritten in JS datatable config-->
-            <th>Name</th>
-            <th>Started</th>
-            <th>Completed</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
+          <tr>
+            <th>New File Name</th>
+            <th>Start Time</th>
+            <th>Finish Time</th>
+          </tr>
         </thead>
         <tfoot>
-        <tr>
-            <!--Headers are overwritten in JS datatable config-->
-            <th>Name</th>
-            <th>Started</th>
-            <th>Completed</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
+          <tr>
+            <th>New File Name</th>
+            <th>Start Time</th>
+            <th>Finish Time</th>
+          </tr>
         </tfoot>
-    </table>
-</div>
+      </table>
 
-<a href="#top-of-page" class="top-of-page-link" data-visible="true">
-    <svg width="32" height="32" viewBox="0 0 100 100">
-        <path fill="white"
-              d="m50 0c-13.262 0-25.98 5.2695-35.355 14.645s-14.645 22.094-14.645 35.355 5.2695 25.98 14.645 35.355 22.094 14.645 35.355 14.645 25.98-5.2695 35.355-14.645 14.645-22.094 14.645-35.355-5.2695-25.98-14.645-35.355-22.094-14.645-35.355-14.645zm20.832 62.5-20.832-22.457-20.625 22.457c-1.207 0.74219-2.7656 0.57812-3.7891-0.39844-1.0273-0.98047-1.2695-2.5273-0.58594-3.7695l22.918-25c0.60156-0.61328 1.4297-0.96094 2.2891-0.96094 0.86328 0 1.6914 0.34766 2.293 0.96094l22.918 25c0.88672 1.2891 0.6875 3.0352-0.47266 4.0898-1.1562 1.0508-2.9141 1.0859-4.1133 0.078125z"></path>
-    </svg>
-</a>
+      <div id="individual_file_size_chart">
+        <div class="card">
+          <div class="card-header active">Individual File Size Change</div>
+          <div class="card-content">
+            <div class="content" style="display: block">
+              <input
+                id="selected_task_id"
+                type="hidden"
+                name="selected_task_id"
+                value=""
+              />
 
+              <div id="task_details">
+                <div id="file_size_chart">
+                  There was an issue showing this chart
+                </div>
+              </div>
 
-<!-- ######## END PAGE CONTENT -->
+              <div id="selected_task_name" class="car-header">
+                (Select a task from the table)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <a href="#top-of-page" class="top-of-page-link" data-visible="true">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <path
+          fill="white"
+          d="m50 0c-13.262 0-25.98 5.2695-35.355 14.645s-14.645 22.094-14.645 35.355 5.2695 25.98 14.645 35.355 22.094 14.645 35.355 14.645 25.98-5.2695 35.355-14.645 14.645-22.094 14.645-35.355-5.2695-25.98-14.645-35.355-22.094-14.645-35.355-14.645zm20.832 62.5-20.832-22.457-20.625 22.457c-1.207 0.74219-2.7656 0.57812-3.7891-0.39844-1.0273-0.98047-1.2695-2.5273-0.58594-3.7695l22.918-25c0.60156-0.61328 1.4297-0.96094 2.2891-0.96094 0.86328 0 1.6914 0.34766 2.293 0.96094l22.918 25c0.88672 1.2891 0.6875 3.0352-0.47266 4.0898-1.1562 1.0508-2.9141 1.0859-4.1133 0.078125z"
+        ></path>
+      </svg>
+    </a>
 
-<!-- ######## BEGIN SCRIPTS -->
+    <!-- ######## END PAGE CONTENT -->
 
-<script type="text/javascript" src="./static/vendor/jquery/dist/jquery.min.js?{cache_buster}"></script>
+    <!-- ######## BEGIN SCRIPTS -->
 
-<!--DATATABLE-->
-<script type="text/javascript"
-        src="./static/vendor/datatables.net/js/jquery.dataTables.min.js?{cache_buster}"></script>
+    <script
+      type="text/javascript"
+      src="./static/vendor/jquery/dist/jquery.min.js?{cache_buster}"
+    ></script>
 
-<!--CHARTS-->
-<script type="text/javascript" src="./static/vendor/highcharts/highcharts.js?{cache_buster}"></script>
-<script type="text/javascript" src="./static/vendor/highcharts/highcharts-3d.js?{cache_buster}"></script>
-<script type="text/javascript" src="./static/vendor/highcharts/highcharts-more.js?{cache_buster}"></script>
-<script>
-    var coll = document.getElementsByClassName("collapsible");
-    var i;
+    <!--DATATABLE-->
+    <script
+      type="text/javascript"
+      src="./static/vendor/datatables.net/js/jquery.dataTables.min.js?{cache_buster}"
+    ></script>
 
-    for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener("click", function () {
-            console.log('here')
+    <!--CHARTS-->
+    <script
+      type="text/javascript"
+      src="./static/vendor/highcharts/highcharts.js?{cache_buster}"
+    ></script>
+    <script
+      type="text/javascript"
+      src="./static/vendor/highcharts/highcharts-3d.js?{cache_buster}"
+    ></script>
+    <script
+      type="text/javascript"
+      src="./static/vendor/highcharts/highcharts-more.js?{cache_buster}"
+    ></script>
+
+    <script
+      type="text/javascript"
+      src="./static/js/table.js?{cache_buster}"
+    ></script>
+    <script
+      type="text/javascript"
+      src="./static/js/filesizechart.js?{cache_buster}"
+    ></script>
+
+    <script>
+      ((window, document) => {
+        const coll = document.getElementsByClassName("collapsible");
+
+        for (let i = 0; i < coll.length; i++) {
+          coll[i].addEventListener("click", function () {
+            const content = this.nextElementSibling;
+            let contentVisibility = "none";
+
             this.classList.toggle("active");
-            var content = this.nextElementSibling;
-            if (content.style.display === "block") {
-                content.style.display = "none";
-            } else {
-                content.style.display = "block";
+
+            if (this.classList.contains("active")) {
+              contentVisibility = "block";
             }
-        });
-    }
-</script>
 
-<script type="text/javascript" src="./static/js/table.js?{cache_buster}"></script>
+            content.style.display = contentVisibility;
+          });
+        }
 
-<script type="text/javascript" src="./static/js/filesizechart.js?{cache_buster}"></script>
+        window.onload = () => {
+          CompletedTasksDatatable.init();
+          CompletedTasksFileSizeDiffChart.init();
+        };
 
-<script>
-    window.onload = function funLoad() {
-        CompletedTasksDatatable.init();
-        CompletedTasksFileSizeDiffChart.init();
-    }
-</script>
+        window.onscroll = (e) => {
+          const chart = $("#individual_file_size_chart .card:first")[0];
+          const topContentHeight = $(".top-content").height();
 
-<!-- ######## END SCRIPTS -->
+          let newTop = "0px";
 
-</body>
+          if (window.scrollY > topContentHeight) {
+            newTop = scrollY - topContentHeight + "px";
+          }
+
+          chart.style.top = newTop;
+        };
+      })(window, document);
+    </script>
+    <!-- ######## END SCRIPTS -->
+  </body>
 </html>
