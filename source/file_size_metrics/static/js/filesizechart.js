@@ -40,7 +40,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
   let source_total_size = 0;
   let destination_total_size = 0;
 
-  const individualChart = Highcharts.chart("file_size_chart", {
+  Highcharts.setOptions({
     chart: {
       backgroundColor: chart_background,
       height: chartHeight,
@@ -58,6 +58,9 @@ const CompletedTasksFileSizeDiffChart = (function () {
       },
     },
     colors: [default_bar_colour, positive_bar_colour],
+    legend: {
+      enabled: false,
+    },
     xAxis: {
       type: "category",
       labels: {
@@ -74,62 +77,33 @@ const CompletedTasksFileSizeDiffChart = (function () {
         },
       },
       title: {
-        text: "Sizes",
+        text: "Size",
         style: {
           color: subtext_colour,
         },
       },
-    },
-    legend: {
-      enabled: false,
     },
     series: [],
   });
 
-  const totalChart = Highcharts.chart("total_size_chart", {
+  const individualChart = new Highcharts.Chart({
     chart: {
-      backgroundColor: chart_background,
-      height: chartHeight,
+      renderTo: "file_size_chart",
     },
-    title: {
-      text: "",
-      style: {
-        color: text_colour,
-      },
+  });
+  const individualChart2 = new Highcharts.Chart({
+    chart: {
+      renderTo: "file_size_chart_dialog",
+    },
+  });
+
+  const totalChart = new Highcharts.Chart({
+    chart: {
+      renderTo: "total_size_chart",
     },
     subtitle: {
       text: "Displaying the total file size changed on disk by Unmanic processing files",
-      style: {
-        color: subtext_colour,
-      },
     },
-    colors: [default_bar_colour, positive_bar_colour],
-    xAxis: {
-      type: "category",
-      labels: {
-        style: {
-          color: text_colour,
-        },
-      },
-      lineColor: text_colour,
-    },
-    yAxis: {
-      labels: {
-        style: {
-          color: text_colour,
-        },
-      },
-      title: {
-        text: "Sizes",
-        style: {
-          color: subtext_colour,
-        },
-      },
-    },
-    legend: {
-      enabled: false,
-    },
-    series: [],
   });
 
   const updateIndividualChart = function () {
@@ -149,7 +123,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
     source_file_size = Number(source_file_size);
     destination_file_size = Number(destination_file_size);
 
-    individualChart.update({
+    const options = {
       chart: {
         backgroundColor: chart_background,
         type: "bar",
@@ -173,7 +147,10 @@ const CompletedTasksFileSizeDiffChart = (function () {
             File Size: ${formatBytes(Math.abs(this.point.y))}`;
         },
       },
-    });
+    };
+
+    individualChart.update(options);
+    individualChart2.update(options);
 
     const newSeriesData = {
       borderWidth: 0,
@@ -193,10 +170,14 @@ const CompletedTasksFileSizeDiffChart = (function () {
 
     for (let i = individualChart.series.length - 1; i >= 0; i--) {
       individualChart.series[i].remove(false);
+      individualChart2.series[i].remove(false);
     }
 
     individualChart.addSeries(newSeriesData, false);
+    individualChart2.addSeries(newSeriesData, false);
+
     individualChart.redraw();
+    individualChart2.redraw();
   };
 
   const updateTotalChart = function () {
@@ -303,7 +284,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
         </p>`;
       }
 
-      $("#selected_task_name").html(html);
+      $(".selected_task_name").html(html);
     });
   };
 

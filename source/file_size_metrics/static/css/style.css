@@ -85,9 +85,8 @@ html {
   background-color: var(--q-card-head-hover);
 }
 
-.content {
+.card-content {
   background-color: var(--q-card);
-  display: none;
   overflow: hidden;
   padding: 0 18px;
 }
@@ -126,7 +125,10 @@ html {
 }
 
 #individual_file_size_chart {
+  display: block;
   order: 2;
+  overflow: hidden;
+  padding: 0 3px;
 }
 
 #individual_file_size_chart .card {
@@ -195,6 +197,7 @@ html {
 
   #individual_file_size_chart {
     order: 1;
+    display: none;
   }
 
   #individual_file_size_chart .card {
@@ -209,4 +212,36 @@ html {
   #individual_file_size_chart {
     padding-top: 20px;
   }
+}
+
+dialog {
+  color: var(--q-text);
+  border: none;
+  background-color: var(--q-card);
+  width: 100%;
+  padding: 0;
+}
+
+dialog::backdrop {
+  background-color: var(--q-card-head);
+  opacity: 0.85;
+}
+
+dialog .card-content {
+  padding: 0 10px;
+}
+
+dialog .card-footer {
+  padding: 0 0 10px 0;
+}
+
+dialog .q-btn {
+  background: var(--q-primary);
+  border: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  outline: 0;
+  padding: 8px 20px;
+  text-transform: uppercase;
 }
