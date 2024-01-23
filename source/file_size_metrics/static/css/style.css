@@ -167,11 +167,11 @@ button.collapsible.active::after {
 }
 
 .charts {
-  max-height: 550px;
+  max-height: 450px;
 }
 
 .tables {
-  padding-top: 550px;
+  padding-top: 450px;
 }
 
 /* Responsive columns */

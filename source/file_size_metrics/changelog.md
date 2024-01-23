@@ -1,3 +1,7 @@
+**<span style="color:#56adda">0.0.12</span>**
+- Correct spacing between the bars on the size charts
+- Reduce the height of the top chart area
+
 **<span style="color:#56adda">0.0.11</span>**
 - File Size charts now support the dark theme
 
