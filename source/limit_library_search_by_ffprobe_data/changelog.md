@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.4</span>**
+- Bump jsonata python dependency to v0.2.5
+
 **<span style="color:#56adda">0.0.3</span>**
 - updated ffmpeg helper lib to latest version
 
