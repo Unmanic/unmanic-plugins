@@ -34,7 +34,7 @@ const CompletedTasksFileSizeDiffChart = (function () {
   const chart_background = "var(--q-card)";
   const chartHeight = 300;
 
-  let chart_title = "(Select a task from the table below)";
+  let chart_title = "(Select a task from the table)";
   let source_file_size = 0;
   let destination_file_size = 0;
   let source_total_size = 0;
@@ -282,9 +282,26 @@ const CompletedTasksFileSizeDiffChart = (function () {
 
       updateIndividualChart();
 
-      const html = `Original File Path: "${source_abspath}"
-        <br>
-        New File Path: "${destination_abspath}"`;
+      let html = "";
+
+      if (source_abspath !== destination_abspath) {
+        html = `<p>
+                <strong>Original File Path:</strong>
+                <br>
+                ${source_abspath}
+            </p>
+            <p>
+                <strong>New File Path:</strong>
+                <br>
+                ${destination_abspath}
+            </p>`;
+      } else {
+        html = `<p>
+            <strong>File Path:</strong>
+            <br>
+            ${source_abspath}
+        </p>`;
+      }
 
       $("#selected_task_name").html(html);
     });

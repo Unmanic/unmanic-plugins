@@ -41,34 +41,8 @@ table.dataTable td {
 html {
   background-color: var(--q-page);
   color: var(--q-text);
-}
-
-/* Float four columns side by side */
-.column {
-  float: left;
-  padding: 0 10px;
-  width: 50%;
-}
-
-/* Remove extra left and right margins, due to padding */
-.row {
-  margin: 0 -5px;
-}
-
-/* Clear floats after the columns */
-.row:after {
-  clear: both;
-  content: "";
-  display: table;
-}
-
-/* Responsive columns */
-@media screen and (max-width: 600px) {
-  .column {
-    display: block;
-    margin-bottom: 20px;
-    width: 100%;
-  }
+  font-family: Roboto, -apple-system, Helvetica Neue, Helvetica, Arial,
+    sans-serif;
 }
 
 /*Cards*/
@@ -78,30 +52,32 @@ html {
   text-align: center;
 }
 
-.collapsible {
+.card-header {
   background-color: var(--q-card-head);
   border: none;
   color: var(--q-primary);
-  cursor: pointer;
   font-size: 15px;
   height: 35px;
   outline: none;
-  padding-left: 18px;
-  padding-right: 18px;
+  padding: 10px 18px;
   text-align: left;
   width: 100%;
 }
 
-button.collapsible::after {
+.collapsible {
+  cursor: pointer;
+}
+
+.collapsible::after {
   color: var(--q-text);
-  content: "\2212";
+  content: "\002B";
   float: right;
   font-weight: bold;
   margin-left: 5px;
 }
 
-button.collapsible.active::after {
-  content: "\002B";
+.collapsible.active::after {
+  content: "\2212";
 }
 
 .active,
@@ -133,54 +109,104 @@ button.collapsible.active::after {
 /*Custom*/
 .car-header {
   display: block;
-  height: 100px;
   margin-top: 5px;
   min-height: 40px;
   text-align: left;
 }
 
-.view-btn {
-  background-color: var(--q-secondary);
-  border-radius: 5px;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  display: inline-block;
-  font-family: "Source Sans Pro", sans-serif;
-  font-size: 17px;
-  overflow: hidden;
-  padding: 6px 18px;
-  text-align: center;
-  text-decoration: none;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.view-btn:hover {
-  background-color: var(--q-primary);
-}
-
-.top-content {
-  position: fixed;
-  width: 100%;
-  z-index: 15;
-}
-
 .charts {
-  max-height: 450px;
+  max-height: 335px;
 }
 
 .tables {
-  padding-top: 450px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 66% 33%;
+  padding-top: 20px;
+}
+
+#individual_file_size_chart {
+  order: 2;
+}
+
+#individual_file_size_chart .card {
+  position: relative;
+}
+
+#history_completed_tasks_table tbody tr {
+  cursor: pointer;
+}
+
+#history_completed_tasks_table_wrapper {
+  order: 1;
+}
+
+.q-badge {
+  border-radius: 4px;
+  color: #fff;
+  display: inline;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 12px;
+  min-height: 12px;
+  padding: 2px 6px;
+  vertical-align: text-top;
+}
+
+.q-badge.success {
+  background: var(--q-positive);
+}
+
+.q-badge.success::after {
+  content: "Success";
+}
+
+.q-badge.failed {
+  background: var(--q-negative);
+}
+
+.q-badge.failed::after {
+  content: "Failed";
+}
+
+.basename .name {
+  text-decoration: underline dashed;
 }
 
 /* Responsive columns */
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 940px) {
   .top-content {
     position: inherit;
   }
 
+  .q-badge.success::after {
+    content: "✔";
+  }
+
+  .q-badge.failed::after {
+    content: "✖";
+  }
+
   .tables {
+    gap: 0;
+    grid-template-columns: 100%;
     padding-top: 0;
+  }
+
+  #individual_file_size_chart {
+    order: 1;
+  }
+
+  #individual_file_size_chart .card {
+    position: static;
+  }
+
+  #history_completed_tasks_table_wrapper {
+    order: 2;
+  }
+
+  #history_completed_tasks_table_wrapper,
+  #individual_file_size_chart {
+    padding-top: 20px;
   }
 }
