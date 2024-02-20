@@ -72,38 +72,39 @@ class PluginStreamMapper(StreamMapper):
 
     def __gen_start_args(self, duration):
         start_seconds = self.settings.get_setting('start_seconds')
-        main_options = {}
+        advanced_options = {}
         if start_seconds and float(start_seconds) > 0:
             # Ensure the start trim is less than the duration of the file
             if float(start_seconds) > float(duration):
                 # The configured value is larger than the duration of the file.
                 # Skip this file for now...
-                return main_options
+                return advanced_options
             # Build the start trim args
-            main_options = {
+            advanced_options = {
                 "-ss": str(self.settings.get_setting('start_seconds')),
             }
-            self.set_ffmpeg_main_options(**main_options)
+            self.set_ffmpeg_advanced_options(**advanced_options)
 
-        return main_options
+        return advanced_options
 
     def __gen_end_args(self, duration):
         # Reduce duration by X seconds less the start_seconds
         end_seconds = self.settings.get_setting('end_seconds')
-        main_options = {}
+        start_seconds = self.settings.get_setting('start_seconds')
+        advanced_options = {}
         if end_seconds and float(end_seconds) > 0:
-            # Ensure the end trim is less than the duration of the file
+            # Ensure the end trim is less than the duration of the file, less the start trim
             if float(end_seconds) > float(duration):
                 # The configured value is larger than the duration of the file.
                 # Skip this file for now...
-                return main_options
+                return advanced_options
             # Build the start trim args
-            main_options = {
-                "-to": str(duration),
+            advanced_options = {
+                "-to": str(float(duration) - float(end_seconds)),
             }
-            self.set_ffmpeg_main_options(**main_options)
+            self.set_ffmpeg_advanced_options(**advanced_options)
 
-        return main_options
+        return advanced_options
 
     def gen_trim_args(self):
         """
@@ -124,8 +125,10 @@ class PluginStreamMapper(StreamMapper):
         args_string = ''
         for key in start_args:
             args_string += "{} {}".format(key, start_args.get(key))
+        logger.debug("args_string: '{}'".format(args_string))
         for key in end_args:
             args_string += "{} {}".format(key, end_args.get(key))
+        logger.debug("args_string: '{}'".format(args_string))
         return args_string
 
     @staticmethod
@@ -267,6 +270,8 @@ def on_worker_process(data):
         # Apply ffmpeg args to command
         data['exec_command'] = ['ffmpeg']
         data['exec_command'] += ffmpeg_args
+
+        logger.debug("ffmpeg.args: '{}'".format(ffmpeg_args))
 
         # Set the parser
         parser = Parser(logger)
