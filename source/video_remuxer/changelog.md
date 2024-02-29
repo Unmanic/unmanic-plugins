@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.13</span>**
+- update ffmpeg helper to latest to avoid error when probe result contains the legitimate string "error"
+
 **<span style="color:#56adda">0.0.12</span>**
 - Plugin should throw an exception when FFmpeg is not correctly installed
 - Prevent HEVC codec support on AVI
