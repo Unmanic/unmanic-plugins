@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.1.3</span>**
+- fix nvenc 10 bit profile name
+
 **<span style="color:#56adda">0.1.2</span>**
 - Fix for plugin updates from versions older than 0.1.0
 
