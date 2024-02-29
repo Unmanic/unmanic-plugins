@@ -393,8 +393,8 @@ class NvencEncoder:
                     "label": "Main",
                 },
                 {
-                    "value": "high",
-                    "label": "High",
+                    "value": "main10",
+                    "label": "Main10",
                 },
                 {
                     "value": "high444p",
