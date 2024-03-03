@@ -17,5 +17,5 @@
         "on_postprocessor_task_results": 99
     },
     "tags": "video,audio,ffmpeg",
-    "version": "0.0.7"
+    "version": "0.0.8"
 }

@@ -22,6 +22,7 @@
 
 """
 import os
+import shutil
 from logging import Logger
 
 from .probe import Probe
@@ -35,6 +36,14 @@ class StreamMapper(object):
     """
 
     probe: Probe = None
+
+    stream_type_idents = {
+        'video':      'v',
+        'audio':      'a',
+        'subtitle':   's',
+        'data':       'd',
+        'attachment': 't'
+    }
 
     processing_stream_type = ''
     found_streams_to_encode = False
@@ -54,6 +63,10 @@ class StreamMapper(object):
     format_options = []
 
     def __init__(self, logger: Logger, processing_stream_type: list):
+        # Ensure ffmpeg is installed
+        if shutil.which('ffmpeg') is None:
+            raise Exception("Unable to find executable 'ffmpeg'. Please ensure that FFmpeg is installed correctly.")
+
         self.logger = logger
         if processing_stream_type is not None:
             if any(pst for pst in processing_stream_type if
@@ -124,7 +137,7 @@ class StreamMapper(object):
         """
         Overwrite this function to test a stream.
         Return 'True' if it needs to be process.
-        Return 'False' if it should just be copied over to the new file
+        Return 'False' if it should just be copied over to the new file.
 
         :param stream_info:
         :return: bool
@@ -189,10 +202,12 @@ class StreamMapper(object):
                         self.video_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.video_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.video_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('v', self.video_stream_count)
                         self.video_stream_count += 1
                         continue
                 else:
@@ -209,15 +224,28 @@ class StreamMapper(object):
                         self.audio_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.audio_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.audio_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('a', self.audio_stream_count)
                         self.audio_stream_count += 1
                         continue
                 else:
-                    self.__copy_stream_mapping('a', self.audio_stream_count)
-                    self.audio_stream_count += 1
+                    if self.settings.get_setting('mode') == 'advanced':
+                        amaps = self.settings.get_setting('custom_options').split()
+                        self.logger.debug("Advanced Mode Video Settings with custom audio encoding: '%s'", amaps)
+                        if '-c:a' not in amaps:
+                            self.logger.debug("-c:a not detected in custom mappings: '%s'", amaps)
+                            self.__copy_stream_mapping('a', self.audio_stream_count)
+                        else:
+                            self.logger.debug("-c:a detected in custom mappings: '%s'", amaps)
+                            self.stream_mapping += ['-map', '0:{}:{}'.format('a', self.audio_stream_count)]
+                        self.audio_stream_count += 1
+                    else:
+                        self.__copy_stream_mapping('a', self.audio_stream_count)
+                        self.audio_stream_count += 1
                     continue
 
             # If this is a subtitle stream?
@@ -229,15 +257,28 @@ class StreamMapper(object):
                         self.subtitle_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.subtitle_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.subtitle_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('s', self.subtitle_stream_count)
                         self.subtitle_stream_count += 1
                         continue
                 else:
-                    self.__copy_stream_mapping('s', self.subtitle_stream_count)
-                    self.subtitle_stream_count += 1
+                    if self.settings.get_setting('mode') == 'advanced':
+                        submaps = self.settings.get_setting('custom_options').split()
+                        self.logger.debug("Advanced Mode Video Settings with custom subtitle encoding: '%s'", submaps)
+                        if '-c:s' not in submaps:
+                            self.logger.debug("-c:s not detected in custom mappings: '%s'", submaps)
+                            self.__copy_stream_mapping('s', self.subtitle_stream_count)
+                        else:
+                            self.logger.debug("-c:s detected in custom mappings: '%s'", submaps)
+                            self.stream_mapping += ['-map', '0:{}:{}'.format('s', self.subtitle_stream_count)]
+                        self.subtitle_stream_count += 1
+                    else:
+                        self.__copy_stream_mapping('s', self.subtitle_stream_count)
+                        self.subtitle_stream_count += 1
                     continue
 
             # If this is a data stream?
@@ -249,10 +290,12 @@ class StreamMapper(object):
                         self.data_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.data_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.data_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('d', self.data_stream_count)
                         self.data_stream_count += 1
                         continue
                 else:
@@ -269,10 +312,12 @@ class StreamMapper(object):
                         self.attachment_stream_count += 1
                         continue
                     else:
-                        found_streams_to_process = True
-                        self.__apply_custom_stream_mapping(
-                            self.custom_stream_mapping(stream_info, self.attachment_stream_count)
-                        )
+                        mapping = self.custom_stream_mapping(stream_info, self.attachment_stream_count)
+                        if mapping:
+                            found_streams_to_process = True
+                            self.__apply_custom_stream_mapping(mapping)
+                        else:
+                            self.__copy_stream_mapping('t', self.attachment_stream_count)
                         self.attachment_stream_count += 1
                         continue
                 else:
@@ -344,6 +389,9 @@ class StreamMapper(object):
     def set_output_null(self):
         """Set the output container to NULL for the FFmpeg args"""
         self.output_file = '-'
+        if os.name == "nt":
+            # Windows uses NUL instead
+            self.output_file = 'NUL'
         main_options = {
             "-f": 'null',
         }
@@ -429,14 +477,14 @@ class StreamMapper(object):
         # Add generic options first
         args += self.generic_options
 
+        # Add other main options
+        args += self.main_options
+
         # Add the input file
         # This class requires at least one input file specified with the input_file attribute
         if not self.input_file:
             raise Exception("Input file has not been set")
         args += ['-i', self.input_file]
-
-        # Add other main options
-        args += self.main_options
 
         # Add advanced options. This includes the stream mapping and the encoding args
         args += self.advanced_options
