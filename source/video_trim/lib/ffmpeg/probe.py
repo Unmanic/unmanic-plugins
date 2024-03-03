@@ -24,6 +24,7 @@
 import json
 import mimetypes
 import os
+import shutil
 import subprocess
 from logging import Logger
 
@@ -59,7 +60,13 @@ def ffprobe_cmd(params):
         raw_output = out.decode("utf-8")
     except Exception as e:
         raise FFProbeError(command, str(e))
-    if pipe.returncode == 1 or 'error' in raw_output:
+
+    if 'error' in raw_output:
+        try:
+            info = json.loads(raw_output)
+        except Exception as e:
+            raise FFProbeError(command, raw_output)
+    if pipe.returncode == 1:
         raise FFProbeError(command, raw_output)
     if not raw_output:
         raise FFProbeError(command, 'No info found')
@@ -83,6 +90,7 @@ def ffprobe_file(vid_file_path):
         "-show_format",
         "-show_streams",
         "-show_error",
+        "-show_chapters",
         vid_file_path
     ]
 
@@ -104,6 +112,10 @@ class Probe(object):
     probe_info = {}
 
     def __init__(self, logger: Logger, allowed_mimetypes=None):
+        # Ensure ffprobe is installed
+        if shutil.which('ffprobe') is None:
+            raise Exception("Unable to find executable 'ffprobe'. Please ensure that FFmpeg is installed correctly.")
+
         self.logger = logger
         if allowed_mimetypes is None:
             allowed_mimetypes = ['audio', 'video', 'image']
@@ -139,10 +151,41 @@ class Probe(object):
         # Make sure the MIME type is either audio, video or image
         file_type_category = file_type.split('/')[0]
         if file_type_category not in self.allowed_mimetypes:
-            self.logger.debug("File MIME type not in 'audio', 'video' or 'image' - '{}'".format(file_path))
+            self.logger.debug("File MIME type not in [{}] - '{}'".format(', '.join(self.allowed_mimetypes), file_path))
             return False
 
         return True
+
+    @staticmethod
+    def init_probe(data, logger, allowed_mimetypes=None):
+        """
+        Fetch the Probe object given a plugin's data object
+
+        :param data:
+        :param logger:
+        :param allowed_mimetypes:
+        :return:
+        """
+        probe = Probe(logger, allowed_mimetypes=allowed_mimetypes)
+        # Start by fetching probe data from 'shared_info'.
+        ffprobe_data = data.get('shared_info', {}).get('ffprobe')
+        if ffprobe_data:
+            if not probe.set_probe(ffprobe_data):
+                # Failed to set ffprobe from 'shared_info'.
+                # Probably due to it being for an incompatible mimetype declared above.
+                return
+            return probe
+        # No 'shared_info' ffprobe exists. Attempt to probe file.
+        if not probe.file(data.get('path')):
+            # File probe failed, skip the rest of this test.
+            # Again, probably due to it being for an incompatible mimetype.
+            return
+        # Successfully probed file.
+        # Set file probe to 'shared_info' for subsequent file test runners.
+        if 'shared_info' not in data:
+            data['shared_info'] = {}
+        data['shared_info']['ffprobe'] = probe.get_probe()
+        return probe
 
     def file(self, file_path):
         """
@@ -170,10 +213,18 @@ class Probe(object):
             # This will only happen if it was not a file that could be probed.
             self.logger.debug("File unable to be probed by FFProbe - '{}'".format(file_path))
             return
-        except Exception as e:
-            # The process failed for some unknown reason. Log it.
-            self.logger.debug("Failed to set file probe - ".format(str(e)))
+
+    def set_probe(self, probe_info):
+        """Sets the probe dictionary"""
+        file_path = probe_info.get('format', {}).get('filename')
+        if not file_path:
+            self.logger.error("Provided file probe information does not contain the expected 'filename' key.")
             return
+        if not self.__test_valid_mimetype(file_path):
+            return
+
+        self.probe_info = probe_info
+        return self.probe_info
 
     def get_probe(self):
         """Return the probe dictionary"""

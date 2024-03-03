@@ -1,4 +1,10 @@
 
+**<span style="color:#56adda">0.0.8</span>**
+- Update FFmpeg helper
+- fix trim calculation, specifically trimming off the end
+- move -ss and -to arguments to advanced options
+- add some debug logger output
+
 **<span style="color:#56adda">0.0.7</span>**
 - Update FFmpeg helper
 - Add platform declaration
