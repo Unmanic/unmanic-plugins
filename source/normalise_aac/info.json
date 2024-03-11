@@ -5,7 +5,7 @@
         2
     ],
     "description": "Normalise the audio of AAC audio streams. This plugin will only process files with AAC streams.",
-    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.normalise_aac/master/icon.png",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.normalise_aac/master/icon.png",
     "id": "normalise_aac",
     "name": "Normalise AAC Audio Streams",
     "platform": [
