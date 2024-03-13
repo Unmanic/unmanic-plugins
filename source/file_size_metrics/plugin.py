@@ -317,12 +317,12 @@ class Data(object):
         self.db_stop()
         return return_data
 
-    def save_source_item(self, abspath, size, task_success=False):
+    def save_source_item(self, abspath, size, start_time=None, task_success=False):
         self.db_start()
 
         basename = os.path.basename(abspath)
         task_label = basename
-        start_time = datetime.datetime.now()
+        start_time = start_time if start_time is not None else datetime.datetime.now()
         finish_time = None
         try:
             new_historic_task = HistoricTasks.create(
@@ -412,10 +412,10 @@ def get_total_size_change_data_details(data):
     return json.dumps(results, indent=2)
 
 
-def save_source_size(abspath, size):
+def save_source_details(abspath, size, start_time=None):
     # Return a list of historical tasks based on the request JSON body
     data = Data()
-    task_id = data.save_source_item(abspath, size)
+    task_id = data.save_source_item(abspath, size, start_time)
 
     return task_id
 
@@ -458,7 +458,10 @@ def on_worker_process(data):
 
     with open(plugin_data_file, 'w') as f:
         required_data = {
+            'file_in': data.get('file_in'),
+            'original_file_path': data.get('original_file_path'),
             'source_size': source_size,
+            'start_time': datetime.datetime.now().isoformat(),
         }
         json.dump(required_data, f, indent=4)
 
@@ -491,11 +494,15 @@ def on_postprocessor_task_results(data):
     # Get the file out and store (if it exists)
     src_file_hash = hashlib.md5(original_source_path.encode('utf8')).hexdigest()
     plugin_data_file = os.path.join(profile_directory, '{}.json'.format(src_file_hash))
+    start_time = None
+
     if os.path.exists(plugin_data_file):
         # The store exists
         with open(plugin_data_file) as infile:
             task_metadata = json.load(infile)
+
         source_size = task_metadata.get('source_size')
+        start_time = datetime.datetime.fromisoformat(task_metadata.get('start_time')) if 'start_time' in task_metadata else datetime.datetime.now()
     else:
         # The store did not exist, resort to fetching the data from the original source file (hopefully unchanged)
         logger.warning("Plugin data file is missing. Fetching source size direct from source path.")
@@ -504,7 +511,9 @@ def on_postprocessor_task_results(data):
     if not source_size:
         logger.error("Plugin data file is missing 'source_size'.")
         return data
-    task_id = save_source_size(original_source_path, source_size)
+
+    task_id = save_source_details(original_source_path, source_size, start_time)
+
     if task_id is None:
         logger.error("Failed to create source size entry for this file")
         return data

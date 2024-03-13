@@ -3,6 +3,8 @@ const viewConversionDetails = (jobId) => {
 };
 
 const CompletedTasksDatatable = (function () {
+  const modal = document.querySelector("[data-modal]");
+
   const recordName = (basename, type, { task_success } = row) => {
     if (task_success) {
       return `<span class="q-badge success"></span> <span class="name" title="View Details">${basename}</span>`;
@@ -68,6 +70,10 @@ const CompletedTasksDatatable = (function () {
         classList.add("selected");
 
         viewConversionDetails(data.id);
+      }
+
+      if ($("#individual_file_size_chart").is(":visible") === false) {
+        modal.showModal();
       }
     });
   };
