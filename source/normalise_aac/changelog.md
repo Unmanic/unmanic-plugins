@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- add 'ac' parameter to ffmpeg command performing normalization to avoid unsupported channel layout error
+
 **<span style="color:#56adda">0.0.6</span>**
 - Update FFmpeg helper
 - Add platform declaration
