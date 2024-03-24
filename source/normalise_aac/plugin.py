@@ -90,10 +90,11 @@ class PluginStreamMapper(StreamMapper):
         return False
 
     def custom_stream_mapping(self, stream_info: dict, stream_id: int):
+        channels = int(stream_info.get('channels'))
         return {
             'stream_mapping':  ['-map', '0:a:{}'.format(stream_id)],
             'stream_encoding': [
-                '-c:a:{}'.format(stream_id), 'aac',
+                '-c:a:{}'.format(stream_id), 'aac', '-ac:a:{}'.format(stream_id), '{}'.format(channels),
                 '-filter:a:{}'.format(stream_id), audio_filtergraph(self.settings),
             ]
         }
