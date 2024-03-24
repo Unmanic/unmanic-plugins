@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Update pyarr dependency to fix new Sonarr API v4 issues
+
 **<span style="color:#56adda">0.0.4</span>**
 - Add ability to trigger Sonarr file renaming
 - Improve logging

@@ -159,10 +159,8 @@ def update_mode(api, dest_path, rename_files):
     if rename_files:
         time.sleep(10) # Must give time (more than Radarr) for the refresh to complete before we run the rename.
         try:
-            # Bulk series rename is broken, so instead simulate the UI API call workflow.
-            rename_list = api.request_get("rename", "", params={"seriesId": {series_id}})
-            file_ids = [episode['episodeFileId'] for episode in rename_list]
-
+            rename_list = api.get_episode_file(series_id, series=True)
+            file_ids = [episode['id'] for episode in rename_list]
             result = api.post_command('RenameFiles', seriesId=series_id, files=file_ids)
             if isinstance(result, dict):
                 logger.info("Successfully triggered rename of series '%s' for file: '%s'", series_title, dest_path)
