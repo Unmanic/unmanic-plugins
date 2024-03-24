@@ -183,7 +183,7 @@ class NvencEncoder:
                 '-profile:v:{}'.format(stream_id), str(defaults.get('nvenc_profile')),
             ]
             # TODO: Parse stream info to optimise these settings based on resolution, HDR, etc.
-            return stream_encoding
+            return generic_kwargs, stream_encoding
 
         # Add the preset and tune
         if self.settings.get_setting('nvenc_preset'):

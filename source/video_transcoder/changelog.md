@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.1.4</span>**
+- add missing 'generic_kwargs' from return statement in nvenc.py basic config section
+
 **<span style="color:#56adda">0.1.3</span>**
 - fix nvenc 10 bit profile name
 

@@ -12,5 +12,5 @@
         "on_worker_process": 1
     },
     "tags": "video,ffmpeg",
-    "version": "0.1.3"
+    "version": "0.1.4"
 }
