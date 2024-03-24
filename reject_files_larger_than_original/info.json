@@ -1,0 +1,20 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "This plugin will reset the current working file to the original source if it is larger than the original source.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.reject_files_larger_than_original/master/icon.png",
+    "id": "reject_files_larger_than_original",
+    "name": "Reject File if Larger than Original",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 2,
+        "on_worker_process": 2,
+        "on_postprocessor_file_movement": 5
+    },
+    "tags": "library file test",
+    "version": "0.0.4"
+}

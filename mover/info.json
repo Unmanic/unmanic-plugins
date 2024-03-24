@@ -1,0 +1,9 @@
+{
+    "author": "R3dC4p",
+    "description": "A plugin to move completed encodes to a different folder watched by Sonarr/Radarr etc.",
+    "icon": "https://raw.githubusercontent.com/unmanic/unmanic-plugins/official/source/mover/mover.png",
+    "id": "mover",
+    "name": "Mover",
+    "tags": "postprocessing, mover",
+    "version": "0.0.2"
+}

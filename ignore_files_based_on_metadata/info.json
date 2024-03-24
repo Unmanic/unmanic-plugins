@@ -1,0 +1,18 @@
+{
+    "author": "yajrendrag",
+    "compatibility": [
+        2
+    ],
+    "description": "Ignore files containing specific metadata.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.limit_library_search_by_file_extension/master/icon.png",
+    "id": "ignore_files_based_on_metadata",
+    "name": "Ignore Files Based on Metadata",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 1
+    },
+    "tags": "library file test",
+    "version": "0.0.4"
+}

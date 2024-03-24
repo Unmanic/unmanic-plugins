@@ -1,0 +1,19 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1,
+        2
+    ],
+    "description": "Notify Plex on completion of a task.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.notify_plex/master/icon.png",
+    "id": "notify_plex",
+    "name": "Notify Plex",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_postprocessor_task_results": 0
+    },
+    "tags": "post-processor",
+    "version": "0.0.5"
+}

@@ -1,0 +1,968 @@
+{
+    "repo": {
+        "id": "repository.official",
+        "name": "Official Repo",
+        "icon": "",
+        "repo_data_directory": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/repo/",
+        "repo_data_url": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/repo/repo.json"
+    },
+    "plugins": [
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Removes any subtitle streams from video files.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.remove_all_subtitles/master/icon.png",
+            "id": "remove_all_subtitles",
+            "name": "Remove all subtitle streams",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 50,
+                "on_worker_process": 1
+            },
+            "tags": "subtitle,ffmpeg,library file test",
+            "version": "0.0.4"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1
+            ],
+            "description": "Convert DTS streams into Dolby Digital",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.dts_to_dd/master/icon.png",
+            "id": "dts_to_dd",
+            "name": "Convert DTS to Dolby Digital",
+            "priorities": {
+                "on_worker_process": 0
+            },
+            "tags": "audio,ffmpeg,library file test",
+            "version": "0.0.2"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Transcode the video streams of a video file",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.video_transcoder/master/icon.png",
+            "id": "video_transcoder",
+            "name": "Transcode Video Files",
+            "priorities": {
+                "on_library_management_file_test": 10,
+                "on_worker_process": 1
+            },
+            "tags": "video,ffmpeg",
+            "version": "0.1.4"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "This plugin will reset the current working file to the original source if it is larger than the original source.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.reject_files_larger_than_original/master/icon.png",
+            "id": "reject_files_larger_than_original",
+            "name": "Reject File if Larger than Original",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 2,
+                "on_worker_process": 2,
+                "on_postprocessor_file_movement": 5
+            },
+            "tags": "library file test",
+            "version": "0.0.4"
+        },
+        {
+            "author": "yajrendrag",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Instructs Jellyfin to do a library scan",
+            "icon": "https://raw.githubusercontent.com/yajrendrag/unmanic-plugins/master/source/notify_jellyfin/icon.png",
+            "id": "notify_jellyfin",
+            "name": "Notify Jellyfin",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_postprocessor_task_results": 0
+            },
+            "tags": "post-processor",
+            "version": "0.0.2"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Normalise the audio of AAC audio streams. This plugin will only process files with AAC streams.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.normalise_aac/master/icon.png",
+            "id": "normalise_aac",
+            "name": "Normalise AAC Audio Streams",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "audio,ffmpeg,library file test",
+            "version": "0.0.7"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ensure all video streams are encoded with the H265/HEVC codec using the libx265 encoder.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_hevc_libx265/master/icon.png",
+            "id": "encoder_video_hevc_libx265",
+            "name": "Video Encoder H265/HEVC - libx265 (CPU)",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "video,encoder,ffmpeg,library file test",
+            "version": "0.0.9"
+        },
+        {
+            "author": "Cpt.Chaz,Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Notify Radarr on movie update to rescan modified file.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.notify_radarr/master/icon.png",
+            "id": "notify_radarr",
+            "name": "Notify Radarr",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_postprocessor_task_results": 0
+            },
+            "tags": "radarr",
+            "version": "0.0.4"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Specify a language tag for Unmanic to try and put as 1st subtitle track.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.reorder_subtitle_streams_by_language/master/icon.png",
+            "id": "reorder_subtitle_streams_by_language",
+            "name": "Re-order subtitle streams by language",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 2
+            },
+            "tags": "subtitle,ffmpeg,library file test",
+            "version": "1.0.6"
+        },
+        {
+            "author": "yajrendrag",
+            "compatibility": [
+                2
+            ],
+            "description": "Ignore files containing specific metadata.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.limit_library_search_by_file_extension/master/icon.png",
+            "id": "ignore_files_based_on_metadata",
+            "name": "Ignore Files Based on Metadata",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 1
+            },
+            "tags": "library file test",
+            "version": "0.0.4"
+        },
+        {
+            "author": "Josh.5, Bambanah",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Extract text based subtitle streams to *.srt files.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.extract_srt_subtitles_to_files/master/icon.png",
+            "id": "extract_srt_subtitles_to_files",
+            "name": "Extract text subtitle streams to SRT files",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_worker_process": 2
+            },
+            "tags": "subtitle,ffmpeg",
+            "version": "0.0.10"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Execute an external script from an Unmanic worker process.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.processor_script/master/icon.png",
+            "id": "processor_script",
+            "name": "External Worker Processor Script",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_worker_process": 0
+            },
+            "tags": "script,command",
+            "version": "0.0.1"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ensure all video streams are encoded with the H264 codec using the h264_nvenc encoder.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_h264_nvenc/master/icon.png",
+            "id": "encoder_video_h264_nvenc",
+            "name": "Video Encoder H264 - h264_nvenc (NVIDIA GPU)",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "video,encoder,ffmpeg,nvidia,library file test",
+            "version": "0.0.12"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Automatically rotate JPEG images based on their Exif header",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.auto_rotate_images/master/icon.png",
+            "id": "auto_rotate_images",
+            "name": "Auto Rotate Images",
+            "priorities": {
+                "on_library_management_file_test": 4,
+                "on_worker_process": 0
+            },
+            "tags": "image,library file test",
+            "version": "0.0.2"
+        },
+        {
+            "id": "strip_file_metadata",
+            "name": "Strip all stream metadata from file",
+            "author": "Josh.5",
+            "version": "0.0.3",
+            "tags": "video,audio,subtitle,ffmpeg,worker",
+            "description": "Removes [b]all[/b] metadata (if it exists).\n\n[color=ff0000]WARNING![/color]\nThis includes things like titles and language of each stream.\nDon't use this if you intend to use other plugins that rely on this metadata such as plugins that re-order streams based on language.\nYou have been warned!",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic/master/icon.png"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Only look for files ending in a specified extension.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.limit_library_search_by_file_extension/master/icon.png",
+            "id": "limit_library_search_by_file_extension",
+            "name": "Limit library search by file extension",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 1
+            },
+            "tags": "library file test",
+            "version": "0.0.4"
+        },
+        {
+            "author": "j7126",
+            "compatibility": [
+                2
+            ],
+            "description": "Removes any video streams that use configured codecs.",
+            "icon": "https://raw.githubusercontent.com/j7126/unmanic-remove_streams_by_codec/master/icon.png",
+            "id": "remove_streams_by_codec",
+            "name": "Remove streams based on codec",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 50,
+                "on_worker_process": 1
+            },
+            "tags": "ffmpeg,library file test",
+            "version": "0.0.2"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Convert any ASS subtitle streams in videos to subrip (SRT).",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.convert_subtitle_streams_ass_to_srt/master/icon.png",
+            "id": "convert_subtitle_streams_ass_to_srt",
+            "name": "Convert any ASS subtitle streams in videos to SRT",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_worker_process": 0
+            },
+            "tags": "subtitle,ffmpeg,library file test",
+            "version": "0.0.5"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Ensure all audio streams are encoded with the AC3 codec using the native FFmpeg ac3 encoder.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.encoder_audio_ac3/master/icon.png",
+            "id": "encoder_audio_ac3",
+            "name": "Audio Encoder AC3",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "audio,encoder,ffmpeg,library file test",
+            "version": "0.0.7"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ensure all video streams are encoded with the H265/HEVC codec using the hevc_vaapi encoder.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_hevc_vaapi/master/icon.png",
+            "id": "encoder_video_hevc_vaapi",
+            "name": "Video Encoder H265/HEVC - hevc_vaapi (INTEL/AMD)",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "video,encoder,ffmpeg,intel,amd,library file test",
+            "version": "0.0.7"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Remux a video file to the configured container",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_remuxer/master/icon.png",
+            "id": "video_remuxer",
+            "name": "Remux Video Files",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_worker_process": 3
+            },
+            "tags": "video,ffmpeg",
+            "version": "0.0.13"
+        },
+        {
+            "author": "Cpt.Chaz,Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Notify Sonarr on series update to rescan modified file.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.notify_sonarr/master/icon.png",
+            "id": "notify_sonarr",
+            "name": "Notify Sonarr",
+            "priorities": {
+                "on_postprocessor_task_results": 0
+            },
+            "tags": "sonarr",
+            "version": "0.0.5"
+        },
+        {
+            "author": "R3dC4p",
+            "description": "A plugin to move completed encodes to a different folder watched by Sonarr/Radarr etc.",
+            "icon": "https://raw.githubusercontent.com/unmanic/unmanic-plugins/official/source/mover/mover.png",
+            "id": "mover",
+            "name": "Mover",
+            "tags": "postprocessing, mover",
+            "version": "0.0.2"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Ignore files if they exist in the completed tasks list (with status success OR failed)",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_completed_tasks/master/icon.png",
+            "id": "ignore_completed_tasks",
+            "name": "Ignore completed tasks",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 2
+            },
+            "tags": "library file test",
+            "version": "0.0.1"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Use regex to specify paths for Unmanic to ignore within your library.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.path_ignore/master/icon.png",
+            "id": "path_ignore",
+            "name": "Path Ignore",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 1
+            },
+            "tags": "library file test",
+            "version": "0.0.5"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Generate EDL files with Comskip",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.comskip/master/icon.png",
+            "id": "comskip",
+            "name": "Skip commercials in TV show - Comskip",
+            "priorities": {
+                "on_library_management_file_test": 2,
+                "on_worker_process": 0,
+                "on_postprocessor_task_results": 1
+            },
+            "tags": "video,pvr,library file test",
+            "version": "0.0.8"
+        },
+        {
+            "author": "Josh.5, EspadaV8",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Aggregate changes in file size metrics for processed files and add a data panel for displaying the results.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.file_size_metrics/master/icon.png",
+            "id": "file_size_metrics",
+            "name": "File Size Metrics Data Panel",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_worker_process": 1,
+                "on_postprocessor_task_results": 0
+            },
+            "tags": "data panel",
+            "version": "0.1.0"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Removes all image streams (if any exist) from video streams.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.strip_image_streams/master/icon.png",
+            "id": "strip_image_streams",
+            "name": "Strip all image streams from file",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 1
+            },
+            "tags": "video,ffmpeg,library file test",
+            "version": "0.0.7"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Ignore files over the configured video resolution.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_video_file_over_resolution/master/icon.png",
+            "id": "ignore_video_file_over_resolution",
+            "name": "Ignore video files over resolution limit",
+            "priorities": {
+                "on_library_management_file_test": 0
+            },
+            "tags": "library file test",
+            "version": "0.0.2"
+        },
+        {
+            "author": "k29t59dh",
+            "compatibility": [
+                2
+            ],
+            "description": "Convert hev1 HEVC to Apple-compatible hvc1 HEVC",
+            "icon": "https://raw.githubusercontent.com/k29t59dh/unmanic-plugins/d9d75c70b2b9fec167ab51a18340dcbf3168a46b/source/apple_hevc/icon.png",
+            "id": "apple_hevc",
+            "name": "Apple HEVC",
+            "priorities": {
+                "on_worker_process": 0
+            },
+            "tags": "apple, mac, hvc1, hev1, hevc, 265",
+            "version": "0.0.1"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Notify Plex on completion of a task.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.notify_plex/master/icon.png",
+            "id": "notify_plex",
+            "name": "Notify Plex",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_postprocessor_task_results": 0
+            },
+            "tags": "post-processor",
+            "version": "0.0.5"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Execute an external script on completion of a task.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.postprocessor_script/master/icon.png",
+            "id": "postprocessor_script",
+            "name": "External Post-processor Script",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_postprocessor_task_results": 0
+            },
+            "tags": "script,command,post-processor",
+            "version": "0.0.7"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ensure all video streams are encoded with the H265/HEVC codec using the hevc_nvenc encoder.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_hevc_nvenc/master/icon.png",
+            "id": "encoder_video_hevc_nvenc",
+            "name": "Video Encoder H265/HEVC - hevc_nvenc (NVIDIA GPU)",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "video,encoder,ffmpeg,nvidia,library file test",
+            "version": "0.0.11"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Removes any image subtitle streams from video files.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.remove_image_subtitles/master/icon.png",
+            "id": "remove_image_subtitles",
+            "name": "Remove image subtitle streams",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 50,
+                "on_worker_process": 1
+            },
+            "tags": "subtitle,ffmpeg,library file test",
+            "version": "0.0.4"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Only look for files containing specified value in the FFprobe data.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.limit_library_search_by_ffprobe_data/master/icon.png",
+            "id": "limit_library_search_by_ffprobe_data",
+            "name": "Limit Library Search by FFprobe Data",
+            "priorities": {
+                "on_library_management_file_test": 0
+            },
+            "tags": "audio,video,ffmpeg",
+            "version": "0.0.4"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ignore files recently modified on disk.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_files_recently_modified/master/icon.png",
+            "id": "ignore_files_recently_modified",
+            "name": "Ignore files recently modified",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 2
+            },
+            "tags": "library file test",
+            "version": "0.0.2"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Automatically converts media files downloaded by various programs to a standardized format, and tags them with the appropriate metadata from TMDB if the container supports tagging.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.sma/master/icon.png",
+            "id": "sma",
+            "name": "SMA Conversion/Tagging Automation Script",
+            "platform": [
+                "linux"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 2,
+                "on_worker_process": 0,
+                "on_postprocessor_task_results": 1
+            },
+            "tags": "video,ffmpeg,library file test",
+            "version": "0.0.4"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Configure a few tweaks to Unmanic's default behaviour.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.modify_default_unmanic_file_movements/master/icon.png",
+            "id": "modify_default_unmanic_file_movements",
+            "name": "Modify Unmanic's Default File Movements",
+            "priorities": {
+                "on_worker_process": 9999,
+                "on_postprocessor_file_movement": 9999
+            },
+            "tags": "post-processor,tweaks",
+            "version": "0.0.1"
+        },
+        {
+            "author": "yajrendrag",
+            "compatibility": [
+                2
+            ],
+            "description": "Creates an extra stereo libfdk stereo audio stream from existing audio stream",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.encoder_audio_aac/master/icon.png",
+            "id": "add_extra_stereo_audio",
+            "name": "Add Extra Stereo Audio",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "audio,encoder,ffmpeg,library file test",
+            "version": "0.0.13"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Ignore files under the configured video resolution.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_video_file_under_resolution/master/icon.png",
+            "id": "ignore_video_file_under_resolution",
+            "name": "Ignore video files under resolution limit",
+            "priorities": {
+                "on_library_management_file_test": 0
+            },
+            "tags": "library file test",
+            "version": "0.0.2"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Specify a language tag for Unmanic to try and put as 1st audio track.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.reorder_audio_streams_by_language/master/icon.png",
+            "id": "reorder_audio_streams_by_language",
+            "name": "Re-order audio streams by language",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 2
+            },
+            "tags": "audio,ffmpeg,library file test",
+            "version": "1.1.10"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ignore files under the configured size.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/source/ignore_under_size/icon.png",
+            "id": "ignore_under_size",
+            "name": "Ignore files under size",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 2
+            },
+            "tags": "library file test",
+            "version": "0.0.5"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ignore files over the configured size.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.ignore_over_size/master/icon.png",
+            "id": "ignore_over_size",
+            "name": "Ignore files over size",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 0
+            },
+            "tags": "library file test",
+            "version": "0.0.2"
+        },
+        {
+            "author": "hstep20",
+            "compatibility": [
+                2
+            ],
+            "description": "Ignores any files with a Hardlink for transcoding. Useful for situations where you need source files in tact",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.ignore_hardlinked_files/master/icon.png",
+            "id": "ignore_hardlinked_files",
+            "name": "Ignore Hardlinked Files",
+            "priorities": {
+                "on_library_management_file_test": 0
+            },
+            "tags": "",
+            "version": "0.0.1"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ensure all video streams are encoded with the H264 codec using the libx264 encoder.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_h264_libx264/master/icon.png",
+            "id": "encoder_video_h264_libx264",
+            "name": "Video Encoder H264 - libx264 (CPU)",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "video,encoder,ffmpeg,library file test",
+            "version": "0.0.10"
+        },
+        {
+            "author": "Josh.5, SenorSmartyPants",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Specify a list of audio/subtitle languages to remove from video files.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.remove_stream_by_language/master/icon.png",
+            "id": "remove_stream_by_language",
+            "name": "Remove audio/subtitle streams by language",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 1
+            },
+            "tags": "audio,ffmpeg,library file test",
+            "version": "0.0.6"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Trim X seconds from either the start or end of an audio or video file.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_trim/master/icon.png",
+            "id": "video_trim",
+            "name": "Video Trim",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 1,
+                "on_postprocessor_task_results": 99
+            },
+            "tags": "video,audio,ffmpeg",
+            "version": "0.0.8"
+        },
+        {
+            "author": "R3dC4p,Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Move completed encodes to a different directory.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.mover2/master/icon.png",
+            "id": "mover2",
+            "name": "Mover v2",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_postprocessor_file_movement": 0,
+                "on_postprocessor_task_results": 99
+            },
+            "tags": "post-processor, mover",
+            "version": "0.0.8"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Ensure all audio streams are encoded with the AAC codec using the native FFmpeg aac encoder.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.encoder_audio_aac/master/icon.png",
+            "id": "encoder_audio_aac",
+            "name": "Audio Encoder AAC",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "audio,encoder,ffmpeg,library file test",
+            "version": "0.0.6"
+        },
+        {
+            "author": "k29t59dh",
+            "compatibility": [
+                2
+            ],
+            "description": "Downmix all audio streams to Stereo AAC",
+            "icon": "https://raw.githubusercontent.com/k29t59dh/unmanic-plugins/master/source/aac_stereo_downmix/icon.png",
+            "icon_static": "/unmanic/panel/aac_stereo_downmix/static/icon.png",
+            "id": "aac_stereo_downmix",
+            "name": "AAC Stereo Downmix",
+            "priorities": {
+                "on_worker_process": 0
+            },
+            "tags": "audio, encoder, ffmpeg, stereo, downmix, aac",
+            "version": "0.0.1"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                2
+            ],
+            "description": "Transcode the audio streams of a audio file",
+            "icon": "https://raw.githubusercontent.com/Unmanic/plugin.audio_transcoder/master/icon.png",
+            "id": "audio_transcoder",
+            "name": "Transcode Audio Files",
+            "priorities": {
+                "on_library_management_file_test": 10,
+                "on_worker_process": 1
+            },
+            "tags": "audio,ffmpeg",
+            "version": "0.0.1"
+        },
+        {
+            "author": "lbenedetto",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ignore video files under the configured size per hour per resolution.",
+            "icon": "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/official/source/ignore_under_size/icon.png",
+            "id": "ignore_video_file_under_size",
+            "name": "Ignore video files under size",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 2
+            },
+            "tags": "library file test",
+            "version": "0.0.3"
+        },
+        {
+            "author": "Josh.5",
+            "compatibility": [
+                1,
+                2
+            ],
+            "description": "Ensure all video streams are encoded with the H265/HEVC codec using the hevc_qsv encoder.",
+            "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_hevc_qsv/master/icon.png",
+            "id": "encoder_video_hevc_qsv",
+            "name": "Video Encoder H265/HEVC - hevc_qsv (Intel)",
+            "platform": [
+                "all"
+            ],
+            "priorities": {
+                "on_library_management_file_test": 99,
+                "on_worker_process": 0
+            },
+            "tags": "video,encoder,ffmpeg,intel,library file test",
+            "version": "0.0.5"
+        }
+    ]
+}

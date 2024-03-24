@@ -1,0 +1,20 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1,
+        2
+    ],
+    "description": "Ensure all video streams are encoded with the H264 codec using the libx264 encoder.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_h264_libx264/master/icon.png",
+    "id": "encoder_video_h264_libx264",
+    "name": "Video Encoder H264 - libx264 (CPU)",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 99,
+        "on_worker_process": 0
+    },
+    "tags": "video,encoder,ffmpeg,library file test",
+    "version": "0.0.10"
+}

@@ -1,0 +1,20 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1,
+        2
+    ],
+    "description": "Ensure all video streams are encoded with the H264 codec using the h264_nvenc encoder.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_h264_nvenc/master/icon.png",
+    "id": "encoder_video_h264_nvenc",
+    "name": "Video Encoder H264 - h264_nvenc (NVIDIA GPU)",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 99,
+        "on_worker_process": 0
+    },
+    "tags": "video,encoder,ffmpeg,nvidia,library file test",
+    "version": "0.0.12"
+}

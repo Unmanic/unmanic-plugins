@@ -1,0 +1,18 @@
+{
+    "author": "Cpt.Chaz,Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Notify Radarr on movie update to rescan modified file.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.notify_radarr/master/icon.png",
+    "id": "notify_radarr",
+    "name": "Notify Radarr",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_postprocessor_task_results": 0
+    },
+    "tags": "radarr",
+    "version": "0.0.4"
+}

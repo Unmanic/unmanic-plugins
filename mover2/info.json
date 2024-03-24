@@ -1,0 +1,20 @@
+{
+    "author": "R3dC4p,Josh.5",
+    "compatibility": [
+        1,
+        2
+    ],
+    "description": "Move completed encodes to a different directory.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.mover2/master/icon.png",
+    "id": "mover2",
+    "name": "Mover v2",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_postprocessor_file_movement": 0,
+        "on_postprocessor_task_results": 99
+    },
+    "tags": "post-processor, mover",
+    "version": "0.0.8"
+}

@@ -1,0 +1,21 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1,
+        2
+    ],
+    "description": "Trim X seconds from either the start or end of an audio or video file.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.video_trim/master/icon.png",
+    "id": "video_trim",
+    "name": "Video Trim",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 99,
+        "on_worker_process": 1,
+        "on_postprocessor_task_results": 99
+    },
+    "tags": "video,audio,ffmpeg",
+    "version": "0.0.8"
+}

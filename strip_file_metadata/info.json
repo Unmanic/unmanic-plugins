@@ -1,0 +1,9 @@
+{
+    "id": "strip_file_metadata",
+    "name": "Strip all stream metadata from file",
+    "author": "Josh.5",
+    "version": "0.0.3",
+    "tags": "video,audio,subtitle,ffmpeg,worker",
+    "description": "Removes [b]all[/b] metadata (if it exists).\n\n[color=ff0000]WARNING![/color]\nThis includes things like titles and language of each stream.\nDon't use this if you intend to use other plugins that rely on this metadata such as plugins that re-order streams based on language.\nYou have been warned!",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic/master/icon.png"
+}

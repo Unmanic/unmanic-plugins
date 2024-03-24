@@ -1,0 +1,20 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        1,
+        2
+    ],
+    "description": "Ensure all video streams are encoded with the H265/HEVC codec using the hevc_vaapi encoder.",
+    "icon": "https://raw.githubusercontent.com/Josh5/unmanic.plugin.encoder_video_hevc_vaapi/master/icon.png",
+    "id": "encoder_video_hevc_vaapi",
+    "name": "Video Encoder H265/HEVC - hevc_vaapi (INTEL/AMD)",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 99,
+        "on_worker_process": 0
+    },
+    "tags": "video,encoder,ffmpeg,intel,amd,library file test",
+    "version": "0.0.7"
+}
