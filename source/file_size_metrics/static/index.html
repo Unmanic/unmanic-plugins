@@ -51,6 +51,12 @@
   </head>
   <body id="top-of-page">
     <!-- ######## BEGIN PAGE CONTENT -->
+    <input
+      id="selected_task_id"
+      type="hidden"
+      name="selected_task_id"
+      value=""
+    />
 
     <div class="top-content">
       <div class="charts">
@@ -91,27 +97,36 @@
         <div class="card">
           <div class="card-header active">Individual File Size Change</div>
           <div class="card-content">
-            <div class="content" style="display: block">
-              <input
-                id="selected_task_id"
-                type="hidden"
-                name="selected_task_id"
-                value=""
-              />
-
-              <div id="task_details">
-                <div id="file_size_chart">
-                  There was an issue showing this chart
-                </div>
-              </div>
-
-              <div id="selected_task_name" class="car-header">
-                (Select a task from the table)
+            <div class="task_details">
+              <div id="file_size_chart">
+                There was an issue showing this chart
               </div>
             </div>
+
+            <div class="selected_task_name" class="car-header"></div>
           </div>
         </div>
       </div>
+
+      <dialog id="individual_file_size_chart_dialog" data-modal>
+        <div class="card">
+          <div class="card-header active">Individual File Size Change</div>
+          <div class="card-content">
+            <div class="task_details">
+              <div id="file_size_chart_dialog">
+                There was an issue showing this chart
+              </div>
+            </div>
+
+            <div class="selected_task_name" class="car-header"></div>
+          </div>
+          <div class="card-footer">
+            <form method="dialog">
+              <button autofocus class="q-btn">Close</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
     </div>
 
     <a href="#top-of-page" class="top-of-page-link" data-visible="true">

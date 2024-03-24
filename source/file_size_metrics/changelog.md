@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.1.1</span>**
+- When viewing on mobile, show individual file metrics in a dialog popup
+
 **<span style="color:#56adda">0.1.0</span>**
 - New layout to try and make better use of space
 
