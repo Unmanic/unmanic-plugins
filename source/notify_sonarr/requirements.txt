@@ -1,2 +1,2 @@
-pyarr==3.0.1
+pyarr==5.2.0
 humanfriendly>=9.1
