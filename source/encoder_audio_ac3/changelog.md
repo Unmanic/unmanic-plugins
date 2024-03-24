@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- fix stray character in custom stream mapping function
+
 **<span style="color:#56adda">0.0.6</span>**
 - add an '-ac` parameter to encoder to avoid unsupported channel layout error when normalizing 6 channel streams
 
