@@ -54,7 +54,10 @@ class PluginStreamMapper(StreamMapper):
 
     def test_stream_needs_processing(self, stream_info: dict):
         """Check if this stream matches configured codecs."""
-        return stream_info.get('codec_name').lower() in self.codecs
+        codec_name = stream_info.get('codec_name')
+        if (codec_name is None):
+            return False
+        return codec_name.lower() in self.codecs
 
     def custom_stream_mapping(self, stream_info: dict, stream_id: int):
         """Do not map the streams matched above"""
