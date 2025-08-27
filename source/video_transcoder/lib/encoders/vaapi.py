@@ -186,7 +186,7 @@ class VaapiEncoder:
         if self.settings.get_setting('vaapi_encoder_ratecontrol_method') in ['CQP', 'ICQ']:
             if self.settings.get_setting('vaapi_encoder_ratecontrol_method') in ['CQP']:
                 stream_encoding += [
-                    '-q', str(self.settings.get_setting('vaapi_constant_quantizer_scale')),
+                    '-global_quality', str(self.settings.get_setting('vaapi_constant_quantizer_scale')),
                 ]
             elif self.settings.get_setting('vaapi_encoder_ratecontrol_method') in ['ICQ']:
                 stream_encoding += [
