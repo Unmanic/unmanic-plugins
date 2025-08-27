@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.1.11</span>**
+- Fix CQP quality selector for VAAPI encoding
+
 **<span style="color:#56adda">0.1.10</span>**
 - Adds better management of 10Bit video formats for NVIDIA, Intel, and AMD hardware. 
 - Adds an improved fallback system to prevent failed decodes for QSV.
