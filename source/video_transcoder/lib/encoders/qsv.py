@@ -31,11 +31,18 @@ Notes:
         https://gist.github.com/jackleaks/776d2de2688d238c95ed7eafb3d5bae8
 """
 
+from video_transcoder.lib.encoders.base import Encoder
 
-class QsvEncoder:
 
-    def __init__(self, settings):
-        self.settings = settings
+class QsvEncoder(Encoder):
+    def __init__(self, settings=None, probe=None):
+        super().__init__(settings=settings, probe=probe)
+
+    def _map_pix_fmt(self, is_h264: bool, is_10bit: bool) -> str:
+        if is_10bit and not is_h264:
+            return "p010le"
+        else:
+            return "nv12"
 
     def provides(self):
         return {
@@ -57,7 +64,6 @@ class QsvEncoder:
         return {
             "qsv_decoding_method":            "cpu",
             "qsv_preset":                     "slow",
-            "qsv_tune":                       "film",
             "qsv_encoder_ratecontrol_method": "LA_ICQ",
             "qsv_constant_quantizer_scale":   "25",
             "qsv_constant_quality_scale":     "23",
@@ -68,27 +74,24 @@ class QsvEncoder:
         """
         Generate a list of args for using a QSV decoder
 
-        :param settings:
         :return:
         """
         # Encode only (no decoding)
         #   REF: https://trac.ffmpeg.org/wiki/Hardware/QuickSync#Transcode
         generic_kwargs = {
-            "-init_hw_device":   "qsv=hw",
-            "-filter_hw_device": "hw",
+            "-init_hw_device":   "qsv=qsv0",
+            "-filter_hw_device": "qsv0",
         }
         advanced_kwargs = {}
         # Check if we are using a HW accelerated decoder> Modify args as required
         if self.settings.get_setting('qsv_decoding_method') in ['qsv']:
-            generic_kwargs = {
+            generic_kwargs.update({
                 "-hwaccel":               "qsv",
                 "-hwaccel_output_format": "qsv",
-                "-init_hw_device":        "qsv=hw",
-                "-filter_hw_device":      "hw",
-            }
+            })
         return generic_kwargs, advanced_kwargs
 
-    def generate_filtergraphs(self, settings, has_sw_filters, hw_smart_filters, target_fmt="nv12"):
+    def generate_filtergraphs(self, current_filter_args, smart_filters, encoder_name):
         """
         Generate the required filter for enabling QSV HW acceleration
 
@@ -96,104 +99,164 @@ class QsvEncoder:
         """
         generic_kwargs = {}
         advanced_kwargs = {}
-        hw_filter_args = []
-        sw_filter_prefix_args = []
-        sw_filter_suffix_args = []
+        start_filter_args = []
+        end_filter_args = []
+
+        # Loop over any HW smart filters to be applied and add them as required.
+        hw_smart_filters = []
+        remaining_smart_filters = []
+        for sf in smart_filters:
+            if sf.get("scale"):
+                w = sf["scale"]["values"]["width"]
+                hw_smart_filters.append(f"scale_qsv=w={w}:h=-1")
+            else:
+                remaining_smart_filters.append(sf)
 
         # Check if we are decoding with QSV
-        hw_decode = settings.get_setting('qsv_decoding_method') in ['qsv']
+        hw_decode = self.settings.get_setting('qsv_decoding_method') in ['qsv']
         # Check software format to use
-        sw_fmt = "p010le" if target_fmt == "p010" else "nv12"
+        target_fmt = self._target_pix_fmt_for_encoder(encoder_name)
+
+        # Handle HDR
+        enc_supports_hdr = (encoder_name in ["hevc_qsv"])
+        target_color_config = self._target_color_config_for_encoder(encoder_name)
 
         # If we have SW filters:
-        if has_sw_filters:
+        if remaining_smart_filters or current_filter_args:
             # If we have SW filters and HW decode is enabled, make decoder produce SW frames
             if hw_decode:
-                generic_kwargs['-hwaccel_output_format'] = sw_fmt
+                # Force decoder to deliver SW frames
+                generic_kwargs['-hwaccel_output_format'] = target_fmt
+
             # Add filter to upload software frames to QSV for QSV filters
             # Note, format conversion (if any - eg yuv422p10le -> p010le) happens after the software filters.
             # If a user applies a custom software filter that does not support the pix_fmt, then will need to prefix it with 'format=p010le'
-            sw_filter_suffix_args.append(
-                f'format={sw_fmt}|qsv,hwupload=extra_hw_frames=64,format=qsv,vpp_qsv=format={target_fmt}')
+            # Set format and setparams at start of filter
+            start_chain = [f"format={target_fmt}"]
+            if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                start_chain.append(target_color_config['setparams_filter'])
+            start_filter_args.append(",".join(start_chain))
+            # Upload to hw frames at the end of the filter
+            end_chain = start_chain + ["hwupload=extra_hw_frames=64", "format=qsv", f"vpp_qsv=format={target_fmt}"]
+            end_filter_args.append(",".join(end_chain))
         # If we have no software filters:
         else:
-            # Add hwupload filter that can handle when the frame was decoded in software or hardware
-            hw_filter_args.append(f'format={sw_fmt}|qsv,hwupload=extra_hw_frames=64,format=qsv,vpp_qsv=format={target_fmt}')
+            # Check if we are software decoding
+            if not hw_decode:
+                # Set format and setparams at start of filter
+                start_chain = [f"format={target_fmt}"]
+                if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                    start_chain.append(target_color_config['setparams_filter'])
+                start_filter_args.append(",".join(start_chain))
+                # Upload to hw frames at the end of the filter
+                end_chain = start_chain + ["hwupload=extra_hw_frames=64", "format=qsv", f"vpp_qsv=format={target_fmt}"]
+                end_filter_args.append(",".join(end_chain))
+            else:
+                # Add hwupload filter that can handle when the frame was decoded in software or hardware
+                chain = [f"format={target_fmt}|qsv",
+                         "hwupload=extra_hw_frames=64",
+                         "format=qsv", f"vpp_qsv=format={target_fmt}"]
+                end_filter_args.append(",".join(chain))
 
-        # Loop over any HW smart filters to be applied and add them as required.
-        for smart_filter in hw_smart_filters:
-            if smart_filter.get('scale'):
-                scale_values = smart_filter.get('scale')
-                hw_filter_args.append('scale_qsv=w={}:h=-1'.format(scale_values["width"]))
+        # Add the smart filters to the end
+        end_filter_args += hw_smart_filters
 
         # Return built args
         return {
-            "generic_kwargs":        generic_kwargs,
-            "advanced_kwargs":       advanced_kwargs,
-            "hw_filter_args":        hw_filter_args,
-            "sw_filter_prefix_args": sw_filter_prefix_args,
-            "sw_filter_suffix_args": sw_filter_suffix_args,
+            "generic_kwargs":    generic_kwargs,
+            "advanced_kwargs":   advanced_kwargs,
+            "smart_filters":     remaining_smart_filters,
+            "start_filter_args": start_filter_args,
+            "end_filter_args":   end_filter_args,
         }
 
     def encoder_details(self, encoder):
         provides = self.provides()
         return provides.get(encoder, {})
 
-    def args(self, stream_id):
-        stream_encoding = []
+    def stream_args(self, stream_info, stream_id, encoder_name):
+        generic_kwargs = {}
+        advanced_kwargs = {}
+        encoder_args = []
+        stream_args = []
+
+        # Handle HDR
+        enc_supports_hdr = (encoder_name in ["hevc_qsv"])
+        target_color_config = self._target_color_config_for_encoder(encoder_name)
+        if enc_supports_hdr and target_color_config.get('apply_color_params'):
+            # Force Main10 profile
+            stream_args += [f'-profile:v:{stream_id}', 'main10']
 
         # Use defaults for basic mode
         if self.settings.get_setting('mode') in ['basic']:
+            # Read defaults
             defaults = self.options()
+
+            if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                # Add HDR color tags to the encoder output stream
+                for k, v in target_color_config.get('stream_color_params', {}).items():
+                    stream_args += [k, v]
+
             # Use default LA_ICQ mode
-            stream_encoding += [
-                '-preset', str(defaults.get('qsv_preset')),
-                '-global_quality', str(defaults.get('qsv_constant_quality_scale')), '-look_ahead', '1',
+            encoder_args += [
+                '-global_quality', str(defaults.get('qsv_constant_quality_scale')),
+                '-look_ahead_depth', '100', '-extbrc', '1',
             ]
-            return stream_encoding
+            if encoder_name in ["h264_qsv"]:
+                encoder_args += ['-look_ahead', '1']
+            stream_args += ['-preset', str(defaults.get('qsv_preset')), ]
+            return {
+                "generic_kwargs":  generic_kwargs,
+                "advanced_kwargs": advanced_kwargs,
+                "encoder_args":    encoder_args,
+                "stream_args":     stream_args,
+            }
 
         # Add the preset and tune
         if self.settings.get_setting('qsv_preset'):
-            stream_encoding += ['-preset', str(self.settings.get_setting('qsv_preset'))]
-        if self.settings.get_setting('qsv_tune') and self.settings.get_setting('qsv_tune') != 'auto':
-            stream_encoding += ['-tune', str(self.settings.get_setting('qsv_tune'))]
+            stream_args += ['-preset', str(self.settings.get_setting('qsv_preset'))]
 
         if self.settings.get_setting('qsv_encoder_ratecontrol_method'):
             if self.settings.get_setting('qsv_encoder_ratecontrol_method') in ['CQP', 'LA_ICQ', 'ICQ']:
                 # Configure QSV encoder with a quality-based mode
                 if self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'CQP':
                     # Set values for constant quantizer scale
-                    stream_encoding += [
-                        '-q', str(self.settings.get_setting('qsv_constant_quantizer_scale')),
-                    ]
+                    encoder_args += ['-q', str(self.settings.get_setting('qsv_constant_quantizer_scale'))]
                 elif self.settings.get_setting('qsv_encoder_ratecontrol_method') in ['LA_ICQ', 'ICQ']:
                     # Set the global quality
-                    stream_encoding += [
-                        '-global_quality', str(self.settings.get_setting('qsv_constant_quality_scale')),
-                    ]
+                    encoder_args += ['-global_quality', str(self.settings.get_setting('qsv_constant_quality_scale'))]
                     # Set values for constant quality scale
                     if self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'LA_ICQ':
                         # Add lookahead
-                        stream_encoding += [
-                            '-look_ahead', '1',
-                        ]
+                        if encoder_name in ["h264_qsv"]:
+                            encoder_args += ['-look_ahead', '1']
+                        encoder_args += ['-look_ahead_depth', '100', '-extbrc', '1']
             else:
                 # Configure the QSV encoder with a bitrate-based mode
                 # Set the max and average bitrate (used by all bitrate-based modes)
-                stream_encoding += [
-                    '-b:v:{}'.format(stream_id), '{}M'.format(self.settings.get_setting('qsv_average_bitrate')),
-                ]
+                encoder_args += [f"-b:v:{stream_id}", f"{self.settings.get_setting('qsv_average_bitrate')}M"]
                 if self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'LA':
                     # Add lookahead
-                    stream_encoding += [
-                        '-look_ahead', '1',
-                    ]
+                    if encoder_name in ["h264_qsv"]:
+                        encoder_args += ['-look_ahead', '1']
+                    encoder_args += ['-look_ahead_depth', '100', '-extbrc', '1']
                 elif self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'CBR':
                     # Add 'maxrate' with the same value to make CBR mode
-                    stream_encoding += [
-                        '-maxrate', '{}M'.format(self.settings.get_setting('qsv_average_bitrate')),
-                    ]
-        return stream_encoding
+                    encoder_args += ['-maxrate', f"{self.settings.get_setting('qsv_average_bitrate')}M"]
+
+        # Add stream color args
+        if enc_supports_hdr and target_color_config.get('apply_color_params'):
+            # Add HDR color tags to the encoder output stream
+            for k, v in target_color_config.get('stream_color_params', {}).items():
+                stream_args += [k, v]
+
+        # Return built args
+        return {
+            "generic_kwargs":  generic_kwargs,
+            "advanced_kwargs": advanced_kwargs,
+            "encoder_args":    encoder_args,
+            "stream_args":     stream_args,
+        }
 
     def __set_default_option(self, select_options, key, default_option=None):
         """
@@ -277,80 +340,50 @@ class QsvEncoder:
             values["display"] = "hidden"
         return values
 
-    def get_qsv_tune_form_settings(self):
-        values = {
-            "label":          "Tune for a particular type of source or situation",
-            "sub_setting":    True,
-            "input_type":     "select",
-            "select_options": [
-                {
-                    "value": "auto",
-                    "label": "Disabled – Do not apply any tune",
-                },
-                {
-                    "value": "film",
-                    "label": "Film – use for high quality movie content; lowers deblocking",
-                },
-                {
-                    "value": "animation",
-                    "label": "Animation – good for cartoons; uses higher deblocking and more reference frames",
-                },
-                {
-                    "value": "grain",
-                    "label": "Grain – preserves the grain structure in old, grainy film material",
-                },
-                {
-                    "value": "stillimage",
-                    "label": "Still image – good for slideshow-like content",
-                },
-                {
-                    "value": "fastdecode",
-                    "label": "Fast decode – allows faster decoding by disabling certain filters",
-                },
-                {
-                    "value": "zerolatency",
-                    "label": "Zero latency – good for fast encoding and low-latency streaming",
-                },
-            ],
-        }
-        self.__set_default_option(values['select_options'], 'qsv_tune')
-        if self.settings.get_setting('mode') not in ['standard']:
-            values["display"] = "hidden"
-        return values
-
     def get_qsv_encoder_ratecontrol_method_form_settings(self):
         values = {
             "label":          "Encoder ratecontrol method",
             "sub_setting":    True,
             "input_type":     "select",
-            "select_options": [
-                {
-                    "value": "CQP",
-                    "label": "CQP - Quality based mode using constant quantizer scale",
-                },
-                {
-                    "value": "ICQ",
-                    "label": "ICQ - Quality based mode using intelligent constant quality",
-                },
+            "select_options": []
+        }
+        values['select_options'] = [
+            {
+                "value": "CQP",
+                "label": "CQP - Quality based mode using constant quantizer scale",
+            },
+            {
+                "value": "ICQ",
+                "label": "ICQ - Quality based mode using intelligent constant quality",
+            }
+        ]
+        if self.settings.get_setting('video_encoder') in ['h264_qsv']:
+            values['select_options'] += [
                 {
                     "value": "LA_ICQ",
                     "label": "LA_ICQ - Quality based mode using intelligent constant quality with lookahead",
-                },
-                {
-                    "value": "VBR",
-                    "label": "VBR - Bitrate based mode using variable bitrate",
-                },
+                }
+            ]
+        values['select_options'] += [
+            {
+                "value": "VBR",
+                "label": "VBR - Bitrate based mode using variable bitrate",
+            },
+        ]
+        if self.settings.get_setting('video_encoder') in ['h264_qsv', 'hevc_qsv']:
+            values['select_options'] += [
                 {
                     "value": "LA",
                     "label": "LA - Bitrate based mode using VBR with lookahead",
-                },
-                {
-                    "value": "CBR",
-                    "label": "CBR - Bitrate based mode using constant bitrate",
-                },
+                }
             ]
-        }
-        self.__set_default_option(values['select_options'], 'qsv_encoder_ratecontrol_method', default_option='LA_ICQ')
+        values['select_options'] += [
+            {
+                "value": "CBR",
+                "label": "CBR - Bitrate based mode using constant bitrate",
+            }
+        ]
+        self.__set_default_option(values['select_options'], 'qsv_encoder_ratecontrol_method', default_option='LA')
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values

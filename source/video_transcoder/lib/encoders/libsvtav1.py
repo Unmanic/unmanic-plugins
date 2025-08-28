@@ -21,12 +21,12 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
+from video_transcoder.lib.encoders.base import Encoder
 
 
-class LibsvtAv1Encoder:
-
-    def __init__(self, settings):
-        self.settings = settings
+class LibsvtAv1Encoder(Encoder):
+    def __init__(self, settings=None, probe=None):
+        super().__init__(settings=settings, probe=probe)
 
     def provides(self):
         return {
@@ -48,7 +48,7 @@ class LibsvtAv1Encoder:
             "enable_qm":                  False,
             "qm_min":                     "8",
             "encoder_additional_params":  "no_additional_params",
-            "additional_params":           "",
+            "additional_params":          "",
         }
 
     def generate_default_args(self):
@@ -62,20 +62,44 @@ class LibsvtAv1Encoder:
         advanced_kwargs = {}
         return generic_kwargs, advanced_kwargs
 
-    def generate_filtergraphs(self):
+    def generate_filtergraphs(self, current_filter_args, smart_filters, encoder_name):
         """
         Generate the required filter for this encoder
-        No filters are required for libx encoders
 
         :return:
         """
-        return []
+        generic_kwargs = {}
+        advanced_kwargs = {}
+        start_filter_args = []
+        end_filter_args = []
+
+        # Check software format to use
+        target_fmt = self._target_pix_fmt_for_encoder(encoder_name)
+
+        # Handle HDR (only for HEVC)
+        target_color_config = self._target_color_config_for_encoder(encoder_name)
+
+        # If we have existing filters:
+        if smart_filters or current_filter_args:
+            start_filter_args.append(f'format={target_fmt}')
+            if target_color_config.get('apply_color_params'):
+                # Apply setparams filter if software filters exist (apply at the start of the filters list) to preserve HDR tags
+                end_filter_args.append(target_color_config['setparams_filter'])
+
+        # Return built args
+        return {
+            "generic_kwargs":    generic_kwargs,
+            "advanced_kwargs":   advanced_kwargs,
+            "smart_filters":     smart_filters,
+            "start_filter_args": start_filter_args,
+            "end_filter_args":   end_filter_args,
+        }
 
     def encoder_details(self, encoder):
         provides = self.provides()
         return provides.get(encoder, {})
 
-    def args(self, stream_id):
+    def stream_args(self, stream_id):
         stream_encoding = []
 
         # Use defaults for basic mode
@@ -90,29 +114,30 @@ class LibsvtAv1Encoder:
                 default_crf = 23
             stream_encoding += ['-crf', str(default_crf)]
             return stream_encoding
-        
+
         stav1_params = ["enable-stat-report=1"]
         stav1_params += ['tune=' + str(self.settings.get_setting('tune_stvav1'))]
-        
+
         if self.settings.get_setting('overlays'):
             # Enable overlays
             stav1_params += ['enable-overlays=1']
-            
+
         if self.settings.get_setting('variance_boost'):
             # Enable variance boost
             stav1_params += ['enable-variance-boost=1']
-            
+
         if self.settings.get_setting('enable_qm'):
             # Enable quantization matrix
             stav1_params += ['enable-qm=1']
             stav1_params += ['qm-min=' + str(self.settings.get_setting('qm_min'))]
 
-        if self.settings.get_setting('encoder_additional_params') in ['additional_params'] and len(self.settings.get_setting('encoder_svtav1_additional_params')):
+        if self.settings.get_setting('encoder_additional_params') in ['additional_params'] and len(
+            self.settings.get_setting('encoder_svtav1_additional_params')):
             # Add additional parameters for SVT-AV1
             stav1_params += self.settings.get_setting('encoder_svtav1_additional_params')
-        
+
         stream_encoding += ['-svtav1-params', ":".join(stav1_params)]
-        
+
         # Add the preset
         if self.settings.get_setting('preset'):
             stream_encoding += ['-preset', str(self.settings.get_setting('preset'))]
@@ -221,7 +246,7 @@ class LibsvtAv1Encoder:
         if self.settings.get_setting('video_encoder') in ['libsvtav1']:
             values["description"] = "Default value for libsvtav1 = 23"
         return values
-    
+
     def get_video_pix_fmt_form_settings(self):
         values = {
             "label":          "Pixel Format",
@@ -246,7 +271,7 @@ class LibsvtAv1Encoder:
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
-    
+
     def get_tune_stvav1_form_settings(self):
         values = {
             "label":          "SVT-AV1: Tune",
@@ -271,7 +296,7 @@ class LibsvtAv1Encoder:
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
-    
+
     def get_overlays_form_settings(self):
         values = {
             "label":          "SVT-AV1: Enable Overlays",
@@ -282,7 +307,8 @@ class LibsvtAv1Encoder:
                     "value": 0,
                     "label": "No (Default)",
                 },
-                {   "value": 1,
+                {
+                    "value": 1,
                     "label": "Yes"
                 },
             ]
@@ -310,7 +336,7 @@ class LibsvtAv1Encoder:
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
-    
+
     def get_enable_qm_form_settings(self):
         values = {
             "label":          "SVT-AV1: Enable Quantization Matrix (enable-qm)",
@@ -348,9 +374,9 @@ class LibsvtAv1Encoder:
             values["display"] = "hidden"
         if (not self.settings.get_setting('enable_qm')):
             values["display"] = "hidden"
-            
+
         return values
-    
+
     def get_encoder_additional_params_form_settings(self):
         values = {
             "label":          "SVT-AV1: Additional Parameters",
@@ -371,10 +397,10 @@ class LibsvtAv1Encoder:
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
-    
+
     def get_additional_params_form_settings(self):
         values = {
-            "label": "SVT-AV1: Additional Parameters field",
+            "label":       "SVT-AV1: Additional Parameters field",
             "description": "Additional SVT-AV1 parameters as a colon-separated string (e.g., enable-cdef=1:enable-restoration=1).",
             "sub_setting": True,
             "input_type":  "textarea",
@@ -383,5 +409,5 @@ class LibsvtAv1Encoder:
             values["display"] = "hidden"
         if self.settings.get_setting('encoder_additional_params') not in ['additional_params']:
             values["display"] = "hidden"
-        
+
         return values

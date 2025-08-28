@@ -28,6 +28,11 @@ import subprocess
 from collections import Counter
 from typing import List, Optional, Iterable
 
+from video_transcoder.lib.encoders.libx import LibxEncoder
+from video_transcoder.lib.encoders.libsvtav1 import LibsvtAv1Encoder
+from video_transcoder.lib.encoders.qsv import QsvEncoder
+from video_transcoder.lib.encoders.vaapi import VaapiEncoder
+from video_transcoder.lib.encoders.nvenc import NvencEncoder
 from video_transcoder.lib.ffmpeg import StreamMapper
 
 image_video_codecs = [
@@ -114,6 +119,22 @@ resolution_map = {
 }
 
 
+def available_encoders(settings=None, probe=None):
+    return_encoders = {}
+    encoder_libs = [
+        LibxEncoder,
+        LibsvtAv1Encoder,
+        QsvEncoder,
+        VaapiEncoder,
+        NvencEncoder,
+    ]
+    for encoder_class in encoder_libs:
+        encoder_lib = encoder_class(settings=settings, probe=probe)
+        for encoder in encoder_lib.provides():
+            return_encoders[encoder] = encoder_lib
+    return return_encoders
+
+
 def get_video_stream_data(streams):
     width = 0
     height = 0
@@ -127,7 +148,6 @@ def get_video_stream_data(streams):
             break
 
     return width, height, video_stream_index
-
 
 
 def format_command_multiline(mapper, max_width=120, indent="  "):
@@ -180,7 +200,29 @@ def format_command_multiline(mapper, max_width=120, indent="  "):
     return " \\\n".join(lines)
 
 
-def detect_plack_bars(abspath, probe_data):
+def join_filtergraph(filter_id, filter_args, stream_id):
+    """
+    Joins a filtergraph from a collection of args
+    """
+    filtergraph = ''
+    count = 1
+    for filter_string in filter_args:
+        # If we are appending to existing filters, separate by a semicolon to start a new chain
+        if filtergraph:
+            filtergraph += ';'
+        # Add the input for this filter
+        filtergraph += '[{}]'.format(filter_id)
+        # Add filtergraph
+        filtergraph += '{}'.format(filter_string)
+        # Update filter ID and add it to the end
+        filter_id = '0:vf:{}-{}'.format(stream_id, count)
+        filtergraph += '[{}]'.format(filter_id)
+        # Increment filter ID counter
+        count += 1
+    return filter_id, filtergraph
+
+
+def detect_black_bars(abspath, probe_data, settings):
     """
     Detect black bars via ffmpeg cropdetect using quorum logic across multiple samples.
 
@@ -372,17 +414,61 @@ def detect_plack_bars(abspath, probe_data):
 
         return f"{w_r}:{h_r}:{x_r}:{y_r}"
 
-    def _ffmpeg_sample(ss: int, t_seconds: Optional[int], r_to: Optional[int]) -> str:
+    def _ffmpeg_sample(ss: int, t_seconds: Optional[int], r_to: Optional[int], enable_hw_accel=False) -> str:
+        # NOTE: After adding HW accel, I actually found it to be slower.
+        #   I am leaving the code here with a switch enable_hw_accel incase I come back to test further later on.
         mapper = StreamMapper(logger, ['video', 'audio', 'subtitle', 'data', 'attachment'])
         mapper.set_input_file(abspath)
+
+        # Figure out which video stream we're filtering
+        _, _, video_stream_index = get_video_stream_data(probe_data.get('streams'))
+        # Fallback to 0 if probe didn't return a valid index
+        stream_id = str(video_stream_index if video_stream_index is not None else 0)
+
+        # Configure the cropdetect filter
+        filter_args = [f"cropdetect=mode=black:round={r_to}:reset=0"]
+
+        # Build hardware acceleration args based on encoder
+        # Note: these are not applied to advanced mode - advanced mode was returned above
+        encoder_name = settings.get_setting('video_encoder')
+        encoder_lib = available_encoders(settings=settings).get(encoder_name)
+        if enable_hw_accel and encoder_lib:
+            encoder_lib.set_probe(probe_info=probe_data)
+            generic_kwargs, advanced_kwargs = encoder_lib.generate_default_args()
+            mapper.set_ffmpeg_generic_options(**generic_kwargs)
+            mapper.set_ffmpeg_advanced_options(**advanced_kwargs)
+
+            filtergraph_config = encoder_lib.generate_filtergraphs(
+                filter_args,
+                [],
+                encoder_name
+            )
+
+            generic_kwargs = filtergraph_config.get('generic_kwargs', {})
+            mapper.set_ffmpeg_generic_options(**generic_kwargs)
+
+            advanced_kwargs = filtergraph_config.get('advanced_kwargs', {})
+            mapper.set_ffmpeg_advanced_options(**advanced_kwargs)
+
+            start_filter_args = filtergraph_config.get('start_filter_args', [])
+            end_filter_args = filtergraph_config.get('end_filter_args', [])
+            filter_args = start_filter_args + filter_args + end_filter_args
+
+        # Join filtergraph
+        filter_id = '0:v:{}'.format(stream_id)
+        filter_id, filtergraph = join_filtergraph(filter_id, filter_args, stream_id)
+
         # Seek to the sample start
         mapper.set_ffmpeg_generic_options(**{"-ss": str(int(ss))})
 
-        # Configure time-based cropdetect filter at sample end timestamp
+        # Ingore non-video streams and insert filter
         adv_args = ["-an", "-sn", "-dn"]
-        adv_kwargs = {"-vf": f"cropdetect=round={r_to}:reset=0"}
+        adv_kwargs = {
+            "-filter_complex": filtergraph,
+            "-map":            f"[{filter_id}]",
+        }
         if t_seconds and t_seconds > 0:
-            adv_kwargs["-t"] = str(int(t_seconds))
+            mapper.set_ffmpeg_generic_options(**{"-t": str(int(t_seconds))})
         mapper.set_ffmpeg_advanced_options(*adv_args, **adv_kwargs)
         mapper.set_output_null()
 
@@ -447,14 +533,14 @@ def detect_plack_bars(abspath, probe_data):
     logger.info("[BB Detection] Sampling video file '%s' (width:%s, height:%s) to detect black bars",
                 abspath, src_w, src_h)
 
-    # Special case: very short videos (<60s) → single full-file pass
+    # Special case: very short videos (<60s) → single, capped pass (max 20s)
     if total_duration is not None and total_duration < 60:
-        logger.debug("[BB Detection] Duration < 60s. Sampling single full-file pass")
-        observed = _ffmpeg_sample(ss=0, t_seconds=None, r_to=round_to)
-        observed_raw = _ffmpeg_sample(ss=0, t_seconds=None, r_to=round_to)
-
-        logger.debug("[BB Detection] Sample #1 @ 0s → %s", observed)
-        if observed != "NO_CROP":
+        # Cap runtime to avoid slow software decode on whole-file scans
+        t_cap = int(min(20, max(1, total_duration)))
+        logger.debug("[BB Detection] Duration < 60s. Sampling capped to %ss from start (ss=0).", t_cap)
+        observed_raw = _ffmpeg_sample(ss=0, t_seconds=t_cap, r_to=round_to)
+        logger.debug("[BB Detection] Sample #1 @ 0s (t=%ss) → %s", t_cap, observed_raw)
+        if observed_raw != "NO_CROP":
             observed = _normalise_crop_or_nocrop(
                 observed_raw, src_w, src_h,
                 min_sum_tb=12,
@@ -463,8 +549,15 @@ def detect_plack_bars(abspath, probe_data):
             if observed == "NO_CROP":
                 logger.debug("[BB Detection] Decision: NO_CROP (normalised from %s).", observed_raw)
                 return None
-            logger.debug("[BB Detection] Decision: CROP=%s.", observed)
+
+            if observed != observed_raw:
+                logger.debug("[BB Detection] Decision: CROP=%s (normalised from %s).", observed, observed_raw)
+            else:
+                logger.debug("[BB Detection] Decision: CROP=%s.", observed)
             return observed
+
+        # observed_raw == NO_CROP
+        logger.debug("[BB Detection] Decision: NO_CROP (short-video capped sample).")
         return None
 
     # Define sampling parameters

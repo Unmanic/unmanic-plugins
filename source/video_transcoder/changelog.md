@@ -1,3 +1,11 @@
+**<span style="color:#56adda">0.1.12</span>**
+- Improved handling for HDR content with new helper tools for detecting and parsing metadata.
+- Removed the look-ahead feature from QSV's HEVC and AV1 encoders (not supported).
+- Fixed an issue with default tune options on libx264 and libx265
+- Removed the tune option from QSV encoders (not supported).
+- Changed the VAAPI hardware decoding setting to now be a dropdown menu instead of a checkbox (like all the other encoders).
+- Speed up crop-detect on smaller files.
+
 **<span style="color:#56adda">0.1.11</span>**
 - Fix CQP quality selector for VAAPI encoding
 
