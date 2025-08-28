@@ -174,8 +174,8 @@ class GlobalSettings:
             "input_type":     "select",
             "select_options": [],
         }
-        for encoder_name in self.settings.encoders:
-            encoder_lib = self.settings.encoders.get(encoder_name)
+        encoder_libs = tools.available_encoders(settings=self.settings)
+        for encoder_name, encoder_lib in encoder_libs.items():
             encoder_details = encoder_lib.encoder_details(encoder_name)
             if encoder_details.get('codec') != self.settings.get_setting('video_codec'):
                 continue
@@ -257,6 +257,7 @@ class GlobalSettings:
             "description": "Runs FFmpeg 'cropdetect' on the file to auto-detect the crop size.\n"
                            "This detected crop size is then applied during video transcode as a 'crop' filter.",
             "sub_setting": True,
+            "req_lev":     2,
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'
@@ -335,6 +336,7 @@ class GlobalSettings:
                            "Certain subtitle formats are stored as data streams in some containers.\n"
                            "Data streams are not supported by all containers.",
             "sub_setting": True,
+            "req_lev":     2,
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'
@@ -349,6 +351,7 @@ class GlobalSettings:
                            "These streams could contain fonts used in rendering subtitles.\n"
                            "Attachment streams are not supported by all containers.",
             "sub_setting": True,
+            "req_lev":     2,
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'
@@ -368,7 +371,8 @@ class GlobalSettings:
     def get_custom_software_filters_form_settings(self):
         values = {
             "label":       "Custom video filters",
-            "description": "Video filters and filter chains - https://trac.ffmpeg.org/wiki/FilteringGuide",
+            "description": "Video filters and filter chains - https://trac.ffmpeg.org/wiki/FilteringGuide.\n"
+                           "Note that any hardware accelerated filters may need to implement the appropriate hwupload filter.",
             "tooltip":     "Separate each filter chain by a linebreak",
             "sub_setting": True,
             "input_type":  "textarea",

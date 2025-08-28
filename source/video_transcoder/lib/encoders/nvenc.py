@@ -31,13 +31,14 @@ import logging
 import re
 import subprocess
 
+from video_transcoder.lib.encoders.base import Encoder
+
 logger = logging.getLogger("Unmanic.Plugin.video_transcoder")
 
 
 def list_available_cuda_devices():
     """
-    Return a list of available cuda decoder devices
-    :return:
+    Return a list of available CUDA devices via nvidia-smi.
     """
     gpu_dicts = []
     try:
@@ -47,11 +48,10 @@ def list_available_cuda_devices():
         gpu_info = re.findall(r'GPU (\d+): (.+) \(UUID: (.+)\)', result)
         # Populate the list of dictionaries for each GPU
         for gpu_id, gpu_name, gpu_uuid in gpu_info:
-            gpu_dict = {
+            gpu_dicts.append({
                 'hwaccel_device':      gpu_id,
-                'hwaccel_device_name': f"{gpu_name} (UUID: {gpu_uuid})"
-            }
-            gpu_dicts.append(gpu_dict)
+                'hwaccel_device_name': f"{gpu_name} (UUID: {gpu_uuid})",
+            })
     except FileNotFoundError:
         # nvidia-smi executable not found
         return []
@@ -88,10 +88,15 @@ def get_configured_device(settings):
     return hardware_device
 
 
-class NvencEncoder:
+class NvencEncoder(Encoder):
+    def __init__(self, settings=None, probe=None):
+        super().__init__(settings=settings, probe=probe)
 
-    def __init__(self, settings):
-        self.settings = settings
+    def _map_pix_fmt(self, is_h264: bool, is_10bit: bool) -> str:
+        if is_10bit and not is_h264:
+            return "p010le"
+        else:
+            return "nv12"
 
     def provides(self):
         return {
@@ -141,9 +146,10 @@ class NvencEncoder:
             }
             if self.settings.get_setting('nvenc_decoding_method') in ['cuda', 'nvdec']:
                 generic_kwargs["-hwaccel_output_format"] = "cuda"
+
         return generic_kwargs, advanced_kwargs
 
-    def generate_filtergraphs(self, settings, has_sw_filters, hw_smart_filters, target_fmt="nv12"):
+    def generate_filtergraphs(self, current_filter_args, smart_filters, encoder_name):
         """
         Generate the required filter for enabling NVENC/CUDA HW acceleration.
 
@@ -151,44 +157,65 @@ class NvencEncoder:
         """
         generic_kwargs = {}
         advanced_kwargs = {}
-        hw_filter_args = []
-        sw_filter_prefix_args = []
-        sw_filter_suffix_args = []
+        start_filter_args = []
+        end_filter_args = []
+
+        # Loop over any HW smart filters to be applied and add them as required.
+        hw_smart_filters = []
+        remaining_smart_filters = []
+        for sf in smart_filters:
+            if sf.get("scale"):
+                w = sf["scale"]["values"]["width"]
+                hw_smart_filters.append(f"scale_cuda={w}:-1")
+            else:
+                remaining_smart_filters.append(sf)
 
         # Check for HW accelerated decode mode
         # All decode methods ('cuda', 'nvdec', 'cuvid') are handled by the same
-        # filtergraph logic and output CUDA fames. The main FFmpeg command handles the specific decoder.
-        hw_decode = (settings.get_setting('nvenc_decoding_method') or '').lower() in ('cuda', 'nvdec', 'cuvid')
+        # filtergraph logic and output CUDA frames. The main FFmpeg command handles the specific decoder.
+        hw_decode = (self.settings.get_setting('nvenc_decoding_method') or '').lower() in ('cuda', 'nvdec', 'cuvid')
 
         # Check software format to use
-        sw_fmt = "p010le" if target_fmt == "p010" else "nv12"
+        target_fmt = self._target_pix_fmt_for_encoder(encoder_name)
+
+        # Handle HDR
+        enc_supports_hdr = (encoder_name in ["hevc_nvenc"])
+        target_color_config = self._target_color_config_for_encoder(encoder_name)
 
         # If we have SW filters:
-        if has_sw_filters:
+        if remaining_smart_filters or current_filter_args:
             # If we have SW filters and HW decode (CUDA/NVDEC) is enabled, make decoder produce SW frames
             if hw_decode:
-                generic_kwargs['-hwaccel_output_format'] = sw_fmt
+                generic_kwargs['-hwaccel_output_format'] = target_fmt
+
             # Add filter to upload software frames to CUDA for CUDA filters
             # Note, format conversion (if any - eg yuv422p10le -> p010le) happens after the software filters.
             # If a user applies a custom software filter that does not support the pix_fmt, then will need to prefix it with 'format=p010le'
-            sw_filter_suffix_args.append(f'format={sw_fmt},hwupload_cuda')
+            chain = [f"format={target_fmt}"]
+            if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                # Apply setparams filter if software filters exist (apply at the start of the filters list) to preserve HDR tags
+                chain.append(target_color_config['setparams_filter'])
+            chain += ["hwupload_cuda"]
+            end_filter_args.append(",".join(chain))
         # If we have no software filters:
         elif not hw_decode:
-            # Add hwupload filter that can handle when the frame was decoded in software or hardware
-            hw_filter_args.append(f'format={sw_fmt},hwupload_cuda')
+            # CPU decode -> setparams (if HDR) -> upload to CUDA
+            chain = [f"format={target_fmt}"]
+            if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                chain.append(target_color_config['setparams_filter'])
+            chain.append("hwupload_cuda")
+            start_filter_args.append(",".join(chain))
 
-        # Loop over any HW smart filters to be applied and add them as required.
-        for smart_filter in hw_smart_filters:
-            if smart_filter.get('scale'):
-                scale_values = smart_filter.get('scale')
-                hw_filter_args.append('scale_cuda={}:-1'.format(scale_values["width"]))
+        # Add the smart filters to the end
+        end_filter_args += hw_smart_filters
 
+        # Return built args
         return {
-            "generic_kwargs":        generic_kwargs,
-            "advanced_kwargs":       advanced_kwargs,
-            "hw_filter_args":        hw_filter_args,
-            "sw_filter_prefix_args": sw_filter_prefix_args,
-            "sw_filter_suffix_args": sw_filter_suffix_args,
+            "generic_kwargs":    generic_kwargs,
+            "advanced_kwargs":   advanced_kwargs,
+            "smart_filters":     remaining_smart_filters,
+            "start_filter_args": start_filter_args,
+            "end_filter_args":   end_filter_args,
         }
 
     def encoder_details(self, encoder):
@@ -199,59 +226,89 @@ class NvencEncoder:
         provides = self.provides()
         return provides.get(encoder, {})
 
-    def args(self, stream_info, stream_id):
+    def stream_args(self, stream_info, stream_id, encoder_name):
         generic_kwargs = {}
-        stream_encoding = []
+        advanced_kwargs = {}
+        encoder_args = []
+        stream_args = []
 
         # Specify the GPU to use for encoding
         hardware_device = get_configured_device(self.settings)
-        stream_encoding += ['-gpu', str(hardware_device.get('hwaccel_device', '0'))]
+        stream_args += ['-gpu', str(hardware_device.get('hwaccel_device', '0'))]
+
+        # Handle HDR
+        enc_supports_hdr = (encoder_name in ["hevc_nvenc"])
+        if enc_supports_hdr:
+            target_color_config = self._target_color_config_for_encoder(encoder_name)
+        else:
+            target_color_config = {
+                "apply_color_params": False
+            }
+        if enc_supports_hdr and target_color_config.get('apply_color_params'):
+            # Force Main10 profile
+            stream_args += [f'-profile:v:{stream_id}', 'main10']
 
         # Use defaults for basic mode
         if self.settings.get_setting('mode') in ['basic']:
+            # Read defaults
             defaults = self.options()
-            stream_encoding += [
-                '-preset', str(defaults.get('nvenc_preset')),
-                '-profile:v:{}'.format(stream_id), str(defaults.get('nvenc_profile')),
-            ]
-            # TODO: Parse stream info to optimise these settings based on resolution, HDR, etc.
-            return generic_kwargs, stream_encoding
+
+            if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                # Add HDR color tags to the encoder output stream
+                for k, v in target_color_config.get('stream_color_params', {}).items():
+                    stream_args += [k, v]
+
+            stream_args += ['-preset', str(defaults.get('nvenc_preset'))]
+
+            return {
+                "generic_kwargs":  generic_kwargs,
+                "advanced_kwargs": advanced_kwargs,
+                "encoder_args":    encoder_args,
+                "stream_args":     stream_args,
+            }
 
         # Add the preset and tune
         if self.settings.get_setting('nvenc_preset'):
-            stream_encoding += ['-preset', str(self.settings.get_setting('nvenc_preset'))]
+            stream_args += ['-preset', str(self.settings.get_setting('nvenc_preset'))]
         if self.settings.get_setting('nvenc_tune') and self.settings.get_setting('nvenc_tune') != 'auto':
-            stream_encoding += ['-tune', str(self.settings.get_setting('nvenc_tune'))]
+            stream_args += ['-tune', str(self.settings.get_setting('nvenc_tune'))]
         if self.settings.get_setting('nvenc_profile') and self.settings.get_setting('nvenc_profile') != 'auto':
-            stream_encoding += ['-profile:v:{}'.format(stream_id), str(self.settings.get_setting('nvenc_profile'))]
+            stream_args += [f'-profile:v:{stream_id}', str(self.settings.get_setting('nvenc_profile'))]
 
         # Apply rate control config
         if self.settings.get_setting('nvenc_encoder_ratecontrol_method') in ['constqp', 'vbr', 'cbr']:
             # Set the rate control method
-            stream_encoding += [
-                '-rc:v:{}'.format(stream_id), str(self.settings.get_setting('nvenc_encoder_ratecontrol_method'))
-            ]
-        if self.settings.get_setting('nvenc_encoder_ratecontrol_lookahead'):
-            # Set the rate control lookahead frames
-            stream_encoding += [
-                '-rc-lookahead:v:{}'.format(stream_id), str(self.settings.get_setting('nvenc_encoder_ratecontrol_lookahead'))
-            ]
+            stream_args += [f'-rc:v:{stream_id}', str(self.settings.get_setting('nvenc_encoder_ratecontrol_method'))]
+        rc_la = int(self.settings.get_setting('nvenc_encoder_ratecontrol_lookahead') or 0)
+        if rc_la > 0:
+            stream_args += [f'-rc-lookahead:v:{stream_id}', str(rc_la)]
 
         # Apply adaptive quantization
         if self.settings.get_setting('nvenc_enable_spatial_aq'):
-            stream_encoding += ['-spatial-aq', '1']
+            stream_args += ['-spatial-aq', '1']
         if self.settings.get_setting('nvenc_enable_spatial_aq') or self.settings.get_setting('nvenc_enable_temporal_aq'):
-            stream_encoding += ['-aq-strength:v:{}'.format(stream_id), str(self.settings.get_setting('nvenc_aq_strength'))]
+            stream_args += [f'-aq-strength:v:{stream_id}', str(self.settings.get_setting('nvenc_aq_strength'))]
         if self.settings.get_setting('nvenc_enable_temporal_aq'):
-            stream_encoding += ['-temporal-aq', '1']
+            stream_args += ['-temporal-aq', '1']
 
         # If CUVID is enabled, return generic_kwargs
-        if self.settings.get_setting('nvenc_decoding_method') in ['cuvid']:
-            generic_kwargs = {
-                '-c:v:{}'.format(stream_id): '{}_cuvid'.format(stream_info.get('codec_name', 'unknown_codec_name')),
-            }
+        if (self.settings.get_setting('nvenc_decoding_method') or '').lower() in ['cuvid']:
+            in_codec = stream_info.get('codec_name', 'unknown_codec_name')
+            generic_kwargs = {f'-c:v:{stream_id}': f'{in_codec}_cuvid'}
 
-        return generic_kwargs, stream_encoding
+        # Add stream color args
+        if enc_supports_hdr and target_color_config.get('apply_color_params'):
+            # Add HDR color tags to the encoder output stream
+            for k, v in target_color_config.get('stream_color_params', {}).items():
+                stream_args += [k, v]
+
+        # Return built args
+        return {
+            "generic_kwargs":  generic_kwargs,
+            "advanced_kwargs": advanced_kwargs,
+            "encoder_args":    encoder_args,
+            "stream_args":     stream_args,
+        }
 
     def __set_default_option(self, select_options, key, default_option=None):
         """

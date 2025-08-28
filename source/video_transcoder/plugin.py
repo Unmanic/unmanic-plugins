@@ -55,7 +55,6 @@ class Settings(PluginSettings):
     def __init__(self, *args, **kwargs):
         super(Settings, self).__init__(*args, **kwargs)
         self.settings = self.__build_settings_object()
-        self.encoders = self.__available_encoders()
         self.global_settings = GlobalSettings(self)
         self.form_settings = self.__build_form_settings_object()
 
@@ -70,7 +69,7 @@ class Settings(PluginSettings):
         for setting in self.settings:
             # Fetch currently configured encoder
             # This should be done every loop as some settings my change this value
-            selected_encoder = self.encoders.get(self.get_setting('video_encoder'))
+            selected_encoder = tools.available_encoders(settings=self).get(self.get_setting('video_encoder'))
             # Disable form by default
             setting_form_settings = {
                 "display": "hidden"
@@ -267,7 +266,6 @@ def on_worker_process(data):
             new_file_out = "{}.{}".format(split_file_out[0], container_extension.lstrip('.'))
             mapper.set_output_file(new_file_out)
             data['file_out'] = new_file_out
-
 
         # # Pretty, wrapped printing of the command to null for debugging. Should always be commented out.
         # mapper.set_output_null()

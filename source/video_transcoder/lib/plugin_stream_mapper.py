@@ -29,63 +29,10 @@ from video_transcoder.lib.encoders.qsv import QsvEncoder
 from video_transcoder.lib.encoders.vaapi import VaapiEncoder
 from video_transcoder.lib.encoders.nvenc import NvencEncoder
 from video_transcoder.lib.encoders.libsvtav1 import LibsvtAv1Encoder
-from video_transcoder.lib.ffmpeg import StreamMapper
+from video_transcoder.lib.ffmpeg import Probe, StreamMapper
 
 # Configure plugin logger
 logger = logging.getLogger("Unmanic.Plugin.video_transcoder")
-
-
-def target_pix_fmt_for_encoder(encoder_name: str, src_pix_fmt: str) -> str:
-    """
-    Determines the target pixel format for a given encoder based on the source pixel format.
-
-    Args:
-        encoder_name: The name of the FFmpeg encoder (e.g., "hevc_vaapi").
-        src_pix_fmt: The source video's pixel format (e.g., "yuv420p10le").
-
-    Returns:
-        The target pixel format string supported by the encoder.
-    """
-    enc = (encoder_name or "").lower()
-    src = (src_pix_fmt or "").lower()
-
-    # H.264 (AVC) does not support >8-bit color depth
-    is_h264 = "h264" in enc
-
-    # Determine bit depth of the source pixel format
-    is_10bit_or_more = any(tag in src for tag in ("10", "12", "p010", "p016"))
-
-    # Check for known hardware encoders and map to their supported formats
-    if "vaapi" in enc:
-        if is_10bit_or_more and not is_h264:
-            # VAAPI 10-bit support is p010 (for HEVC, AV1, etc.)
-            return "p010"
-        else:
-            # VAAPI 8-bit support is nv12
-            return "nv12"
-
-    if "qsv" in enc:
-        if is_10bit_or_more and not is_h264:
-            # QSV 10-bit support is p010 (for HEVC, AV1, etc.)
-            return "p010"
-        else:
-            # QSV 8-bit support is nv12
-            return "nv12"
-
-    if "nvenc" in enc:
-        if is_10bit_or_more and not is_h264:
-            # NVENC 10-bit support is p010 (for HEVC, AV1, etc.)
-            return "p010"
-        else:
-            # NVENC 8-bit support is nv12
-            return "nv12"
-
-    # For software encoders (or any other case),
-    # map to a common and widely supported format.
-    if is_10bit_or_more:
-        return "yuv420p10le"
-    else:
-        return "yuv420p"
 
 
 class PluginStreamMapper(StreamMapper):
@@ -142,16 +89,16 @@ class PluginStreamMapper(StreamMapper):
             if self.settings.get_setting('apply_smart_filters'):
                 if self.settings.get_setting('autocrop_black_bars'):
                     # Test if the file has black bars
-                    self.crop_value = tools.detect_plack_bars(abspath, probe.get_probe())
+                    self.crop_value = tools.detect_black_bars(abspath, probe.get_probe(), self.settings)
 
         # Build hardware acceleration args based on encoder
         # Note: these are not applied to advanced mode - advanced mode was returned above
-        for encoder_name in self.settings.encoders:
-            encoder_lib = self.settings.encoders.get(encoder_name)
-            if self.settings.get_setting('video_encoder') in encoder_lib.provides():
-                generic_kwargs, advanced_kwargs = encoder_lib.generate_default_args()
-                self.set_ffmpeg_generic_options(**generic_kwargs)
-                self.set_ffmpeg_advanced_options(**advanced_kwargs)
+        encoder_name = self.settings.get_setting('video_encoder')
+        encoder_lib = tools.available_encoders(settings=self.settings).get(encoder_name)
+        if encoder_lib:
+            generic_kwargs, advanced_kwargs = encoder_lib.generate_default_args()
+            self.set_ffmpeg_generic_options(**generic_kwargs)
+            self.set_ffmpeg_advanced_options(**advanced_kwargs)
 
     def scale_resolution(self, stream_info: dict):
         def get_test_resolution(settings):
@@ -195,110 +142,86 @@ class PluginStreamMapper(StreamMapper):
         :param stream_id:
         :return:
         """
-        # TODO: Check for supported hardware filters
-        filter_id = '0:v:{}'.format(stream_id)
         software_filters = []
         hardware_filters = []
-
-        # Get source pix_fmt
-        src_pix_fmt = self.probe.get_video_stream_pix_fmt()
+        filter_args = []
 
         # Get configured encoder name
         encoder_name = self.settings.get_setting('video_encoder')
 
         # Load encoder classes
-        libx_encoder = LibxEncoder(self.settings)
-        qsv_encoder = QsvEncoder(self.settings)
-        vaapi_encoder = VaapiEncoder(self.settings)
-        nvenc_encoder = NvencEncoder(self.settings)
-        stva1_encoder = LibsvtAv1Encoder(self.settings)
+        libx_encoder = LibxEncoder(self.settings, self.probe)
+        stva1_encoder = LibsvtAv1Encoder(self.settings, self.probe)
+        qsv_encoder = QsvEncoder(self.settings, self.probe)
+        vaapi_encoder = VaapiEncoder(self.settings, self.probe)
+        nvenc_encoder = NvencEncoder(self.settings, self.probe)
 
         # HW accelerated encoder libs
-        encoder_libs = [qsv_encoder, vaapi_encoder, nvenc_encoder]
-        hw_encoder = next((lib for lib in encoder_libs if encoder_name in lib.provides()), None)
+        hw_encoder_libs = [qsv_encoder, vaapi_encoder, nvenc_encoder]
+        hw_encoder = next((lib for lib in hw_encoder_libs if encoder_name in lib.provides()), None)
+
+        # All available encoder libs
+        all_encoder_libs = [libx_encoder, qsv_encoder, vaapi_encoder, nvenc_encoder, stva1_encoder]
+        active_encoder = next((lib for lib in all_encoder_libs if encoder_name in lib.provides()), None)
 
         # Apply smart filters first
-        hw_smart_filters = []
+        smart_filters = []
         if self.settings.get_setting('apply_smart_filters'):
             # NOTE: Crop must come first. Filters like scale will ruin the crop values
             if self.settings.get_setting('autocrop_black_bars') and self.crop_value:
-                software_filters.append('crop={}'.format(self.crop_value))
+                # Note: There is no good way to crop with HW filters at this time. For now, lets leave this as a SW filter.
+                filter_args.append(f"crop={self.crop_value}")
             if self.settings.get_setting('target_resolution') not in ['source']:
                 vid_width, vid_height = self.scale_resolution(stream_info)
                 if vid_height:
-                    # Apply scale filter with hw accel if available
-                    if hw_encoder:
-                        hw_smart_filters.append({'scale': {"width": vid_width, "height": vid_height}})
-                    else:
-                        # Apply scale with only width to keep aspect ratio.
-                        # NOTE: Use width since this may follow the black bar crop which will likely crop
-                        # height not width changing the aspect ratio.
-                        software_filters.append('scale={}:-1'.format(vid_width))
+                    # Apply scale with only width to keep aspect ratio.
+                    # NOTE: Use width since this may follow the black bar crop which will likely crop
+                    # height not width changing the aspect ratio.
+                    smart_filters.append({
+                        "scale": {
+                            "filter": f"scale={vid_width}:-1",
+                            "values": {"width": vid_width, "height": vid_height}
+                        },
+                    })
+
+        # Apply custom filtergraph logic from encoder libraries
+        filtergraph_config = {}
+        if active_encoder:
+            filtergraph_config = active_encoder.generate_filtergraphs(
+                filter_args,
+                smart_filters,
+                encoder_name
+            )
+
+        # Set un-changed smart-filters (hw overrides will have removed them)
+        smart_filters = filtergraph_config.get('smart_filters', smart_filters)
+        for smart_filter in smart_filters:
+            for filter_type, filter_data in smart_filter.items():
+                filter_args.append(filter_data.get('filter'))
 
         # Apply custom software filters
         if self.settings.get_setting('apply_custom_filters'):
             for software_filter in self.settings.get_setting('custom_software_filters').splitlines():
                 if software_filter.strip():
-                    software_filters.append(software_filter.strip())
+                    filter_args.append(software_filter.strip())
 
-        # Check for hardware encoders that required video filters
-        target_fmt = target_pix_fmt_for_encoder(encoder_name, src_pix_fmt)
+        generic_kwargs = filtergraph_config.get('generic_kwargs', {})
+        self.set_ffmpeg_generic_options(**generic_kwargs)
 
-        # Apply custom filtergraph logic for hw accelerators
-        if hw_encoder:
-            filtergraph_config = hw_encoder.generate_filtergraphs(
-                self.settings,
-                bool(software_filters),
-                hw_smart_filters,
-                target_fmt
-            )
+        advanced_kwargs = filtergraph_config.get('advanced_kwargs', {})
+        self.set_ffmpeg_advanced_options(**advanced_kwargs)
 
-            generic_kwargs = filtergraph_config.get('generic_kwargs', {})
-            self.set_ffmpeg_generic_options(**generic_kwargs)
-
-            advanced_kwargs = filtergraph_config.get('advanced_kwargs', {})
-            self.set_ffmpeg_advanced_options(**advanced_kwargs)
-
-            hw_filter_args = filtergraph_config.get('hw_filter_args', [])
-            hardware_filters += hw_filter_args
-
-            sw_filter_prefix_args = filtergraph_config.get('sw_filter_prefix_args', [])
-            sw_filter_suffix_args = filtergraph_config.get('sw_filter_suffix_args', [])
-            software_filters = sw_filter_prefix_args + software_filters + sw_filter_suffix_args
+        start_filter_args = filtergraph_config.get('start_filter_args', [])
+        end_filter_args = filtergraph_config.get('end_filter_args', [])
+        filter_args = start_filter_args + filter_args + end_filter_args
 
         # Return here if there are no filters to apply
-        if not software_filters and not hardware_filters:
+        if not filter_args:
             return None, None
 
         # Join filtergraph
-        filtergraph = ''
-        count = 1
-        for filter_string in software_filters:
-            # If we are appending to existing filters, separate by a semicolon to start a new chain
-            if filtergraph:
-                filtergraph += ';'
-            # Add the input for this filter
-            filtergraph += '[{}]'.format(filter_id)
-            # Add filtergraph
-            filtergraph += '{}'.format(filter_string)
-            # Update filter ID and add it to the end
-            filter_id = '0:vf:{}-{}'.format(stream_id, count)
-            filtergraph += '[{}]'.format(filter_id)
-            # Increment filter ID counter
-            count += 1
-        for filter_string in hardware_filters:
-            # If we are appending to existing filters, separate by a semicolon to start a new chain
-            if filtergraph:
-                filtergraph += ';'
-            # Add the input for this filter
-            filtergraph += '[{}]'.format(filter_id)
-            # Add filtergraph
-            filtergraph += '{}'.format(filter_string)
-            # Update filter ID and add it to the end
-            filter_id = '0:vf:{}-{}'.format(stream_id, count)
-            filtergraph += '[{}]'.format(filter_id)
-            # Increment filter ID counter
-            count += 1
+        filter_id = '0:v:{}'.format(stream_id)
+        filter_id, filtergraph = tools.join_filtergraph(filter_id, filter_args, stream_id)
 
         return filter_id, filtergraph
 
@@ -367,11 +290,16 @@ class PluginStreamMapper(StreamMapper):
         codec_type = stream_info.get('codec_type', '').lower()
         stream_specifier = '{}:{}'.format(ident.get(codec_type), stream_id)
         map_identifier = '0:{}'.format(stream_specifier)
+
+        # Get configured encoder name
+        encoder_name = self.settings.get_setting('video_encoder')
+
         if codec_type in ['video']:
             if self.settings.get_setting('mode') == 'advanced':
                 stream_encoding = ['-c:{}'.format(stream_specifier)]
                 stream_encoding += self.settings.get_setting('custom_options').split()
             else:
+
                 # Build complex filter
                 filter_id, filter_complex = self.build_filter_chain(stream_info, stream_id)
                 if filter_complex:
@@ -379,29 +307,39 @@ class PluginStreamMapper(StreamMapper):
                     self.set_ffmpeg_advanced_options(**{"-filter_complex": filter_complex})
 
                 stream_encoding = [
-                    '-c:{}'.format(stream_specifier), self.settings.get_setting('video_encoder'),
+                    '-c:{}'.format(stream_specifier), encoder_name,
                 ]
 
                 # Load encoder classes
-                libx_encoder = LibxEncoder(self.settings)
-                qsv_encoder = QsvEncoder(self.settings)
-                vaapi_encoder = VaapiEncoder(self.settings)
-                nvenc_encoder = NvencEncoder(self.settings)
-                stva1_encoder = LibsvtAv1Encoder(self.settings)
+                libx_encoder = LibxEncoder(self.settings, self.probe)
+                stva1_encoder = LibsvtAv1Encoder(self.settings, self.probe)
+                qsv_encoder = QsvEncoder(self.settings, self.probe)
+                vaapi_encoder = VaapiEncoder(self.settings, self.probe)
+                nvenc_encoder = NvencEncoder(self.settings, self.probe)
 
                 # Add encoder args
-                if self.settings.get_setting('video_encoder') in libx_encoder.provides():
-                    stream_encoding += libx_encoder.args(stream_id)
-                elif self.settings.get_setting('video_encoder') in qsv_encoder.provides():
-                    stream_encoding += qsv_encoder.args(stream_id)
-                elif self.settings.get_setting('video_encoder') in vaapi_encoder.provides():
-                    stream_encoding += vaapi_encoder.args(stream_id)
-                elif self.settings.get_setting('video_encoder') in nvenc_encoder.provides():
-                    generic_kwargs, stream_encoding_args = nvenc_encoder.args(stream_info, stream_id)
-                    self.set_ffmpeg_generic_options(**generic_kwargs)
-                    stream_encoding += stream_encoding_args
-                elif self.settings.get_setting('video_encoder') in stva1_encoder.provides():
-                    stream_encoding += stva1_encoder.args(stream_id)
+                if encoder_name in libx_encoder.provides():
+                    stream_args = libx_encoder.stream_args(stream_info, stream_id, encoder_name)
+                    stream_encoding += stream_args.get("encoder_args", [])
+                    stream_encoding += stream_args.get("stream_args", [])
+                elif encoder_name in stva1_encoder.provides():
+                    stream_args = vaapi_encoder.stream_args(stream_info, stream_id, encoder_name)
+                    stream_encoding += stream_args.get("encoder_args", [])
+                    stream_encoding += stream_args.get("stream_args", [])
+                elif encoder_name in qsv_encoder.provides():
+                    stream_args = qsv_encoder.stream_args(stream_info, stream_id, encoder_name)
+                    stream_encoding += stream_args.get("encoder_args", [])
+                    stream_encoding += stream_args.get("stream_args", [])
+                elif encoder_name in vaapi_encoder.provides():
+                    stream_args = vaapi_encoder.stream_args(stream_info, stream_id, encoder_name)
+                    stream_encoding += stream_args.get("encoder_args", [])
+                    stream_encoding += stream_args.get("stream_args", [])
+                elif encoder_name in nvenc_encoder.provides():
+                    stream_args = nvenc_encoder.stream_args(stream_info, stream_id, encoder_name)
+                    stream_encoding += stream_args.get("encoder_args", [])
+                    stream_encoding += stream_args.get("stream_args", [])
+                    self.set_ffmpeg_generic_options(**stream_args.get("generic_kwargs", {}))
+
         elif codec_type in ['data']:
             if not self.settings.get_setting('apply_smart_filters'):
                 # If smart filters are not enabled, return 'False' to let the default mapping just copy the data stream
