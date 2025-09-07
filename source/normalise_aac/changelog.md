@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.9</span>**
+- fix in 0.0.8 had a bug where the original_sample_rate calculation was in the middle of the return values (moved it just above return stanza)
+
 **<span style="color:#56adda">0.0.8</span>**
 - Fixed a bug where the plugin would fail if the max peak was set to 0
 - Fixed bug where sample rates would be set to 96kHz
