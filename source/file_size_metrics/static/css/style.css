@@ -62,6 +62,9 @@ html {
   padding: 10px 18px;
   text-align: left;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .collapsible {
@@ -71,7 +74,6 @@ html {
 .collapsible::after {
   color: var(--q-text);
   content: "\002B";
-  float: right;
   font-weight: bold;
   margin-left: 5px;
 }
@@ -212,6 +214,10 @@ html {
   #individual_file_size_chart {
     padding-top: 20px;
   }
+
+  .reset-btn span {
+    display: none;
+  }
 }
 
 dialog {
@@ -244,4 +250,98 @@ dialog .q-btn {
   outline: 0;
   padding: 8px 20px;
   text-transform: uppercase;
+}
+
+/* Reset Button Styles */
+.reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--q-negative);
+  color: var(--q-negative);
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  margin-left: auto;
+  margin-right: 25px;
+}
+
+.reset-btn:hover {
+  background: var(--q-negative);
+  color: #fff;
+}
+
+.reset-btn:hover svg {
+  stroke: #fff;
+}
+
+.reset-btn svg {
+  stroke: var(--q-negative);
+  transition: stroke 0.2s ease;
+}
+
+/* Reset Confirmation Dialog */
+#reset_confirm_dialog {
+  max-width: 450px;
+}
+
+#reset_confirm_dialog .card-header {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+#reset_confirm_dialog .card-header.warning-header {
+  color: var(--q-warning);
+}
+
+#reset_confirm_dialog .card-header svg {
+  stroke: var(--q-warning);
+}
+
+.reset-warning-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 15px 0 10px 0;
+  text-align: left;
+}
+
+.reset-warning-subtext {
+  font-size: 14px;
+  color: var(--q-subtext);
+  margin: 0 0 15px 0;
+  text-align: left;
+}
+
+.reset-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 15px 15px 15px !important;
+}
+
+.q-btn-secondary {
+  background: transparent !important;
+  border: 1px solid var(--q-subtext);
+  color: var(--q-text) !important;
+}
+
+.q-btn-secondary:hover {
+  background: var(--q-card-head-hover) !important;
+}
+
+.q-btn-danger {
+  background: var(--q-negative) !important;
+}
+
+.q-btn-danger:hover {
+  opacity: 0.9;
+}
+
+.q-btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
