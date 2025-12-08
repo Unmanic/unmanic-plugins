@@ -5,16 +5,25 @@
 # File Created: 28 September 2021, 8:03 AM
 # Author: josh5
 # -----
-# Last Modified: 28 September 2021, 8:03 AM
+# Last Modified: 04 December 2025, 6:15 PM
 # Modified By: josh5
 # -
 
 # Script is executed by the Unmanic container on startup to auto-install dependencies
 
-if ! command -v comskip &> /dev/null; then
+if ! command -v comskip &> /dev/null || [[ $(( $(comskip 2>&1 | head -1 | awk '{ print $2 }' | tr -d ',' | awk -F'.' '{print $2}') )) < 83 ]]; then
     echo "**** Installing Comskip ****"
-    apt-get update
-    apt-get install -y comskip
+    /usr/bin/apt-get update
+    /usr/bin/apt-get install -y autoconf libtool pkg-config make libswscale-dev libavformat-dev libavcodec-dev libavutil-dev libargtable2-dev
+    cd /root
+    wget https://github.com/erikkaashoek/Comskip/archive/refs/heads/master.zip
+    wait $!
+    unzip master.zip
+    cd Comskip-master
+    ./autogen.sh
+    ./configure --disable-dependency-tracking
+    make
+    cp -a /root/Comskip-master/comskip /usr/local/bin/comskip
 else
-    echo "**** Comskip already installed ****"
+  echo "**** Comskip already installed ****"
 fi

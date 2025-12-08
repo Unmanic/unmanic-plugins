@@ -74,5 +74,6 @@ Chapters are still added to the resulting file.
 </div>
 
 #### <span style="color:blue">Use hardware acceleration for commercial detection</span>
-Uses hardware acceleration for commercial detection - compatible only with Nvidia cuvid currently.
-Do not select if you do not have a compatible Nvidia GPU.
+Uses hardware acceleration for commercial detection - compatible with nvidia and QSV GPUs.
+Autodetects specific GPU installed and will fallback to no hardware acceleration if no useable GPU was found.
+Prefers nvidia if both nvidia and qsv GPUs are found.

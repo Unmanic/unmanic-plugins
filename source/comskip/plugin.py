@@ -27,6 +27,9 @@ import mimetypes
 import os
 import stat
 import re
+import subprocess
+from pathlib import Path
+
 from configparser import NoSectionError, NoOptionError
 
 from unmanic.libs.unplugins.settings import PluginSettings
@@ -202,6 +205,43 @@ def comskip_config_file(settings):
 
     return comskip_config_file
 
+def get_render_vendor():
+    render_root= Path('/dev/dri')
+    render_dev = [render_device for render_device in render_root.glob("render*")]
+    #if render_dev is not empty, render devices were found
+
+    render_names = [dev.name for dev in render_dev]
+    for rdev in render_names:
+        if os.path.exists(os.path.join("/sys/class/drm", render_names[0], "device/vendor")):
+            vendor = Path(os.path.join("/sys/class/drm", render_names[0], "device/vendor"))
+            vendor_text = vendor.read_text()
+            if "0x8086" in vendor_text:
+                return rdev
+    return ""
+
+def get_gpu():
+    command = '[[ $(compgen -G /dev/nvidia*) != "" ]] && [[ $(command -v nvidia-smi) != "" ]] && echo "nvidia_gpu_and_driver_installed"'
+    result = subprocess.run (["bash", "-c", command], capture_output=True, text=True, check=False)
+    if "nvidia_gpu_and_driver_installed" in result.stdout:
+        logger.info(f"nvidia GPU detected in container and driver installed")
+        decoder = "--cuvid"
+    else:
+        logger.info(f"nvidia GPU not detected in container or driver not installed")
+        decoder = ""
+
+    if get_render_vendor() == '':
+        logger.info(f"QSV capable GPU  not detected in container")
+    else:
+        command = '[[ $(vainfo --display drm --device "$INTEL_NODE" 2>/dev/null) ]] && echo "intel driver installed"'
+        result = subprocess.run (["bash", "-c", command], capture_output=True, text=True, check=False)
+        if "intel driver installed" in result.stdout:
+            logger.info(f"QSV GPU driver detected as installed  in container")
+            if decoder == "--cuvid":
+                decoder += "+ --qsv"
+            else:
+                decoder = "--qsv"
+    # if cuvid nor qsv is detected, decoder should be "" here
+    return decoder
 
 def build_comskip_args(abspath, settings):
     config_file = comskip_config_file(settings)
@@ -210,15 +250,24 @@ def build_comskip_args(abspath, settings):
     file_ext = os.path.splitext(abspath)[1]
     use_hw = settings.get_setting('use_hw')
     comskip_args = ['comskip','--ini={}'.format(config_file),'--output={}'.format(file_dirname),'--output-filename={}'.format(file_sans_ext),abspath]
+    if use_hw:
+        decoder = get_gpu()
+        if decoder == "--cuvid + --qsv":
+            logger.info(f"Can use either cuvid or qsv - picking cuvid")
+            decoder == '--cuvid'
+        elif decoder == "":
+            use_hw = False
+            logger.info(f"h/w decoding was configured but no nvidia or qsv decoder was found - falling back to cpu based decoding")
+
     if (not use_hw) & (file_ext == '.ts'):
         comskip_args.insert(1, '-t')
 
     if use_hw & (file_ext != '.ts'):
-        comskip_args.insert(1, '--cuvid')
+        comskip_args.insert(1, decoder)
 
     if use_hw & (file_ext == '.ts'):
         comskip_args.insert(1, '-t')
-        comskip_args.insert(2, '--cuvid')
+        comskip_args.insert(2, decoder)
 
     return comskip_args
 
@@ -230,6 +279,15 @@ def build_comchap_args(abspath, file_out, settings):
     st = os.stat(comchap_path)
     os.chmod(comchap_path, st.st_mode | stat.S_IEXEC)
     use_hw = settings.get_setting('use_hw')
+    if use_hw:
+        decoder = get_gpu()
+        if decoder == "--cuvid + --qsv":
+            logger.info(f"For comchap - can use either cuvid or qsv - picking cuvid")
+            decoder == '--cuvid'
+        elif decoder == "":
+            use_hw = False
+            logger.info(f"for comchap - h/w decoding was configured but no nvidia or qsv decoder was found - falling back to cpu based decoding")
+
     if not use_hw:
         args = [
             comchap_path,
@@ -244,7 +302,7 @@ def build_comchap_args(abspath, file_out, settings):
         args = [
             comchap_path,
             '--comskip-ini={}'.format(config_file),
-            '--use-hw',
+            decoder,
             '--keep-edl',
             '--keep-meta',
             '--verbose',
@@ -261,6 +319,15 @@ def build_comcut_args(abspath, file_out, settings):
     st = os.stat(comcut_path)
     os.chmod(comcut_path, st.st_mode | stat.S_IEXEC)
     use_hw = settings.get_setting('use_hw')
+    if use_hw:
+        decoder = get_gpu()
+        if decoder == "--cuvid + --qsv":
+            logger.info(f"For comcut - can use either cuvid or qsv - picking cuvid")
+            decoder == '--cuvid'
+        elif decoder == "":
+            use_hw = False
+            logger.info(f"for comcut - h/w decoding was configured but no nvidia or qsv decoder was found - falling back to cpu based decoding")
+
     if not use_hw:
         args = [
             comcut_path,
@@ -274,7 +341,7 @@ def build_comcut_args(abspath, file_out, settings):
         args = [
             comcut_path,
             '--comskip-ini={}'.format(config_file),
-            '--use-hw',
+            decoder,
             '--keep-edl',
             '--keep-meta',
             abspath,

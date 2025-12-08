@@ -30,7 +30,8 @@ deletelogo=true
 deletetxt=true
 lockfile=""
 workdir=""
-usehw=false
+usecuvid=false
+useqsv=false
 
 while [[ $# -gt 0 ]]
 do
@@ -44,8 +45,12 @@ case $key in
     deletemeta=false
     shift
     ;;
-    --use-hw)
-    usehw=true
+    --cuvid)
+    usecuvid=true
+    shift
+    ;;
+    --qsv)
+    useqsv=true
     shift
     ;;
     --ffmpeg=*)
@@ -74,14 +79,14 @@ case $key in
     ;;
     *)
     if [ -z "$infile" ]; then
-      infile=$1
+      infile="$1"
       if [ ! -f "$infile" ]; then
         echo "Inputfile '$infile' doesn't exist. Please check."
         exit 1
       fi
     else
       if [ -z "$outfile" ]; then
-        outfile=$1
+        outfile="$1"
       else
         echo "Error: too many parameters. Inputfile and Outputfile already defined. Please check your command."
         exit 1
@@ -144,17 +149,23 @@ fi
 
 infile_ext="${infile##*.}"
 if [ ! -f "$edlfile" ]; then
-  if [ "$usehw" == false ]; then
+  if [ "$useqsv" == false ] && [ "$usecuvid" == false ]; then
     if [ "$infile_ext" != 'ts' ]; then
-      $comskipPath $comskipoutput --ini="$comskipini" "$infile"
+      $comskipPath --ini="$comskipini" "$infile"
     else
-      $comskipPath -t $comskipoutput --ini="$comskipini" "$infile"
+      $comskipPath -t --ini="$comskipini" "$infile"
+    fi
+  elif [ "$usecuvid" == true ]; then
+    if [ "$infile_ext" != 'ts' ]; then
+      $comskipPath --cuvid --ini="$comskipini" "$infile"
+    else
+      $comskipPath -t --cuvid --ini="$comskipini" "$infile"
     fi
   else
     if [ "$infile_ext" != 'ts' ]; then
-      $comskipPath $comskipoutput --cuvid --ini="$comskipini" "$infile"
+      $comskipPath --qsv --ini="$comskipini" "$infile"
     else
-      $comskipPath $comskipoutput -t --cuvid --ini="$comskipini" "$infile"
+      $comskipPath -t --qsv --ini="$comskipini" "$infile"
     fi
   fi
 fi
