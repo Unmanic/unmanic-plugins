@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-    Written by:               Josh.5 <jsunnex@gmail.com>
-    Date:                     25 April 2021, (3:41 AM)
+    Written by:               Josh.5 <jsunnex@gmail.com>, gwlsn
+    Date:                     2 December 2025, (7:09 PM)
 
     Copyright:
-        Copyright (C) 2021 Josh Sunnex
+        Copyright (C) 2025 Josh Sunnex
 
         This program is free software: you can redistribute it and/or modify it under the terms of the GNU General
         Public License as published by the Free Software Foundation, version 3.
@@ -109,6 +109,25 @@ class Data(object):
     def db_stop(self):
         db.close()
         # db.stop()
+
+    def clear_all_data(self):
+        """
+        Clear all historical data from the database.
+        Returns True if successful, False otherwise.
+        """
+        self.db_start()
+        try:
+            # Delete all probe data first (foreign key constraint)
+            HistoricTaskProbe.delete().execute()
+            # Then delete all task records
+            HistoricTasks.delete().execute()
+            logger.info("All file size metrics data has been cleared.")
+            success = True
+        except Exception:
+            logger.exception("Failed to clear historical data from database.")
+            success = False
+        self.db_stop()
+        return success
 
     def create_db_schema(self):
         # Create required tables in new DB
@@ -411,6 +430,20 @@ def get_total_size_change_data_details(data):
     return json.dumps(results, indent=2)
 
 
+def reset_all_metrics(data):
+    """
+    Reset all metrics data by clearing the database.
+    Returns JSON with success status.
+    """
+    data_handler = Data()
+    success = data_handler.clear_all_data()
+    results = {
+        'success': success,
+        'message': 'All metrics have been reset.' if success else 'Failed to reset metrics.'
+    }
+    return json.dumps(results, indent=2)
+
+
 def save_source_details(abspath, size, start_time=None):
     # Return a list of historical tasks based on the request JSON body
     data = Data()
@@ -500,7 +533,7 @@ def on_postprocessor_task_results(data, store):
         return
     start_time = datetime.datetime.fromtimestamp(unix_start_time)
     unix_finish_time = data.get('finish_time')
-    if not unix_start_time:
+    if not unix_finish_time:
         logger.error("The 'finish_time' is missing the data.")
         return
     finish_time = datetime.datetime.fromtimestamp(unix_finish_time)
@@ -560,6 +593,11 @@ def render_frontend_panel(data):
     if data.get('path') in ['totalSizeChange', '/totalSizeChange', '/totalSizeChange/']:
         data['content_type'] = 'application/json'
         data['content'] = get_total_size_change_data_details(data)
+        return
+
+    if data.get('path') in ['resetMetrics', '/resetMetrics', '/resetMetrics/']:
+        data['content_type'] = 'application/json'
+        data['content'] = reset_all_metrics(data)
         return
 
     with open(os.path.abspath(os.path.join(os.path.dirname(__file__), 'static', 'index.html'))) as f:
