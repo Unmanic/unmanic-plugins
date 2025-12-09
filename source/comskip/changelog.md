@@ -1,4 +1,10 @@
 
+**<span style="color:#56adda">0.0.10</span>**
+- changed init.d to install the plugin by building from github - installs the latest version with ffmpeg compatibility fixes
+- expands use_hw option to be used for either nvidia or intel QSV GPUs
+- auto detects GPU
+- falls back to CPU based decode if use_hw is selected and plugin determines no GPU or no useable GPU was found
+
 **<span style="color:#56adda">0.0.9</span>**
 - add mimetype override and comskip command line arg to support ts files
 - add parse_progress to display estimated time of completion
