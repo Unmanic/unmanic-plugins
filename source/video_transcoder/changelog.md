@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.1.13</span>**
+- Fix bug where intermittently HW accelerated config was reverted to CPU encoding on its own
+
 **<span style="color:#56adda">0.1.12</span>**
 - Improved handling for HDR content with new helper tools for detecting and parsing metadata.
 - Removed the look-ahead feature from QSV's HEVC and AV1 encoders (not supported).

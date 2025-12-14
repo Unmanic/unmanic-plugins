@@ -31,9 +31,8 @@ TODO:
     - Add support for source bitrate matching on basic mode
 """
 
-import logging
 import os
-
+import logging
 from video_transcoder.lib import plugin_stream_mapper, tools
 from video_transcoder.lib.ffmpeg import Parser, Probe
 from video_transcoder.lib.global_settings import GlobalSettings
@@ -42,9 +41,9 @@ from video_transcoder.lib.encoders.qsv import QsvEncoder
 from video_transcoder.lib.encoders.vaapi import VaapiEncoder
 from video_transcoder.lib.encoders.nvenc import NvencEncoder
 from video_transcoder.lib.encoders.libsvtav1 import LibsvtAv1Encoder
-
-from unmanic.libs.unplugins.settings import PluginSettings
 from unmanic.libs.directoryinfo import UnmanicDirectoryInfo
+from unmanic.libs.unplugins.settings import PluginSettings
+
 
 # Configure plugin logger
 logger = logging.getLogger("Unmanic.Plugin.video_transcoder")
@@ -53,6 +52,8 @@ logger = logging.getLogger("Unmanic.Plugin.video_transcoder")
 class Settings(PluginSettings):
 
     def __init__(self, *args, **kwargs):
+        # Add optional flag to disable default fallback logic. This should be set for the plugin runner calls
+        self.apply_default_fallbacks = kwargs.pop('apply_default_fallbacks', True)
         super(Settings, self).__init__(*args, **kwargs)
         self.settings = self.__build_settings_object()
         self.global_settings = GlobalSettings(self)
@@ -181,8 +182,8 @@ def on_library_management_file_test(data):
 
     """
 
-    # Get settings
-    settings = Settings(library_id=data.get('library_id'))
+    # Get settings (do not persist defaults during worker/library execution)
+    settings = Settings(library_id=data.get('library_id'), apply_default_fallbacks=False)
 
     # Get the path to the file
     abspath = data.get('path')
@@ -233,8 +234,8 @@ def on_worker_process(data):
     data['exec_command'] = []
     data['repeat'] = False
 
-    # Get settings
-    settings = Settings(library_id=data.get('library_id'))
+    # Get settings (do not persist defaults during worker execution)
+    settings = Settings(library_id=data.get('library_id'), apply_default_fallbacks=False)
 
     # Get the path to the file
     abspath = data.get('file_in')
@@ -308,8 +309,8 @@ def on_postprocessor_task_results(data):
     :param data:
     :return:
     """
-    # Get settings
-    settings = Settings(library_id=data.get('library_id'))
+    # Get settings (do not persist defaults during post-processing)
+    settings = Settings(library_id=data.get('library_id'), apply_default_fallbacks=False)
 
     # Get the original file's absolute path
     original_source_path = data.get('source_data', {}).get('abspath')
