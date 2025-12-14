@@ -271,8 +271,16 @@ class QsvEncoder(Encoder):
             available_options.append(option.get('value'))
             if not default_option:
                 default_option = option.get('value')
-        if self.settings.get_setting(key) not in available_options:
-            self.settings.set_setting(key, default_option)
+        current_value = self.settings.get_setting(key)
+        if not getattr(self.settings, 'apply_default_fallbacks', True):
+            return current_value
+        if current_value not in available_options:
+            # Update in-memory setting for display only. 
+            # IMPORTANT: do not persist settings from plugin.
+            #   Only the Unmanic API calls should persist to JSON file.
+            self.settings.settings_configured[key] = default_option
+            return default_option
+        return current_value
 
     def get_qsv_decoding_method_form_settings(self):
         values = {
