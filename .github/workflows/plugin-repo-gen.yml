@@ -258,6 +258,18 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install build dependencies
+        if: steps.previous_jobs_success.outputs.IS_SUCCESS == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            libjpeg-dev \
+            zlib1g-dev \
+            libpng-dev \
+            libwebp-dev \
+            libtiff-dev
+
       # Execute plugin repo gen action
       - name: Generate and Deploy Unmanic Plugin Repository
         uses: Unmanic/action.generate-unmanic-plugin-repo@master
