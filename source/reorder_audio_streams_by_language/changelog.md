@@ -1,3 +1,6 @@
+**<span style="color:#56adda">1.2.1</span>**
+- Fix Radarr/Sonarr original language query not finding movie/series correctly
+
 **<span style="color:#56adda">1.2.0</span>**
 - Add support for grabbing original language from Radarr or Sonarr
 

@@ -2,26 +2,24 @@
 # -*- coding: utf-8 -*-
 
 """
-    Written by:               Josh.5 <jsunnex@gmail.com>
-    Date:                     23 March 2021, (8:06 PM)
+Written by:               Josh.5 <jsunnex@gmail.com>
+Date:                     23 March 2021, (8:06 PM)
 
-    Copyright:
-        Copyright (C) 2021 Josh Sunnex
+Copyright:
+    Copyright (C) 2021 Josh Sunnex
 
-        This program is free software: you can redistribute it and/or modify it under the terms of the GNU General
-        Public License as published by the Free Software Foundation, version 3.
+    This program is free software: you can redistribute it and/or modify it under the terms of the GNU General
+    Public License as published by the Free Software Foundation, version 3.
 
-        This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-        implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-        for more details.
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+    for more details.
 
-        You should have received a copy of the GNU General Public License along with this program.
-        If not, see <https://www.gnu.org/licenses/>.
-
+    You should have received a copy of the GNU General Public License along with this program.
+    If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-import os
 
 import pycountry
 from pyarr import RadarrAPI, SonarrAPI
@@ -107,7 +105,7 @@ class Settings(PluginSettings):
 
 
 class PluginStreamMapper(StreamMapper):
-    def __init__(self, abspath):
+    def __init__(self, original_path: str | None = None):
         # Check all streams (only the desired stream type will matter when tested)
         super(PluginStreamMapper, self).__init__(
             logger, ["video", "audio", "subtitle", "data", "attachment"]
@@ -116,7 +114,7 @@ class PluginStreamMapper(StreamMapper):
 
         self.search_string = None
 
-        self.abspath = abspath
+        self.original_path = original_path
 
         # The stream type we are considering as streams of interest
         self.stream_type = "audio"
@@ -138,7 +136,7 @@ class PluginStreamMapper(StreamMapper):
         self.settings = settings
 
     def set_langcode(self):
-        original_langcode = ''
+        original_langcode = ""
 
         if self.settings.get_setting("use_radarr"):
             original_langcode = self.get_language_from_radarr()
@@ -159,7 +157,8 @@ class PluginStreamMapper(StreamMapper):
 
         api = RadarrAPI(radarr_url, radarr_api_key)
 
-        movie_data = api.lookup_movie(self.abspath)
+        # Need to wrap in double quotes for querying via path to work correctly
+        movie_data = api.lookup_movie(f'"{self.original_path}"')
 
         if len(movie_data) == 0:
             return None
@@ -182,7 +181,8 @@ class PluginStreamMapper(StreamMapper):
 
         api = SonarrAPI(sonarr_url, sonarr_api_key)
 
-        series_data = api.lookup_series(self.abspath)
+        # Need to wrap in double quotes for querying via path to work correctly
+        series_data = api.lookup_series(f'"{self.original_path}"')
 
         if len(series_data) == 0:
             return None
@@ -326,7 +326,7 @@ def on_library_management_file_test(data):
         settings = Settings()
 
     # Get stream mapper
-    mapper = PluginStreamMapper(abspath)
+    mapper = PluginStreamMapper()
     mapper.set_settings(settings)
     mapper.set_langcode()
     mapper.set_probe(probe)
@@ -369,6 +369,7 @@ def on_worker_process(data):
 
     # Get the path to the file
     abspath = data.get("file_in")
+    original_path = data.get("original_file_path")
 
     # Get file probe
     probe = Probe(logger, allowed_mimetypes=["video"])
@@ -383,7 +384,7 @@ def on_worker_process(data):
         settings = Settings()
 
     # Get stream mapper
-    mapper = PluginStreamMapper(abspath)
+    mapper = PluginStreamMapper(original_path)
     mapper.set_settings(settings)
     mapper.set_langcode()
     mapper.set_probe(probe)
