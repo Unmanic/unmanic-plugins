@@ -12,14 +12,15 @@ Anything not built in can be added to the Other Arguments section.
 
 #### Important Note
 
-You must make sure that mkvpropedit is installed and available in the PATH so that this plugin can use it. To do that you can do something like this:
+You must make sure that mkvpropedit is installed and available in the PATH so that this plugin can use it. 
 
-1. reate a file inside the container `/config/startup.sh`
-2. Inside this file append the following contents:
+If you are running Unmanic with Docker using the official Docker image, this plugin will automatically install the dependencies when you next restrt or recreate the container.
+
+To install mkvpropedit on an Ubnuntu distro you can do something like this:
 
 ```sh
 #!/bin/bash
 
-/usr/bin/apt-get update ;
-/usr/bin/apt-get install -y mkvtoolnix
+apt-get update
+apt-get install -y mkvtoolnix
 ```
