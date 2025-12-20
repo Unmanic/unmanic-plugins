@@ -15,15 +15,12 @@ if ! command -v comskip &> /dev/null || [[ $(( $(comskip 2>&1 | head -1 | awk '{
     echo "**** Installing Comskip ****"
     /usr/bin/apt-get update
     /usr/bin/apt-get install -y autoconf libtool pkg-config make libswscale-dev libavformat-dev libavcodec-dev libavutil-dev libargtable2-dev
-    cd /root
-    wget https://github.com/erikkaashoek/Comskip/archive/refs/heads/master.zip
-    wait $!
-    unzip master.zip
-    cd Comskip-master
-    ./autogen.sh
-    ./configure --disable-dependency-tracking
-    make
-    cp -a /root/Comskip-master/comskip /usr/local/bin/comskip
+    mkdir -p /tmp/comskip
+    wget -P /tmp/comskip https://github.com/erikkaashoek/Comskip/archive/refs/heads/master.zip
+    unzip -d /tmp/comskip /tmp/comskip/master.zip
+    (cd /tmp/comskip/Comskip-master && ./autogen.sh && ./configure --disable-dependency-tracking && make)
+    cp -a /tmp/comskip/Comskip-master/comskip /usr/local/bin/comskip
+    rm -rf /tmp/comskip
 else
   echo "**** Comskip already installed ****"
 fi
