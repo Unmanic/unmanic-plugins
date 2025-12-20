@@ -1,0 +1,18 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Send a Pushbullet notification when a task is complete.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.notify_pushbullet/master/icon.png",
+    "id": "notify_pushbullet",
+    "name": "Notify Pushbullet",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_postprocessor_task_results": 99
+    },
+    "tags": "notification,pushbullet",
+    "version": "0.0.1"
+}
