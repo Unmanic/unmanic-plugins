@@ -1,0 +1,15 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Filter library scans by dynamic range using ffprobe (HDR or SDR) and optionally restrict HDR to specific formats (HDR, HDR10, HDR10+, Dolby Vision, HLG).",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.limit_library_search_by_video_dynamic_range/master/icon.png",
+    "id": "limit_library_search_by_video_dynamic_range",
+    "name": "Limit Library Search By Video's Dynamic Range",
+    "priorities": {
+        "on_library_management_file_test": 0
+    },
+    "tags": "video,ffmpeg,HDR,SDR",
+    "version": "0.0.1"
+}
