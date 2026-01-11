@@ -8,8 +8,9 @@
     "id": "notify_sonarr",
     "name": "Notify Sonarr",
     "priorities": {
-        "on_postprocessor_task_results": 0
+        "on_postprocessor_task_results": 0,
+        "render_plugin_api": 0
     },
     "tags": "sonarr",
-    "version": "0.0.6"
+    "version": "0.0.8"
 }
