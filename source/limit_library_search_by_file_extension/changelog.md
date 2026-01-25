@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Fix issue where whitespaces after commas between extensions caused only the first extension to be selected.
+
 **<span style="color:#56adda">0.0.4</span>**
 - Fix issue where the plugin was never ignoring files without an extension such as the '.unmanic' files
 
