@@ -65,7 +65,9 @@ def file_ends_in_allowed_extensions(path, allowed_extensions):
     if not allowed_extensions:
         logger.debug("Plugin has not yet been configured with a list of file extensions to allow. Blocking everything.")
         return False
-
+    
+    # Remove Whitespace
+    allowed_extensions = "".join(allowed_extensions.split())
     # Check if it ends with one of the allowed search extensions
     if file_extension and file_extension in allowed_extensions.split(','):
         return True
