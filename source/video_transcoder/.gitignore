@@ -3,3 +3,7 @@
 **/site-packages
 **/.idea
 settings.json
+
+# Dev files
+/tests
+/temp

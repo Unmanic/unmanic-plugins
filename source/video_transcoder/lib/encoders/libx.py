@@ -105,7 +105,7 @@ class LibxEncoder(Encoder):
         provides = self.provides()
         return provides.get(encoder, {})
 
-    def stream_args(self, stream_info, stream_id, encoder_name):
+    def stream_args(self, stream_info, stream_id, encoder_name, filter_state=None):
         generic_kwargs = {}
         advanced_kwargs = {}
         encoder_args = []

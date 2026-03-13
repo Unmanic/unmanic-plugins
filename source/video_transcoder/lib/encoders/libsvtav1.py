@@ -99,7 +99,7 @@ class LibsvtAv1Encoder(Encoder):
         provides = self.provides()
         return provides.get(encoder, {})
 
-    def stream_args(self, stream_id):
+    def stream_args(self, stream_id, filter_state=None):
         stream_encoding = []
 
         # Use defaults for basic mode
