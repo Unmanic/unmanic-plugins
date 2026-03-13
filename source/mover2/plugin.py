@@ -123,7 +123,15 @@ def get_file_out(settings, original_source_path, file_out, library_id=None):
     return os.path.join(destination_directory, file_out_basename)
 
 
-def file_marked_as_moved(path):
+def file_marked_as_moved(path, file_metadata=None):
+    if file_metadata:
+        try:
+            metadata = file_metadata.get()
+            if metadata.get('status') == 'Ignoring' or metadata.get('ignore') is True:
+                return True
+        except Exception as e:
+            logger.debug("Unable to read UnmanicFileMetadata for '{}': {}".format(path, e))
+
     directory_info = UnmanicDirectoryInfo(os.path.dirname(path))
     try:
         has_been_moved = directory_info.get('mover2', os.path.basename(path))
@@ -143,7 +151,7 @@ def file_marked_as_moved(path):
     return False
 
 
-def on_library_management_file_test(data):
+def on_library_management_file_test(data, task_data_store=None, file_metadata=None):
     """
     Runner function - enables additional actions during the library management file tests.
 
@@ -166,7 +174,7 @@ def on_library_management_file_test(data):
     else:
         settings = Settings()
 
-    if file_marked_as_moved(abspath):
+    if file_marked_as_moved(abspath, file_metadata=file_metadata):
         # Ensure this file is not added to the pending tasks
         data['add_file_to_pending_tasks'] = False
         logger.debug("File '{}' has been previously marked as moved.".format(abspath))
@@ -179,7 +187,7 @@ def on_library_management_file_test(data):
     return data
 
 
-def on_postprocessor_file_movement(data):
+def on_postprocessor_file_movement(data, task_data_store=None, file_metadata=None):
     """
     Runner function - configures additional postprocessor file movements during the postprocessor stage of a task.
 
@@ -253,12 +261,14 @@ def on_postprocessor_file_movement(data):
             return data
 
         # Mark the source file to be ignored on subsequent scans
-        directory_info = UnmanicDirectoryInfo(os.path.dirname(original_source_path))
-        directory_info.set('mover2', os.path.basename(original_source_path), 'Ignoring')
-        directory_info.save()
-        logger.debug("Ignore on next scan written for '{}'.".format(original_source_path))
-
-    return data
+        if file_metadata:
+            file_metadata.set({'status': 'Ignoring'}, use_source_scope=True)
+            logger.debug("Ignore on next scan written for '{}'.".format(original_source_path))
+        else:
+            directory_info = UnmanicDirectoryInfo(os.path.dirname(original_source_path))
+            directory_info.set('mover2', os.path.basename(original_source_path), 'Ignoring')
+            directory_info.save()
+            logger.debug("Ignore on next scan written for '{}'.".format(original_source_path))
 
 
 def on_postprocessor_task_results(data):
@@ -326,5 +336,3 @@ def on_postprocessor_task_results(data):
 
     # Clean up plugin's data file
     os.remove(plugin_data_file)
-
-    return data

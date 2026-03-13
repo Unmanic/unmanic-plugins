@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.9</span>**
+- Add support for using the File Metadata helper for storing details on moved files (Requires Unmanic v0.3.0)
+
 **<span style="color:#56adda">0.0.8</span>**
 - Always prevent Unmanic's default move process (Requires Unmanic v0.2.0)
 
