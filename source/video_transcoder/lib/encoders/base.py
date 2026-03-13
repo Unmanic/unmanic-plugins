@@ -171,7 +171,7 @@ class Encoder:
         """
         raise NotImplementedError("This method must be implemented by a child class.")
 
-    def stream_args(self, stream_info, stream_id, encoder_name):
+    def stream_args(self, stream_info, stream_id, encoder_name, filter_state=None):
         """
         Generate a list of arguments for the encoder.
         """

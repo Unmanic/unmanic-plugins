@@ -1,3 +1,26 @@
+
+**<span style="color:#56adda">0.1.17</span>**
+- adds nvenc_safe_decode option to allow plugin to avoid an error caused by colorspace changes in the file
+- adds new path in the define_filtergraph function to move the frames off the GPU to avoid h/w accel failure due to midstream colorspace changes
+- adds '-reinit_filter 0' option to the ffmpeg command line so that ffmpeg can ignore the filter change that would have resulted from the colorspace change
+- the combination of these allows ffmpeg to successfully process the file rather than failing
+ 
+**<span style="color:#56adda">0.1.16</span>**
+- Add support for using the File Metadata helper for storing details on moved files (Requires Unmanic v0.3.0)
+- Fix issue with settings not chaing encoder when the codec changes
+
+**<span style="color:#56adda">0.1.15</span>**
+- Add a warning against using "Prefer Quality" when scaling a video down
+- Add smart output target support for QSV
+- Reduce sample time for black-box detection to 10 seconds of video
+- Fix smart output target bitrate derivation to prefer video-only stream stats (Matroska `BPS`) and packet sampling over container bitrate
+- Add ffprobe sampling as a fallback option when bitrate is not specified on a video stream
+- Add more detailed ouput to worker logs as the plugin processes and generates the ffmpeg command to be run
+
+**<span style="color:#56adda">0.1.14</span>**
+- Enable smart filters and resolution scaling in basic mode (works only with NVENC at this stage)
+- Added new smart output target controls to basic mode, including goal presets (Prefer Quality/Balanced/Prefer Compression)
+
 **<span style="color:#56adda">0.1.13</span>**
 - Fix bug where intermittently HW accelerated config was reverted to CPU encoding on its own
 

@@ -79,6 +79,10 @@ class GlobalSettings:
                 "apply_custom_filters":     False,
                 "custom_software_filters":  "",
             },
+            "smart_output_target":   {
+                "enable_smart_output_target": False,
+                "smart_output_target":        "balanced",
+            },
         }
 
     def __set_default_option(self, select_options, key, default_option=None):
@@ -193,7 +197,12 @@ class GlobalSettings:
                     "label": encoder_details.get('label'),
                 }
             )
-        self.__set_default_option(values['select_options'], 'video_encoder')
+        selected_encoder = self.__set_default_option(values['select_options'], 'video_encoder')
+        if getattr(self.settings, 'apply_default_fallbacks', True):
+            current_encoder = self.settings.get_setting('video_encoder')
+            if selected_encoder and selected_encoder != current_encoder:
+                # Persist a compatible encoder when codec selection changes and invalidates the current value.
+                self.settings.set_setting('video_encoder', selected_encoder)
         if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'
         return values
@@ -255,7 +264,7 @@ class GlobalSettings:
             "label":   "Enable plugin's smart video filters",
             "tooltip": "Provides some pre-configured FFmpeg filtergraphs",
         }
-        if self.settings.get_setting('mode') not in ['standard']:
+        if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'
         return values
 
@@ -269,7 +278,7 @@ class GlobalSettings:
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'
-        if self.settings.get_setting('mode') not in ['standard']:
+        if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'
         return values
 
@@ -332,7 +341,7 @@ class GlobalSettings:
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'
-        if self.settings.get_setting('mode') not in ['standard']:
+        if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'
         return values
 
@@ -348,7 +357,7 @@ class GlobalSettings:
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'
-        if self.settings.get_setting('mode') not in ['standard']:
+        if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'
         return values
 
@@ -363,7 +372,7 @@ class GlobalSettings:
         }
         if not self.settings.get_setting('apply_smart_filters'):
             values["display"] = 'hidden'
-        if self.settings.get_setting('mode') not in ['standard']:
+        if self.settings.get_setting('mode') not in ['basic', 'standard']:
             values["display"] = 'hidden'
         return values
 
@@ -373,6 +382,51 @@ class GlobalSettings:
             "tooltip": "Provides text input for adding custom FFmpeg filtergraphs",
         }
         if self.settings.get_setting('mode') not in ['standard']:
+            values["display"] = 'hidden'
+        return values
+
+    def get_enable_smart_output_target_form_settings(self):
+        values = {
+            "label":       "Enable smart output target",
+            "description": "Automatically detects the best FFmpeg encoder params to use based on the source file.",
+            "req_lev":     2,
+        }
+        if self.settings.get_setting('mode') not in ['basic']:
+            values["display"] = 'hidden'
+        return values
+
+    def get_smart_output_target_form_settings(self):
+        description = "Select the goal that best matches how you want Basic mode to balance quality and compression."
+        if self.settings.get_setting('apply_smart_filters') and \
+                self.settings.get_setting('target_resolution') not in ['source', None]:
+            description += (
+                "\n\nWarning: \"Prefer Quality\" is not recommended when scaling down the resolution of a video."
+            )
+        values = {
+            "label":          "Smart output target",
+            "description":    description,
+            "sub_setting":    True,
+            "req_lev":        2,
+            "input_type":     "select",
+            "select_options": [
+                {
+                    "value": "prefer_quality",
+                    "label": "Prefer Quality",
+                },
+                {
+                    "value": "balanced",
+                    "label": "Balanced",
+                },
+                {
+                    "value": "prefer_compression",
+                    "label": "Prefer Compression",
+                },
+            ],
+        }
+        self.__set_default_option(values['select_options'], 'smart_output_target', default_option='balanced')
+        if not self.settings.get_setting('enable_smart_output_target'):
+            values["display"] = 'hidden'
+        if self.settings.get_setting('mode') not in ['basic']:
             values["display"] = 'hidden'
         return values
 

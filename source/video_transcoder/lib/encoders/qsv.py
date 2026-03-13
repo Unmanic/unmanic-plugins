@@ -31,12 +31,99 @@ Notes:
         https://gist.github.com/jackleaks/776d2de2688d238c95ed7eafb3d5bae8
 """
 
+
 from video_transcoder.lib.encoders.base import Encoder
+import logging
+from video_transcoder.lib.smart_output_target import SmartOutputTargetHelper
+
+
+logger = logging.getLogger("Unmanic.Plugin.video_transcoder")
 
 
 class QsvEncoder(Encoder):
     def __init__(self, settings=None, probe=None):
         super().__init__(settings=settings, probe=probe)
+
+    def _smart_basic_stream_args(self, stream_id, filter_state, target_encoder):
+        """
+        Build smart output target args for basic mode, returning encoder/stream arg lists.
+        """
+        encoder_args = []
+        stream_args = []
+        smart_recommendation = None
+        provides = self.provides()
+        try:
+            helper = SmartOutputTargetHelper(self.probe)
+            file_path = None
+            try:
+                file_path = (self.probe.get_probe() or {}).get("format", {}).get("filename")
+            except Exception:
+                file_path = None
+            target_filters = {
+                "target_width":  filter_state.get("target_width") if filter_state else None,
+                "target_height": filter_state.get("target_height") if filter_state else None,
+                "scale_applied": filter_state.get("scale_applied") if filter_state else False,
+                "crop_applied":  filter_state.get("crop_applied") if filter_state else False,
+            }
+            source_stats = helper.collect_source_stats(file_path=file_path)
+            goal = self.settings.get_setting('smart_output_target')
+            target_codec = provides.get(target_encoder, {}).get('codec', 'h264')
+            target_supports_hdr10 = target_encoder in ("hevc_qsv",)
+            smart_recommendation = helper.recommend_params(
+                goal,
+                source_stats,
+                target_filters,
+                target_codec,
+                target_encoder,
+                target_supports_hdr10,
+            )
+        except Exception as exc:
+            logger.info("Smart output target unavailable for QSV, falling back to defaults: %s", exc)
+
+        if smart_recommendation:
+            preset_value = "slow"
+            stream_args += ['-preset', str(preset_value)]
+
+            quality_mode = smart_recommendation.get("quality_mode")
+            quality_index = smart_recommendation.get("quality_index")
+            wants_cap = smart_recommendation.get("wants_cap")
+            rc_mode = "cqp" if quality_mode == SmartOutputTargetHelper.QUALITY_CONST else "icq"
+            if rc_mode == "cqp" and wants_cap:
+                rc_mode = "icq"
+
+            if rc_mode == "cqp":
+                if quality_index is not None:
+                    encoder_args += ['-q', str(int(quality_index))]
+            else:
+                if quality_index is not None:
+                    encoder_args += ['-global_quality', str(int(quality_index))]
+                # Keep a modest lookahead depth for quality modes; LA_ICQ on H.264 can improve stability.
+                if target_encoder == "h264_qsv":
+                    encoder_args += ['-look_ahead', '1']
+                encoder_args += ['-look_ahead_depth', '40', '-extbrc', '1']
+
+            maxrate = smart_recommendation.get("maxrate")
+            bufsize = smart_recommendation.get("bufsize")
+            if wants_cap:
+                if maxrate:
+                    encoder_args += ['-maxrate', str(int(maxrate))]
+                    if quality_mode == SmartOutputTargetHelper.QUALITY_TARGET:
+                        encoder_args += [f'-b:v:{stream_id}', str(int(maxrate))]
+                if bufsize:
+                    encoder_args += ['-bufsize', str(int(bufsize))]
+
+            logger.info(
+                "Smart output target applied for QSV (goal=%s, mode=%s, preset=%s, target=%sx%s, cap=%s, confidence=%s)",
+                smart_recommendation.get("goal"),
+                smart_recommendation.get("quality_mode"),
+                preset_value,
+                smart_recommendation.get("target_resolution", {}).get("width"),
+                smart_recommendation.get("target_resolution", {}).get("height"),
+                smart_recommendation.get("target_cap"),
+                smart_recommendation.get("confidence"),
+            )
+
+        return encoder_args, stream_args
 
     def _map_pix_fmt(self, is_h264: bool, is_10bit: bool) -> str:
         if is_10bit and not is_h264:
@@ -174,7 +261,7 @@ class QsvEncoder(Encoder):
         provides = self.provides()
         return provides.get(encoder, {})
 
-    def stream_args(self, stream_info, stream_id, encoder_name):
+    def stream_args(self, stream_info, stream_id, encoder_name, filter_state=None):
         generic_kwargs = {}
         advanced_kwargs = {}
         encoder_args = []
@@ -197,14 +284,31 @@ class QsvEncoder(Encoder):
                 for k, v in target_color_config.get('stream_color_params', {}).items():
                     stream_args += [k, v]
 
-            # Use default LA_ICQ mode
-            encoder_args += [
-                '-global_quality', str(defaults.get('qsv_constant_quality_scale')),
-                '-look_ahead_depth', '100', '-extbrc', '1',
-            ]
-            if encoder_name in ["h264_qsv"]:
-                encoder_args += ['-look_ahead', '1']
-            stream_args += ['-preset', str(defaults.get('qsv_preset')), ]
+            smart_encoder_args = []
+            smart_stream_args = []
+            smart_goal_enabled = (
+                self.settings.get_setting('enable_smart_output_target') and
+                filter_state and filter_state.get("execution_stage")
+            )
+            if smart_goal_enabled and self.probe:
+                smart_encoder_args, smart_stream_args = self._smart_basic_stream_args(
+                    stream_id,
+                    filter_state,
+                    encoder_name,
+                )
+
+            if smart_encoder_args or smart_stream_args:
+                encoder_args += smart_encoder_args
+                stream_args += smart_stream_args
+            else:
+                # Use default LA_ICQ mode
+                encoder_args += [
+                    '-global_quality', str(defaults.get('qsv_constant_quality_scale')),
+                    '-look_ahead_depth', '100', '-extbrc', '1',
+                ]
+                if encoder_name in ["h264_qsv"]:
+                    encoder_args += ['-look_ahead', '1']
+                stream_args += ['-preset', str(defaults.get('qsv_preset')), ]
             return {
                 "generic_kwargs":  generic_kwargs,
                 "advanced_kwargs": advanced_kwargs,
@@ -228,6 +332,10 @@ class QsvEncoder(Encoder):
                     # Set values for constant quality scale
                     if self.settings.get_setting('qsv_encoder_ratecontrol_method') == 'LA_ICQ':
                         # Add lookahead
+                        #   QSV lookahead quirks:
+                        #   - Only h264_qsv requires the explicit switch "-look_ahead 1" to enable lookahead.
+                        #   - hevc_qsv and av1_qsv must NOT be given "-look_ahead 1" (it can error).
+                        #     They enable lookahead via "-look_ahead_depth <N>" and "-extbrc 1" instead.
                         if encoder_name in ["h264_qsv"]:
                             encoder_args += ['-look_ahead', '1']
                         encoder_args += ['-look_ahead_depth', '100', '-extbrc', '1']
@@ -275,7 +383,7 @@ class QsvEncoder(Encoder):
         if not getattr(self.settings, 'apply_default_fallbacks', True):
             return current_value
         if current_value not in available_options:
-            # Update in-memory setting for display only. 
+            # Update in-memory setting for display only.
             # IMPORTANT: do not persist settings from plugin.
             #   Only the Unmanic API calls should persist to JSON file.
             self.settings.settings_configured[key] = default_option
