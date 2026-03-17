@@ -112,6 +112,14 @@ class GlobalSettings:
                     "value": "mp3",
                     "label": "MP3",
                 },
+                {
+                    "value": "flac",
+                    "label": "FLAC",
+                },
+                {
+                    "value": "opus",
+                    "label": "OPUS",
+                },
             ],
         }
         if self.settings.get_setting('mode') not in ['basic', 'standard', 'advanced']:
@@ -153,6 +161,20 @@ class GlobalSettings:
                 {
                     "value": "libmp3lame",
                     "label": "LAME - libmp3lame",
+                },
+            ]
+        elif self.settings.get_setting('audio_codec') == 'flac':
+            values['select_options'] = [
+                {
+                    "value": "flac",
+                    "label": "Native FFmpeg FLAC encoder",
+                },
+            ]
+        elif self.settings.get_setting('audio_codec') == 'opus':
+            values['select_options'] = [
+                {
+                    "value": "libopus",
+                    "label": "libopus",
                 },
             ]
         self.__set_default_option(values['select_options'], 'audio_encoder')

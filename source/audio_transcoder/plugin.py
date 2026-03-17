@@ -30,6 +30,8 @@ from audio_transcoder.lib.encoders.aac import AacEncoder
 from audio_transcoder.lib.ffmpeg import Probe, Parser
 from audio_transcoder.lib.global_settings import GlobalSettings
 from audio_transcoder.lib.encoders.lame import LameEncoder
+from audio_transcoder.lib.encoders.flac import FlacEncoder
+from audio_transcoder.lib.encoders.opus import OpusEncoder
 
 from unmanic.libs.unplugins.settings import PluginSettings
 from unmanic.libs.directoryinfo import UnmanicDirectoryInfo
@@ -39,8 +41,6 @@ logger = logging.getLogger("Unmanic.Plugin.audio_transcoder")
 
 """
 TODO:
-    - Add FLAC
-    - Add OPUS
     - Add advanced options like the video transcoder plugin
 """
 
@@ -93,9 +93,13 @@ class Settings(PluginSettings):
         # Fetch all encoder settings from encoder libs
         lame_options = LameEncoder.options()
         aac_options = AacEncoder.options()
+        flac_options = FlacEncoder.options()
+        opus_options = OpusEncoder.options()
         return {
             **lame_options,
             **aac_options,
+            **flac_options,
+            **opus_options,
         }
 
     def __build_settings_object(self):
