@@ -1,4 +1,11 @@
 
+**<span style="color:#56adda">0.1.18</span>**
+- adds similar logic for qsv and vaapi as was done for nvenc in 0.1.17
+- adds new qsv_safe_decode and vaapi_safe_decode options to the respective encoders
+- adds new paths in their respective define_filtergraph functions to move the frames off the GPU to avoid h/w accel failure due to midstream colorspace changes
+- adds '-reinit_filter 0' option to the ffmpeg command line when the x_safe_option is enabled so that ffmpeg can ignore the filter change that would have resulted from the colorspace change
+- the combination of these allows ffmpeg to successfully process the file rather than failing
+
 **<span style="color:#56adda">0.1.17</span>**
 - adds nvenc_safe_decode option to allow plugin to avoid an error caused by colorspace changes in the file
 - adds new path in the define_filtergraph function to move the frames off the GPU to avoid h/w accel failure due to midstream colorspace changes

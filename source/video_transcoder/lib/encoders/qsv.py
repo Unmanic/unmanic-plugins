@@ -150,6 +150,7 @@ class QsvEncoder(Encoder):
     def options(self):
         return {
             "qsv_decoding_method":            "cpu",
+            "qsv_safe_decode":                False,
             "qsv_preset":                     "slow",
             "qsv_encoder_ratecontrol_method": "LA_ICQ",
             "qsv_constant_quantizer_scale":   "25",
@@ -176,6 +177,10 @@ class QsvEncoder(Encoder):
                 "-hwaccel":               "qsv",
                 "-hwaccel_output_format": "qsv",
             })
+
+        if self.settings.get_setting('qsv_safe_decode'):
+            generic_kwargs["-reinit_filter"] = "0"
+
         return generic_kwargs, advanced_kwargs
 
     def generate_filtergraphs(self, current_filter_args, smart_filters, encoder_name):
@@ -238,13 +243,22 @@ class QsvEncoder(Encoder):
                 # Upload to hw frames at the end of the filter
                 end_chain = start_chain + ["hwupload=extra_hw_frames=64", "format=qsv", f"vpp_qsv=format={target_fmt}"]
                 end_filter_args.append(",".join(end_chain))
+            elif self.settings.get_setting('qsv_safe_decode'):
+                # HW decode + safe mode: force SW frames to avoid hwaccel reconfigure
+                generic_kwargs['-hwaccel_output_format'] = target_fmt
+                start_chain = [f"format={target_fmt}"]
+                if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                    start_chain.append(target_color_config['setparams_filter'])
+                start_filter_args.append(",".join(start_chain))
+                end_chain = start_chain + ["hwupload=extra_hw_frames=64", "format=qsv", f"vpp_qsv=format={target_fmt}"]
+                end_filter_args.append(",".join(end_chain))
             else:
-                # Add hwupload filter that can handle when the frame was decoded in software or hardware
+                # Pure HW path - frames stay in QSV memory
                 chain = [f"format={target_fmt}|qsv",
                          "hwupload=extra_hw_frames=64",
                          "format=qsv", f"vpp_qsv=format={target_fmt}"]
                 end_filter_args.append(",".join(chain))
-
+                
         # Add the smart filters to the end
         end_filter_args += hw_smart_filters
 
@@ -412,6 +426,18 @@ class QsvEncoder(Encoder):
         }
         self.__set_default_option(values['select_options'], 'qsv_decoding_method', 'cpu')
         if self.settings.get_setting('mode') not in ['standard']:
+            values["display"] = "hidden"
+        return values
+
+    def get_qsv_safe_decode_form_settings(self):
+        values = {
+            "label": "Safe decode mode",
+            "description": "Forces CPU-side frame handling to prevent failures on files with "
+                           "inconsistent color space metadata (common in WEBDL sources).\n"
+                           "Slightly slower due to GPU->CPU->GPU round-trip per frame.",
+            "sub_setting": True,
+        }
+        if self.settings.get_setting('mode') not in ['standard'] or self.settings.get_setting('qsv_decoding_method') != "qsv":
             values["display"] = "hidden"
         return values
 

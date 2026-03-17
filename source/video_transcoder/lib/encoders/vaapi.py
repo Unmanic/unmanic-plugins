@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -89,6 +90,7 @@ class VaapiEncoder(Encoder):
         return {
             "vaapi_device":                     "none",
             "vaapi_decoding_method":            "cpu",
+            "vaapi_safe_decode":                False,
             "vaapi_encoder_ratecontrol_method": "ICQ",
             "vaapi_constant_quantizer_scale":   "25",
             "vaapi_constant_quality_scale":     "23",
@@ -140,6 +142,9 @@ class VaapiEncoder(Encoder):
                 "-vaapi_device": hardware_device.get('hwaccel_device_path'),
             }
             advanced_kwargs = {}
+
+        if self.settings.get_setting('vaapi_safe_decode'):
+            generic_kwargs["-reinit_filter"] = "0"
 
         return generic_kwargs, advanced_kwargs
 
@@ -203,11 +208,20 @@ class VaapiEncoder(Encoder):
                 # Upload to hw frames at the end of the filter
                 end_chain = start_chain + ["hwupload"]
                 end_filter_args.append(",".join(end_chain))
+            elif self.settings.get_setting('vaapi_safe_decode'):
+                # HW decode + safe mode: force SW frames to avoid hwaccel reconfigure
+                generic_kwargs['-hwaccel_output_format'] = target_fmt
+                start_chain = [f"format={target_fmt}"]
+                if enc_supports_hdr and target_color_config.get('apply_color_params'):
+                    start_chain.append(target_color_config['setparams_filter'])
+                start_filter_args.append(",".join(start_chain))
+                end_chain = start_chain + ["hwupload"]
+                end_filter_args.append(",".join(end_chain))
             else:
-                # Add hwupload filter that can handle when the frame was decoded in software or hardware
+                # Pure HW path - frames stay in VAAPI memory
                 chain = [f"format={target_fmt}|vaapi", "hwupload"]
                 end_filter_args.append(",".join(chain))
-
+                
         # Add the smart filters to the end
         end_filter_args += hw_smart_filters
 
@@ -382,6 +396,18 @@ class VaapiEncoder(Encoder):
             values["display"] = "hidden"
         return values
 
+    def get_vaapi_safe_decode_form_settings(self):
+        values = {
+            "label": "Safe decode mode",
+            "description": "Forces CPU-side frame handling to prevent failures on files with "
+                           "inconsistent color space metadata (common in WEBDL sources).\n"
+                           "Slightly slower due to GPU->CPU->GPU round-trip per frame.",
+            "sub_setting": True,
+        }
+        if self.settings.get_setting('mode') not in ['standard'] or self.settings.get_setting('vaapi_decoding_method') != "vaapi":
+            values["display"] = "hidden"
+        return values
+    
     def get_vaapi_encoder_ratecontrol_method_form_settings(self):
         values = {
             "label":          "Encoder ratecontrol method",
