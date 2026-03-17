@@ -1,6 +1,0 @@
-**/__pycache__
-*.py[cod]
-**/site-packages
-**/node_modules
-**/static/vendor
-settings.json

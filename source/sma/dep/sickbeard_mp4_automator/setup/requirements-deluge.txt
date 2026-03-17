@@ -1,2 +1,0 @@
-deluge-client
-gevent
