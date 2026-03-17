@@ -8,7 +8,7 @@ Official plugins for [Unmanic](https://github.com/Unmanic/unmanic)
 [Unmanic Documentation](https://docs.unmanic.app/docs/)
 
 [License and Contribution](#license-and-contribution)
-
+ 
 
 ---
 ## License and Contribution
