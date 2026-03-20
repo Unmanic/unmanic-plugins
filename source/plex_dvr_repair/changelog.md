@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.0.5</span>**
+- Fix the worker handoff after `PluginChildProcess` repair so the repaired cache artifact is published as both `file_out` and `file_in` for later worker plugins in the chain
+
 **<span style="color:#56adda">0.0.4</span>**
 - Improve scan-time skip logging with explicit reasons for unsupported Plex DVR filename patterns and unsupported source extensions
 - Remove the extra debug logging wrapper in the repair logic and log directly through the plugin logger
