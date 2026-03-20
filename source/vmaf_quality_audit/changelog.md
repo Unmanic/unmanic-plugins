@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.0.2</span>**
+- Skip VMAF audits when `original_file_path` and `file_in` resolve to the same file, log a clear configuration warning, and avoid persisting empty audit records
+
 **<span style="color:#56adda">0.0.1</span>**
 - Initial release
 - Runs a late-stage VMAF audit against the original source and the final cached worker output

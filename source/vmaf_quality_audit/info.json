@@ -15,6 +15,6 @@
         "on_worker_process": 999,
         "render_frontend_panel": 1
     },
-    "tags": "vmaf,quality,ffmpeg,data panel,video",
-    "version": "0.0.1"
+    "tags": "video,plex,dvr,ffmpeg,data panel,test",
+    "version": "0.0.2"
 }
