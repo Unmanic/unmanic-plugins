@@ -187,7 +187,7 @@ def _decode_argument(value, default=None):
     return value
 
 
-def _normalize_path(path):
+def _get_abspath(path):
     if not path:
         return ""
     return os.path.abspath(path)
@@ -269,7 +269,7 @@ def _summarize_probe(probe_data, file_path):
     stream = _video_stream_from_probe(probe_data)
     format_info = probe_data.get("format", {})
     return {
-        "path": _normalize_path(file_path),
+        "path": _get_abspath(file_path),
         "codec_name": stream.get("codec_name"),
         "codec_long_name": stream.get("codec_long_name"),
         "profile": stream.get("profile"),
@@ -388,7 +388,7 @@ def _downsample_frames(frame_scores, max_points):
 
 
 def _build_analysis_paths(encoded_path, task_id):
-    cache_dir = os.path.dirname(_normalize_path(encoded_path))
+    cache_dir = os.path.dirname(_get_abspath(encoded_path))
     os.makedirs(cache_dir, exist_ok=True)
     task_label = task_id or "task"
     return {
@@ -530,8 +530,8 @@ def _run_vmaf_audit_child(
             "output_video": _summarize_probe(encoded_probe, encoded_path),
             "vmaf_summary": summary,
             "vmaf_frames": frame_scores,
-            "source_abspath": _normalize_path(source_path),
-            "analyzed_abspath": _normalize_path(encoded_path),
+            "source_abspath": _get_abspath(source_path),
+            "analyzed_abspath": _get_abspath(encoded_path),
             "captured_at": datetime.datetime.utcnow().isoformat() + "Z",
         }
         _write_json_file(result_path, result_payload)
@@ -548,8 +548,8 @@ def _run_vmaf_audit_child(
             "output_video": {},
             "vmaf_summary": {},
             "vmaf_frames": [],
-            "source_abspath": _normalize_path(source_path),
-            "analyzed_abspath": _normalize_path(encoded_path),
+            "source_abspath": _get_abspath(source_path),
+            "analyzed_abspath": _get_abspath(encoded_path),
             "captured_at": datetime.datetime.utcnow().isoformat() + "Z",
         }
         _write_json_file(result_path, failure_payload)
@@ -769,7 +769,7 @@ class DataStore(object):
 def _build_destination_file_data(destination_files):
     results = []
     for path in destination_files or []:
-        abspath = _normalize_path(path)
+        abspath = _get_abspath(path)
         item = {
             "path": abspath,
             "basename": os.path.basename(abspath),
@@ -900,9 +900,30 @@ def _build_overall_status(data, analysis_success):
     return "processing_failed" if analysis_success else "processing_failed_without_vmaf"
 
 
+def _same_path_warning(source_path, encoded_path):
+    return (
+        f"[{PLUGIN_ID}] WARNING: Skipping VMAF audit because the worker input file "
+        f"matches the original source file.\n"
+        f"[{PLUGIN_ID}] original_file_path='{source_path}'\n"
+        f"[{PLUGIN_ID}] file_in='{encoded_path}'\n"
+        f"[{PLUGIN_ID}] This usually indicates the library or worker pipeline is "
+        f"configured such that no transformed cache file was produced before this "
+        f"plugin ran.\n"
+        f"[{PLUGIN_ID}] Comparing a file against itself would produce meaningless "
+        f"VMAF results, so this plugin will not run for this task."
+    )
+
+
 def _persist_audit_record(task_data_store, data):
     analysis = task_data_store.get_task_state(STATE_KEY_RESULT, default={}) or {}
-    source_path = _normalize_path(data.get("source_data", {}).get("abspath"))
+    if not analysis:
+        logger.info(
+            "No VMAF analysis state found for task '%s'. Skipping audit record persistence.",
+            data.get("task_id"),
+        )
+        return None
+
+    source_path = _get_abspath(data.get("source_data", {}).get("abspath"))
     destination_files = _build_destination_file_data(_event_destination_files(data))
     finish_time = (
         datetime.datetime.fromtimestamp(data["finish_time"])
@@ -931,13 +952,13 @@ def _persist_audit_record(task_data_store, data):
         or f"Task {data.get('task_id')}",
         "source_abspath": source_path,
         "source_basename": os.path.basename(source_path),
-        "analyzed_abspath": _normalize_path(
+        "analyzed_abspath": _get_abspath(
             analysis.get("analyzed_abspath") or data.get("final_cache_path")
         ),
         "analyzed_basename": os.path.basename(
             analysis.get("analyzed_abspath") or data.get("final_cache_path") or ""
         ),
-        "final_cache_path": _normalize_path(data.get("final_cache_path")),
+        "final_cache_path": _get_abspath(data.get("final_cache_path")),
         "destination_files_json": _safe_json_dumps(destination_files),
         "task_processing_success": bool(data.get("task_success")),
         "file_move_processes_success": bool(data.get("file_move_processes_success")),
@@ -1080,8 +1101,20 @@ def on_worker_process(data, task_data_store=None):
         )
         return
 
-    source_path = _normalize_path(data.get("original_file_path"))
-    encoded_path = _normalize_path(data.get("file_in"))
+    source_path = _get_abspath(data.get("original_file_path"))
+    encoded_path = _get_abspath(data.get("file_in"))
+    if source_path and encoded_path and source_path == encoded_path:
+        warning_message = _same_path_warning(source_path, encoded_path)
+        logger.warning(
+            "Skipping VMAF audit for task '%s' because original_file_path and file_in resolved to the same path: %s",
+            data.get("task_id"),
+            source_path,
+        )
+        data.get("worker_log", []).append(f"\n{warning_message}\n")
+        if task_data_store is not None:
+            task_data_store.set_task_state(STATE_KEY_RESULT, None)
+        return
+
     result = {
         "analysis_success": False,
         "analysis_error": "",
@@ -1135,7 +1168,9 @@ def emit_postprocessor_complete(data, task_data_store=None):
         return
 
     record_id = _persist_audit_record(task_data_store, data)
-    if record_id is None:
+    if record_id is None and task_data_store.get_task_state(
+        STATE_KEY_RESULT, default=None
+    ):
         logger.error(
             "Failed writing VMAF audit result for task '%s'.", data.get("task_id")
         )
