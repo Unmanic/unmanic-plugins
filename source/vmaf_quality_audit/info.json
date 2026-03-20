@@ -1,0 +1,20 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Score final cached worker outputs against the original source with VMAF and review the results in a data panel.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.vmaf_quality_audit/master/icon.png",
+    "id": "vmaf_quality_audit",
+    "name": "VMAF Quality Audit",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "emit_postprocessor_complete": 1,
+        "on_worker_process": 999,
+        "render_frontend_panel": 1
+    },
+    "tags": "vmaf,quality,ffmpeg,data panel,video",
+    "version": "0.0.1"
+}
