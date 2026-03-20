@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      (function (window, document) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("theme") === "dark") {
+          document.documentElement.classList.replace("light", "dark");
+        }
+      })(window, document);
+    </script>
+    <title>VMAF Quality Audit | Unmanic</title>
+    <link rel="stylesheet" href="./static/css/style.css?{cache_buster}" />
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div>
+          <h1>VMAF Quality Audit</h1>
+          <p class="lede">
+            Review post-transcode VMAF measurements against the original source,
+            with final task status and destination tracking preserved after the
+            task completes.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="refreshButton" class="button secondary">Refresh</button>
+          <button id="resetButton" class="button danger">Reset History</button>
+        </div>
+      </section>
+
+      <section class="utility-row">
+        <section class="controls">
+          <label class="field field-search">
+            <span>Search</span>
+            <input id="searchInput" type="search" placeholder="Source, codec, status" />
+          </label>
+          <div class="filter-row">
+            <label class="field">
+              <span>Status</span>
+              <select id="statusFilter">
+                <option value="all">All statuses</option>
+                <option value="completed">Completed</option>
+                <option value="postprocess_failed">Post-process failed</option>
+                <option value="processing_failed">Processing failed</option>
+                <option value="analysis_failed">Analysis failed</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Sort</span>
+              <select id="sortSelect">
+                <option value="finish_desc">Newest finish time</option>
+                <option value="finish_asc">Oldest finish time</option>
+                <option value="vmaf_desc">Highest VMAF</option>
+                <option value="vmaf_asc">Lowest VMAF</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="guidance-strip">
+          <article class="guidance-card">
+            <div class="panel-header compact">
+              <h2>How to Read VMAF</h2>
+            </div>
+            <p class="guidance-summary">
+              Higher is better. Roughly <strong>95+</strong> is excellent,
+              <strong>90-95</strong> is very good, <strong>80-90</strong> is a
+              visible compromise, and <strong>below 80</strong> needs closer review.
+            </p>
+            <div class="guidance-actions">
+              <button id="guidanceInfoButton" class="button secondary button-compact" type="button">More Info</button>
+            </div>
+          </article>
+        </section>
+      </section>
+
+      <section class="layout">
+        <div class="records-panel">
+          <div class="panel-header">
+            <div class="records-header-block">
+              <h2>Audits</h2>
+              <div class="summary-strip" id="summaryGrid">
+                <div class="summary-item">
+                  <span class="summary-label">Records</span>
+                  <strong id="summaryTotal">0</strong>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Completed</span>
+                  <strong id="summaryCompleted">0</strong>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Task Failures</span>
+                  <strong id="summaryFailed">0</strong>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Avg. VMAF</span>
+                  <strong id="summaryAverage">-</strong>
+                </div>
+              </div>
+            </div>
+            <span id="recordCount"></span>
+          </div>
+          <div id="emptyState" class="empty-state hidden">
+            <h3>No audit results yet</h3>
+            <p>
+              Enable this plugin in a library, keep it late in the worker flow,
+              then process files to start collecting VMAF history.
+            </p>
+          </div>
+          <div id="recordList" class="record-list"></div>
+        </div>
+
+        <aside class="details-panel">
+          <div id="detailPlaceholder" class="detail-placeholder">
+            <h2>Select an audit</h2>
+            <p>
+              Pick a record from the list to inspect source/output diagnostics,
+              final task status, destination files, and the frame-level VMAF curve.
+            </p>
+          </div>
+          <div id="detailView" class="detail-view hidden">
+            <div class="detail-header">
+              <div>
+                <p class="eyebrow">Selected Task</p>
+                <h2 id="detailTitle"></h2>
+              </div>
+              <div class="badge-row">
+                <span id="detailTaskBadge" class="badge"></span>
+                <span id="detailAnalysisBadge" class="badge muted"></span>
+              </div>
+            </div>
+
+            <div class="metric-grid">
+              <article class="metric-card">
+                <span>Mean VMAF</span>
+                <strong id="detailVmafMean">-</strong>
+                <small id="detailVmafMeaning" class="metric-note">Interpretation unavailable</small>
+              </article>
+              <article class="metric-card">
+                <span>Harmonic Mean</span>
+                <strong id="detailVmafHarmonic">-</strong>
+              </article>
+              <article class="metric-card">
+                <span>Frame Range</span>
+                <strong id="detailVmafRange">-</strong>
+              </article>
+              <article class="metric-card">
+                <span>Frames Scored</span>
+                <strong id="detailFrameCount">-</strong>
+              </article>
+            </div>
+
+            <section class="chart-card">
+              <div class="panel-header">
+                <h3>Frame-level VMAF</h3>
+              </div>
+              <svg id="detailChart" viewBox="0 0 960 260" preserveAspectRatio="none"></svg>
+              <p id="detailChartCaption" class="chart-caption"></p>
+            </section>
+
+            <section class="info-grid">
+              <article class="info-card">
+                <div class="panel-header"><h3>Source Video</h3></div>
+                <dl id="sourceVideoMeta" class="meta-list"></dl>
+              </article>
+              <article class="info-card">
+                <div class="panel-header"><h3>Analyzed Output</h3></div>
+                <dl id="outputVideoMeta" class="meta-list"></dl>
+              </article>
+            </section>
+
+            <section class="info-card">
+              <div class="panel-header"><h3>Paths & Result State</h3></div>
+              <div id="detailPaths" class="path-list"></div>
+            </section>
+
+            <section class="info-card">
+              <div class="panel-header"><h3>Destination Files</h3></div>
+              <div id="destinationFiles" class="destination-list"></div>
+            </section>
+
+            <section class="info-card">
+              <div class="panel-header"><h3>Command</h3></div>
+              <pre id="ffmpegCommand" class="command-block"></pre>
+            </section>
+
+            <section id="analysisErrorSection" class="info-card hidden">
+              <div class="panel-header"><h3>Analysis Error</h3></div>
+              <pre id="analysisError" class="command-block error-block"></pre>
+            </section>
+          </div>
+        </aside>
+      </section>
+
+      <dialog id="guidanceDialog">
+        <form method="dialog" class="dialog-card dialog-card-wide">
+          <div class="panel-header compact">
+            <h3>How to Read VMAF</h3>
+            <button value="cancel" class="button secondary button-compact" type="submit">Close</button>
+          </div>
+          <p class="muted">
+            Treat ranges as guidance, not a hard rule. Grain, animation, scaling,
+            and encode settings can shift what a useful score looks like.
+          </p>
+          <div class="guidance-scale">
+            <div class="guidance-scale-item">
+              <strong>95+</strong>
+              <span>Excellent retention</span>
+            </div>
+            <div class="guidance-scale-item">
+              <strong>90-95</strong>
+              <span>Very good retention</span>
+            </div>
+            <div class="guidance-scale-item">
+              <strong>80-90</strong>
+              <span>Visible compromise</span>
+            </div>
+            <div class="guidance-scale-item">
+              <strong>Below 80</strong>
+              <span>Needs close review</span>
+            </div>
+          </div>
+          <div class="link-row">
+            <a href="https://github.com/Netflix/vmaf" target="_blank" rel="noreferrer">Netflix VMAF</a>
+            <a href="https://en.wikipedia.org/wiki/Video_Multimethod_Assessment_Fusion" target="_blank" rel="noreferrer">Wikipedia VMAF Overview</a>
+            <a href="https://medium.com/vimeo-engineering-blog/vmaf-ftw-67c154424c0c" target="_blank" rel="noreferrer">Vimeo Breakdown of VMAF</a>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="confirmDialog">
+        <form method="dialog" class="dialog-card">
+          <h3>Reset VMAF Audit History?</h3>
+          <p>This removes all stored audit records and cannot be undone.</p>
+          <div class="dialog-actions">
+            <button value="cancel" class="button secondary">Cancel</button>
+            <button id="confirmResetButton" value="confirm" class="button danger">Reset</button>
+          </div>
+        </form>
+      </dialog>
+    </div>
+
+    <script src="./static/js/app.js?{cache_buster}"></script>
+  </body>
+</html>
