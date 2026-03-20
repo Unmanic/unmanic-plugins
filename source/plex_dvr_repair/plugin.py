@@ -1016,7 +1016,11 @@ def on_worker_process(data, task_data_store=None, file_metadata=None):
         )
         raise RuntimeError("Plex DVR Repair worker failed")
 
+    # PluginChildProcess runners do not automatically advance file_in for the next
+    # worker plugin in the chain, so publish the repaired cache artifact as both
+    # the current output and the next input.
     data["file_out"] = str(expected_cache_output)
+    data["file_in"] = str(expected_cache_output)
 
     if task_data_store:
         cleanup_paths = []
