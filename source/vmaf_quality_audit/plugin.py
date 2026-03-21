@@ -51,6 +51,10 @@ DEFAULT_FFPROBE = "/usr/lib/btbn-ffmpeg/bin/ffprobe"
 
 logger = UnmanicLogging.get_logger(name=f"Unmanic.Plugin.{PLUGIN_ID}")
 FFMPEG_TIME_RE = re.compile(r"(?:\btime=|\bout_time=)(\d+):(\d+):(\d+(?:\.\d+)?)")
+FILE_SAMPLING_WHOLE = "whole_file"
+FILE_SAMPLING_CHUNKS = "sample_chunks"
+FILE_SAMPLING_MIN_DURATION_SECONDS = 330.0
+FILE_SAMPLING_CHUNK_DURATION_SECONDS = 60.0
 
 
 class Settings(PluginSettings):
@@ -59,6 +63,8 @@ class Settings(PluginSettings):
         "ffmpeg_path": DEFAULT_FFMPEG,
         "ffprobe_path": DEFAULT_FFPROBE,
         "threads": 0,
+        "file_sampling_mode": FILE_SAMPLING_WHOLE,
+        "file_sampling_count": 5,
         "frame_subsample": 1,
         "max_chart_points": 800,
         "fail_on_analysis_error": False,
@@ -86,6 +92,37 @@ class Settings(PluginSettings):
                 "label": "VMAF Threads",
                 "input_type": "number",
                 "description": "Number of threads FFmpeg/libvmaf may use during scoring. Set 0 to let FFmpeg choose automatically.",
+            },
+            "file_sampling_mode": {
+                "label": "File Sampling",
+                "input_type": "select",
+                "select_options": [
+                    {
+                        "value": FILE_SAMPLING_WHOLE,
+                        "label": "Sample Whole File",
+                    },
+                    {
+                        "value": FILE_SAMPLING_CHUNKS,
+                        "label": "Sample One-Minute Chunks",
+                    },
+                ],
+                "description": "Choose whether VMAF should analyze the whole file or sample matching one-minute chunks spread across the timeline. Files shorter than 5 minutes are always analyzed in full.",
+            },
+            "file_sampling_count": {
+                "label": "Sample Count",
+                "input_type": "slider",
+                "slider_options": {
+                    "min": 1,
+                    "max": 10,
+                    "step": 1,
+                    "suffix": " chunks",
+                },
+                "display": (
+                    "visible"
+                    if self.get_setting("file_sampling_mode") == FILE_SAMPLING_CHUNKS
+                    else "hidden"
+                ),
+                "description": "Number of one-minute samples to compare when file sampling is enabled. Samples are spread across the timeline.",
             },
             "frame_subsample": {
                 "label": "Frame Subsample",
@@ -291,7 +328,47 @@ def _summarize_probe(probe_data, file_path):
     }
 
 
-def _build_vmaf_filter(log_path, thread_count, frame_subsample):
+def _format_filter_seconds(value):
+    return "{:.3f}".format(float(value)).rstrip("0").rstrip(".")
+
+
+def _build_sample_positions(sample_count):
+    sample_count = max(_coerce_int(sample_count, 5), 1)
+    if sample_count == 1:
+        return [0.50]
+    step = 0.80 / float(sample_count - 1)
+    return [round(0.10 + (step * index), 6) for index in range(sample_count)]
+
+
+def _resolve_file_sampling_windows(sample_mode, sample_count, duration_seconds):
+    duration_seconds = _coerce_float(duration_seconds) or 0.0
+    if duration_seconds <= 0:
+        return []
+    if sample_mode == FILE_SAMPLING_WHOLE:
+        return []
+    if duration_seconds < FILE_SAMPLING_MIN_DURATION_SECONDS:
+        return []
+    if sample_mode != FILE_SAMPLING_CHUNKS:
+        return []
+
+    chunk_duration = FILE_SAMPLING_CHUNK_DURATION_SECONDS
+    half_chunk = chunk_duration / 2.0
+    windows = []
+    for position in _build_sample_positions(sample_count):
+        centre_point = duration_seconds * position
+        start_time = max(0.0, centre_point - half_chunk)
+        end_time = min(duration_seconds, start_time + chunk_duration)
+        start_time = max(0.0, end_time - chunk_duration)
+        windows.append(
+            {
+                "start": round(start_time, 3),
+                "end": round(end_time, 3),
+            }
+        )
+    return windows
+
+
+def _build_vmaf_filter(log_path, thread_count, frame_subsample, sample_windows=None):
     options = [
         "log_fmt=json",
         f"log_path={log_path}",
@@ -301,12 +378,47 @@ def _build_vmaf_filter(log_path, thread_count, frame_subsample):
     if frame_subsample and int(frame_subsample) > 1:
         options.append(f"n_subsample={int(frame_subsample)}")
 
-    return (
-        "[0:v][1:v]scale2ref=flags=bicubic[distorted][reference];"
-        "[distorted]settb=AVTB,setpts=PTS-STARTPTS[dist];"
-        "[reference]settb=AVTB,setpts=PTS-STARTPTS[ref];"
-        f"[dist][ref]libvmaf={':'.join(options)}"
+    filter_parts = []
+    if sample_windows:
+        distorted_segments = []
+        reference_segments = []
+        for index, window in enumerate(sample_windows):
+            start_time = _format_filter_seconds(window["start"])
+            end_time = _format_filter_seconds(window["end"])
+            distorted_label = f"distorted_seg_{index}"
+            reference_label = f"reference_seg_{index}"
+            filter_parts.append(
+                f"[0:v]trim=start={start_time}:end={end_time},setpts=PTS-STARTPTS[{distorted_label}]"
+            )
+            filter_parts.append(
+                f"[1:v]trim=start={start_time}:end={end_time},setpts=PTS-STARTPTS[{reference_label}]"
+            )
+            distorted_segments.append(f"[{distorted_label}]")
+            reference_segments.append(f"[{reference_label}]")
+        filter_parts.append(
+            "{}concat=n={}:v=1:a=0[distorted_sampled]".format(
+                "".join(distorted_segments), len(distorted_segments)
+            )
+        )
+        filter_parts.append(
+            "{}concat=n={}:v=1:a=0[reference_sampled]".format(
+                "".join(reference_segments), len(reference_segments)
+            )
+        )
+        filter_parts.append(
+            "[distorted_sampled][reference_sampled]scale2ref=flags=bicubic[distorted][reference]"
+        )
+    else:
+        filter_parts.append("[0:v][1:v]scale2ref=flags=bicubic[distorted][reference]")
+
+    filter_parts.extend(
+        [
+            "[distorted]settb=AVTB,setpts=PTS-STARTPTS[dist]",
+            "[reference]settb=AVTB,setpts=PTS-STARTPTS[ref]",
+            f"[dist][ref]libvmaf={':'.join(options)}",
+        ]
     )
+    return ";".join(filter_parts)
 
 
 def _analysis_duration_seconds(source_probe, encoded_probe):
@@ -318,6 +430,20 @@ def _analysis_duration_seconds(source_probe, encoded_probe):
     ]
     durations = [value for value in durations if value and value > 0]
     return max(durations) if durations else 0.0
+
+
+def _sampled_analysis_duration_seconds(sample_windows, fallback_duration):
+    if not sample_windows:
+        return fallback_duration
+    sampled_duration = sum(
+        max(
+            (_coerce_float(window.get("end")) or 0)
+            - (_coerce_float(window.get("start")) or 0),
+            0,
+        )
+        for window in sample_windows
+    )
+    return sampled_duration or fallback_duration
 
 
 def _parse_ffmpeg_progress_percent(line, duration_seconds):
@@ -398,10 +524,14 @@ def _build_analysis_paths(encoded_path, task_id):
     }
 
 
-def _build_vmaf_command(source_path, encoded_path, settings_payload, log_path):
+def _build_vmaf_command(
+    source_path, encoded_path, settings_payload, log_path, sample_windows=None
+):
     thread_count = _coerce_int(settings_payload.get("threads"), 0)
     frame_subsample = max(_coerce_int(settings_payload.get("frame_subsample"), 1), 1)
-    filter_complex = _build_vmaf_filter(log_path, thread_count, frame_subsample)
+    filter_complex = _build_vmaf_filter(
+        log_path, thread_count, frame_subsample, sample_windows=sample_windows
+    )
     return [
         settings_payload.get("ffmpeg_path") or DEFAULT_FFMPEG,
         "-hide_banner",
@@ -450,15 +580,48 @@ def _run_vmaf_audit_child(
                 "The analyzed cached output does not contain a video stream."
             )
 
+        sampling_mode = (
+            settings_payload.get("file_sampling_mode") or FILE_SAMPLING_WHOLE
+        )
+        sampling_count = max(
+            _coerce_int(settings_payload.get("file_sampling_count"), 5), 1
+        )
+        total_duration_seconds = _analysis_duration_seconds(source_probe, encoded_probe)
+        sample_windows = _resolve_file_sampling_windows(
+            sampling_mode, sampling_count, total_duration_seconds
+        )
         command = _build_vmaf_command(
-            source_path, encoded_path, settings_payload, log_path
+            source_path,
+            encoded_path,
+            settings_payload,
+            log_path,
+            sample_windows=sample_windows,
         )
         command_string = shlex.join(command)
-        duration_seconds = _analysis_duration_seconds(source_probe, encoded_probe)
+        duration_seconds = _sampled_analysis_duration_seconds(
+            sample_windows, total_duration_seconds
+        )
         output_tail = []
         if log_queue is not None:
             log_queue.put(f"[{PLUGIN_ID}] Executing VMAF audit:")
             log_queue.put(command_string)
+            if sample_windows:
+                log_queue.put(
+                    f"[{PLUGIN_ID}] File sampling mode '{sampling_mode}' selected. Using {len(sample_windows)} one-minute chunks."
+                )
+                for index, window in enumerate(sample_windows, start=1):
+                    log_queue.put(
+                        "[{}] Sample {}: {}s -> {}s".format(
+                            PLUGIN_ID,
+                            index,
+                            _format_filter_seconds(window["start"]),
+                            _format_filter_seconds(window["end"]),
+                        )
+                    )
+            else:
+                log_queue.put(
+                    f"[{PLUGIN_ID}] File sampling mode '{sampling_mode}' resolved to full-file analysis."
+                )
             if duration_seconds > 0:
                 log_queue.put(
                     f"[{PLUGIN_ID}] Progress tracking duration: {duration_seconds:.3f} seconds"
@@ -532,6 +695,9 @@ def _run_vmaf_audit_child(
             "vmaf_frames": frame_scores,
             "source_abspath": _get_abspath(source_path),
             "analyzed_abspath": _get_abspath(encoded_path),
+            "file_sampling_mode": sampling_mode,
+            "file_sampling_count": sampling_count,
+            "file_sampling_windows": sample_windows,
             "captured_at": datetime.datetime.utcnow().isoformat() + "Z",
         }
         _write_json_file(result_path, result_payload)
@@ -550,6 +716,12 @@ def _run_vmaf_audit_child(
             "vmaf_frames": [],
             "source_abspath": _get_abspath(source_path),
             "analyzed_abspath": _get_abspath(encoded_path),
+            "file_sampling_mode": settings_payload.get("file_sampling_mode")
+            or FILE_SAMPLING_WHOLE,
+            "file_sampling_count": max(
+                _coerce_int(settings_payload.get("file_sampling_count"), 5), 1
+            ),
+            "file_sampling_windows": [],
             "captured_at": datetime.datetime.utcnow().isoformat() + "Z",
         }
         _write_json_file(result_path, failure_payload)
@@ -561,6 +733,11 @@ def _run_vmaf_audit(source_path, encoded_path, plugin_settings, data):
         "ffmpeg_path": plugin_settings.get_setting("ffmpeg_path") or DEFAULT_FFMPEG,
         "ffprobe_path": plugin_settings.get_setting("ffprobe_path") or DEFAULT_FFPROBE,
         "threads": _coerce_int(plugin_settings.get_setting("threads"), 0),
+        "file_sampling_mode": plugin_settings.get_setting("file_sampling_mode")
+        or FILE_SAMPLING_WHOLE,
+        "file_sampling_count": max(
+            _coerce_int(plugin_settings.get_setting("file_sampling_count"), 5), 1
+        ),
         "frame_subsample": max(
             _coerce_int(plugin_settings.get_setting("frame_subsample"), 1), 1
         ),
