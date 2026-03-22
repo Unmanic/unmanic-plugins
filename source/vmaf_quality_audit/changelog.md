@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.0.4</span>**
+- Record and display VMAF runner timing instead of overall task timing
+
 **<span style="color:#56adda">0.0.3</span>**
 - Added file sampling controls with a two-option dropdown for whole-file analysis or sampled one-minute chunks
 - Added a conditional sample-count slider to control how many one-minute chunks are compared across the timeline
