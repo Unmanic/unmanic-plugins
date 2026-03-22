@@ -30,10 +30,6 @@ It audits the final cached worker output, so any transcoding, remuxing, filterin
 
 ##### Configuration:
 
-- **Enable VMAF Audit**
-  Enables or disables the audit for the selected library.
-  Default: `Enabled`
-  Recommended: `Enabled` when you want quality auditing on that library.
 - **FFmpeg Path**
   Path to the FFmpeg binary that will run the `libvmaf` comparison.
   Default: `/usr/lib/btbn-ffmpeg/bin/ffmpeg`
