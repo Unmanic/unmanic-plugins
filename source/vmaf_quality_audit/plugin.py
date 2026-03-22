@@ -60,7 +60,6 @@ FILE_SAMPLING_CHUNK_DURATION_SECONDS = 60.0
 
 class Settings(PluginSettings):
     settings = {
-        "enabled": True,
         "ffmpeg_path": DEFAULT_FFMPEG,
         "ffprobe_path": DEFAULT_FFPROBE,
         "threads": 0,
@@ -74,11 +73,6 @@ class Settings(PluginSettings):
     def __init__(self, *args, **kwargs):
         super(Settings, self).__init__(*args, **kwargs)
         self.form_settings = {
-            "enabled": {
-                "label": "Enable VMAF Audit",
-                "input_type": "checkbox",
-                "description": "Run a VMAF quality audit after the worker pipeline has produced its final cached output for this task.",
-            },
             "ffmpeg_path": {
                 "label": "FFmpeg Path",
                 "input_type": "text",
@@ -1287,12 +1281,6 @@ def on_worker_process(data, task_data_store=None):
 
     """
     plugin_settings = Settings(library_id=data.get("library_id"))
-    if not plugin_settings.get_setting("enabled"):
-        logger.debug(
-            "VMAF Quality Audit disabled for library '%s'.", data.get("library_id")
-        )
-        return
-
     source_path = _get_abspath(data.get("original_file_path"))
     encoded_path = _get_abspath(data.get("file_in"))
     if source_path and encoded_path and source_path == encoded_path:

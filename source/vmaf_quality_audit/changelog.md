@@ -1,3 +1,6 @@
+**<span style="color:#56adda">0.0.5</span>**
+- Remove enabled config option
+
 **<span style="color:#56adda">0.0.4</span>**
 - Record and display VMAF runner timing instead of overall task timing
 
