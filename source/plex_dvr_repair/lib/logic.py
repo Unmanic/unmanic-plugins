@@ -36,6 +36,7 @@ PLEX_SIDECAR_SUFFIXES = (".log", ".txt", ".logo.txt")
 COPY_FILE_STALE_MINUTES = 5
 RECORDING_GROUP_JOIN_BUFFER_SECONDS = 300
 REPAIRED_FILE_MARKER = "UNMANIC_REPAIRED"
+MAX_GRAB_PARENT_SEARCH_DEPTH = 4
 logger = logging.getLogger("Unmanic.Plugin.plex_dvr_repair")
 
 
@@ -156,6 +157,45 @@ def find_active_sidecars(base_path, grace_minutes, ignore_when_sidecars_exist):
                 base_path.name,
                 grace_minutes,
                 [sidecar.name for sidecar in active],
+            )
+        )
+    return active
+
+
+def find_active_grab_recordings(base_path):
+    base_path = Path(base_path)
+    base_fragment = parse_fragment_path(base_path)
+    if base_fragment is None:
+        return []
+
+    grab_root = None
+    for depth, parent in enumerate(base_path.parents, start=1):
+        if depth > MAX_GRAB_PARENT_SEARCH_DEPTH:
+            break
+        candidate = parent / ".grab"
+        if candidate.is_dir():
+            grab_root = candidate
+            break
+    if grab_root is None:
+        return []
+
+    active = []
+    for candidate in grab_root.rglob(f"*{base_fragment.extension}"):
+        if not candidate.is_file():
+            continue
+        parsed = parse_fragment_path(candidate)
+        if parsed is None:
+            continue
+        if parsed.base_stem != base_fragment.base_stem:
+            continue
+        active.append(candidate)
+
+    if active:
+        logger.debug(
+            "Active .grab recordings for '%s': %s"
+            % (
+                base_path.name,
+                [str(path) for path in active],
             )
         )
     return active

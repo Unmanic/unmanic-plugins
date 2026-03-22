@@ -1,3 +1,7 @@
+**<span style="color:#56adda">0.0.6</span>**
+- Add `.grab` staging checks during library scans so base recordings are skipped while Plex still has a matching in-progress DVR source file
+- Limit the `.grab` parent-directory search to four levels while keeping the existing recent-modification and sidecar safeguards
+
 **<span style="color:#56adda">0.0.5</span>**
 - Fix the worker handoff after `PluginChildProcess` repair so the repaired cache artifact is published as both `file_out` and `file_in` for later worker plugins in the chain
 
