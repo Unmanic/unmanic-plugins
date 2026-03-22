@@ -45,6 +45,7 @@ from unmanic.libs.unplugins.settings import PluginSettings
 
 PLUGIN_ID = "vmaf_quality_audit"
 STATE_KEY_RESULT = "analysis_result"
+STATE_KEY_TIMING = "analysis_timing"
 DEFAULT_FFMPEG = "/usr/lib/btbn-ffmpeg/bin/ffmpeg"
 DEFAULT_FFPROBE = "/usr/lib/btbn-ffmpeg/bin/ffprobe"
 
@@ -698,7 +699,7 @@ def _run_vmaf_audit_child(
             "file_sampling_mode": sampling_mode,
             "file_sampling_count": sampling_count,
             "file_sampling_windows": sample_windows,
-            "captured_at": datetime.datetime.utcnow().isoformat() + "Z",
+            "captured_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         }
         _write_json_file(result_path, result_payload)
     except Exception as exc:
@@ -722,7 +723,7 @@ def _run_vmaf_audit_child(
                 _coerce_int(settings_payload.get("file_sampling_count"), 5), 1
             ),
             "file_sampling_windows": [],
-            "captured_at": datetime.datetime.utcnow().isoformat() + "Z",
+            "captured_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         }
         _write_json_file(result_path, failure_payload)
         raise
@@ -1102,17 +1103,31 @@ def _persist_audit_record(task_data_store, data):
 
     source_path = _get_abspath(data.get("source_data", {}).get("abspath"))
     destination_files = _build_destination_file_data(_event_destination_files(data))
+    analysis_timing = (
+        task_data_store.get_task_state(
+            STATE_KEY_TIMING, default={}, task_id=data.get("task_id")
+        )
+        or {}
+    )
     finish_time = (
-        datetime.datetime.fromtimestamp(data["finish_time"])
-        if data.get("finish_time")
+        datetime.datetime.fromtimestamp(analysis_timing["finish_time"])
+        if analysis_timing.get("finish_time")
         else None
     )
     start_time = (
-        datetime.datetime.fromtimestamp(data["start_time"])
-        if data.get("start_time")
+        datetime.datetime.fromtimestamp(analysis_timing["start_time"])
+        if analysis_timing.get("start_time")
         else None
     )
-    test_duration_seconds = _duration_seconds(start_time, finish_time)
+    test_duration_seconds = _coerce_float(analysis_timing.get("duration_seconds"))
+    if test_duration_seconds is None:
+        test_duration_seconds = _duration_seconds(start_time, finish_time)
+    if start_time is None and data.get("start_time"):
+        start_time = datetime.datetime.fromtimestamp(data["start_time"])
+    if finish_time is None and data.get("finish_time"):
+        finish_time = datetime.datetime.fromtimestamp(data["finish_time"])
+    if test_duration_seconds is None:
+        test_duration_seconds = _duration_seconds(start_time, finish_time)
 
     source_video = analysis.get("source_video") or {}
     output_video = analysis.get("output_video") or {}
@@ -1290,6 +1305,7 @@ def on_worker_process(data, task_data_store=None):
         data.get("worker_log", []).append(f"\n{warning_message}\n")
         if task_data_store is not None:
             task_data_store.set_task_state(STATE_KEY_RESULT, None)
+            task_data_store.set_task_state(STATE_KEY_TIMING, None)
         return
 
     result = {
@@ -1303,6 +1319,14 @@ def on_worker_process(data, task_data_store=None):
         "vmaf_summary": {},
         "vmaf_frames": [],
     }
+    analysis_start_time = datetime.datetime.now(datetime.timezone.utc)
+    analysis_timing = {
+        "start_time": analysis_start_time.timestamp(),
+        "finish_time": None,
+        "duration_seconds": None,
+    }
+    if task_data_store is not None:
+        task_data_store.set_task_state(STATE_KEY_TIMING, analysis_timing)
 
     try:
         result = _run_vmaf_audit(source_path, encoded_path, plugin_settings, data)
@@ -1315,6 +1339,12 @@ def on_worker_process(data, task_data_store=None):
             raise
     finally:
         if task_data_store is not None:
+            analysis_finish_time = datetime.datetime.now(datetime.timezone.utc)
+            analysis_timing["finish_time"] = analysis_finish_time.timestamp()
+            analysis_timing["duration_seconds"] = round(
+                (analysis_finish_time - analysis_start_time).total_seconds(), 3
+            )
+            task_data_store.set_task_state(STATE_KEY_TIMING, analysis_timing)
             task_data_store.set_task_state(STATE_KEY_RESULT, result)
 
 
