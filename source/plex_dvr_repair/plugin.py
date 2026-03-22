@@ -37,6 +37,7 @@ from plex_dvr_repair.lib.logic import (
     detect_hardware_acceleration_methods,
     discover_candidate_fragments,
     ensure_fragment_profiles,
+    find_active_grab_recordings,
     find_active_sidecars,
     format_command_for_logs,
     group_fragments_by_recording_window,
@@ -932,6 +933,24 @@ def on_library_management_file_test(data, file_metadata=None):
             {
                 "id": "Plex DVR Repair",
                 "message": f"Skipping '{abspath.name}' because Plex sidecar files indicate post-processing is still active.",
+            }
+        )
+        return
+
+    active_grab_recordings = find_active_grab_recordings(abspath)
+    if active_grab_recordings:
+        data["add_file_to_pending_tasks"] = False
+        logger.debug(
+            "File '%s' is being skipped for now because matching Plex .grab recordings were detected.",
+            abspath,
+        )
+        data["issues"].append(
+            {
+                "id": "Plex DVR Repair",
+                "message": (
+                    f"Skipping '{abspath.name}' because Plex still has a matching "
+                    "recording staged in '.grab'."
+                ),
             }
         )
         return

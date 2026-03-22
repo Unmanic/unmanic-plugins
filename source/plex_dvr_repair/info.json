@@ -14,5 +14,5 @@
         "on_worker_process": 1
     },
     "tags": "video,plex,dvr,ffmpeg",
-    "version": "0.0.5"
+    "version": "0.0.6"
 }
