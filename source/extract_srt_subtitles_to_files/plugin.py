@@ -64,6 +64,7 @@ class PluginStreamMapper(StreamMapper):
         super(PluginStreamMapper, self).__init__(logger, ['subtitle'])
         self.sub_streams = []
         self.settings = None
+        self.used_tags = {}
 
     def set_settings(self, settings):
         self.settings = settings
@@ -123,9 +124,29 @@ class PluginStreamMapper(StreamMapper):
         if title_tag and self.settings.get_setting('include_title_in_output_file_name'):
             subtitle_tag = "{}.{}".format(subtitle_tag, title_tag)
 
-        # If there were no tags, just number the file
+        # If there were no tags, just number the file with prefix `.`
         if not subtitle_tag:
-            subtitle_tag = "{}.{}".format(subtitle_tag, stream_info.get('index'))
+            subtitle_tag = ".{}".format(stream_info.get('index'))
+        else:
+            # It is possible that there are multiple streams with the same tag
+            # If the title is not included, the tags will be the same for all such
+            # streams and only the most recently extracted file will survive.
+            # We make it unique by adding a `.1` and `.2` to it. However, we do
+            # not add a `.1` is the tag is being used for the first time.
+            base_tag = subtitle_tag
+            if base_tag in self.used_tags:
+                self.used_tags[base_tag] += 1
+                # Used for the second time, so add 1 to the previous one
+                if self.used_tags[base_tag] == 2:
+                    for past_stream in self.sub_streams:
+                        if past_stream.get('subtitle_tag') == base_tag:
+                            past_stream['subtitle_tag'] = "{}.1".format(base_tag)
+                            break
+                # Add the number to the current tag
+                subtitle_tag = "{}.{}".format(base_tag, self.used_tags[base_tag])
+            else:
+                # First time seeing this tag
+                self.used_tags[base_tag] = 1
 
         # Ensure subtitle tag does not contain whitespace or slashes
         subtitle_tag = re.sub('\s|/|\\\\', '-', subtitle_tag)
