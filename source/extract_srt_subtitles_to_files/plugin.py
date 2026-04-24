@@ -35,6 +35,7 @@ logger = logging.getLogger("Unmanic.Plugin.extract_srt_subtitles_to_files")
 class Settings(PluginSettings):
     settings = {
         "languages_to_extract": "",
+        "include_no_language_subtitles": True,
         "include_title_in_output_file_name": True
     }
 
@@ -45,10 +46,17 @@ class Settings(PluginSettings):
             "languages_to_extract": {
                 "label": "Subtitle languages to extract (leave empty for all)",
             },
+            "include_no_language_subtitles": {
+                "label": "Include subtitles with no language tag",
+            },
             "include_title_in_output_file_name": {
                 "label": "Include title in output file name",
             },
         }
+
+        # Hide 'include_no_language_subtitles' if 'languages_to_extract' is empty
+        if not self.get_setting('languages_to_extract'):
+            self.form_settings["include_no_language_subtitles"]["display"] = "hidden"
 
 
 class PluginStreamMapper(StreamMapper):
@@ -79,7 +87,11 @@ class PluginStreamMapper(StreamMapper):
         if len(languages) == 0:
             return True
 
-        language_tag = stream_info.get('tags').get('language', '').lower()
+        language_tag = stream_info.get('tags', {}).get('language', '').lower()
+
+        # If there is no language tag, check if we should include it
+        if not language_tag:
+            return self.settings.get_setting('include_no_language_subtitles')
 
         return language_tag in languages
 
@@ -93,12 +105,14 @@ class PluginStreamMapper(StreamMapper):
 
         languages = self._get_language_list()
 
-        # Skip stream
+        # Skip stream if it does not match the language list
         if len(languages) > 0 and language_tag not in languages:
-            return {
-                'stream_mapping':  [],
-                'stream_encoding': [],
-            }
+            # If there is no language tag, check if we should include it
+            if language_tag or not self.settings.get_setting('include_no_language_subtitles'):
+                return {
+                    'stream_mapping':  [],
+                    'stream_encoding': [],
+                }
 
         # Find a tag for this subtitle
         subtitle_tag = ''
@@ -269,45 +283,45 @@ def on_worker_process(data):
         settings = Settings(library_id=data.get('library_id'))
     else:
         settings = Settings()
-        
+
     if not srt_already_extracted(settings, data.get('file_in')):
         # Get stream mapper
         mapper = PluginStreamMapper()
-    
+
         mapper.set_settings(settings)
         mapper.set_probe(probe)
-    
+
         split_original_file_path = os.path.splitext(data.get('original_file_path'))
         original_file_directory = os.path.dirname(data.get('original_file_path'))
-    
+
         if mapper.streams_need_processing():
             # Set the input file
             mapper.set_input_file(abspath)
-    
+
             # Get generated ffmpeg args
             ffmpeg_args = mapper.get_ffmpeg_args()
-    
+
             # Append STR extract args
             for sub_stream in mapper.sub_streams:
                 stream_mapping = sub_stream.get('stream_mapping', [])
                 subtitle_tag = sub_stream.get('subtitle_tag')
-    
+
                 ffmpeg_args += stream_mapping
                 ffmpeg_args += [
                     "-y",
                     os.path.join(original_file_directory, "{}{}.srt".format(split_original_file_path[0], subtitle_tag)),
                 ]
-    
+
             # Apply ffmpeg args to command
             data['exec_command'] = ['ffmpeg']
             data['exec_command'] += ffmpeg_args
-    
+
             # Set the parser
             parser = Parser(logger)
             parser.set_probe(probe)
             data['command_progress_parser'] = parser.parse_progress
     return data
-    
+
 def on_postprocessor_task_results(data):
     """
     Runner function - provides a means for additional postprocessor functions based on the task success.
@@ -341,7 +355,7 @@ def on_postprocessor_task_results(data):
         probe_streams=probe_data.get_probe()["streams"]
     else:
         probe_streams=[]
-        
+
     # Loop over the destination_files list and update the directory info file for each one
     for destination_file in data.get('destination_files'):
         langs = ""
@@ -358,4 +372,4 @@ def on_postprocessor_task_results(data):
         directory_info.save()
         logger.info("SRT subtitles processed for '{}' and recorded in .unmanic file.".format(destination_file))
 
-    return data                                                                                
+    return data
