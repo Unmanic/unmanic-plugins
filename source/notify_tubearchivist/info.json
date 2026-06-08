@@ -1,0 +1,18 @@
+{
+    "id": "notify_tubearchivist",
+    "name": "Notify TubeArchivist",
+    "author": "mistic100",
+    "version": "0.0.1",
+    "tags": "post-processor",
+    "description": "Intructs TubeArchivist to reindex the video.",
+    "icon": "https://raw.githubusercontent.com/mistic100/unmanic-plugins/main/source/notify_tubearchivist/icon.png",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_postprocessor_task_results": 0
+    },
+    "compatibility": [
+        2
+    ]
+}

@@ -1,9 +1,0 @@
-{
-    "id": "example_postprocessor_task_results",
-    "name": "Example Task Result Post-processor Plugin",
-    "author": "Josh.5",
-    "version": "0.0.1",
-    "tags": "example,results,postprocessor",
-    "description": "An example plugin to demonstrate the ability to expand on functionality executed during a task success or failure during the postprocessor.",
-    "icon": ""
-}

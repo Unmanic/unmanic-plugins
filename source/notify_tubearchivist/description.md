@@ -1,0 +1,1 @@
+Uses TubeArchivist API to trigger a reindex of the transcoded video so that TA statistics (size, format, bitrate) are correct.

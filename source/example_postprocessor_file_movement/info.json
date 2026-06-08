@@ -1,9 +1,0 @@
-{
-    "id": "example_postprocessor_file_movement",
-    "name": "Example File Copy Plugin",
-    "author": "Josh.5",
-    "version": "0.0.1",
-    "tags": "example,copy,postprocessor",
-    "description": "An example plugin to show what we can modify during a post-processor file movement.\n\nThis plugin will keep the original source file and create a copy of the file with the tag 'UNMANIC' appended to the end.",
-    "icon": ""
-}

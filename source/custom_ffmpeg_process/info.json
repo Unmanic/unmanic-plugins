@@ -1,9 +1,0 @@
-{
-    "id": "custom_ffmpeg_process",
-    "name": "Example Worker FFMPEG Plugin",
-    "author": "Josh.5",
-    "version": "0.0.3",
-    "tags": "example,ffmpeg,worker",
-    "description": "An example plugin to show what a worker process plugin can do.",
-    "icon": "https://raw.githubusercontent.com/Josh5/unmanic/master/icon.png"
-}

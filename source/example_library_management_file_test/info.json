@@ -1,9 +1,0 @@
-{
-    "id": "example_library_management_file_test",
-    "name": "Example Library Management File Test Plugin",
-    "author": "Josh.5",
-    "version": "0.0.1",
-    "tags": "example,scan,event,library",
-    "description": "An example plugin to demonstrate the basic functionality compatible during a library scan.",
-    "icon": ""
-}
