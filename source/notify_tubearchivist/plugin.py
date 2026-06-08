@@ -1,7 +1,31 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+    Written by: mistic100
+    Date:       June 8th, 2026
+
+    Copyright:
+        Copyright (C) 2026
+
+        This program is free software: you can redistribute it and/or modify it under the terms of the GNU General
+        Public License as published by the Free Software Foundation, version 3.
+
+        This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+        implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+        for more details.
+
+        You should have received a copy of the GNU General Public License along with this program.
+        If not, see <https://www.gnu.org/licenses/>.
+
+"""
 import logging
 import requests
 from pathlib import Path
 from unmanic.libs.unplugins.settings import PluginSettings
+
+logger = logging.getLogger("Unmanic.Plugin.notify_tubearchivist")
+
 
 class Settings(PluginSettings):
     settings = {
@@ -52,7 +76,7 @@ def notify_ta(ta_url: str, ta_token: str, video_id: str):
 
 def on_postprocessor_task_results(data):
     if not data.get('destination_files'):
-        logging.info('No destination files')
+        loggloggering.info('No destination files')
         return data
 
     settings = Settings(library_id=data.get('library_id'))
@@ -60,7 +84,7 @@ def on_postprocessor_task_results(data):
     ta_token = settings.get_setting('ta_token')
 
     if not ta_url or not ta_token:
-        logging.warning("TubeArchivist URL/API Token is not configured, skipping")
+        logger.warning("TubeArchivist URL/API Token is not configured, skipping")
         return data
 
     for file in data.get('destination_files'):
@@ -69,6 +93,6 @@ def on_postprocessor_task_results(data):
         if ta_video_exists(ta_url, ta_token, video_id):
             notify_ta(ta_url, ta_token, video_id)
         else:
-            logging.warning(f"Video {video_id} does not exist on TubeArchivist")
+            logger.warning(f"Video {video_id} does not exist on TubeArchivist")
 
     return data
