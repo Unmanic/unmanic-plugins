@@ -99,21 +99,27 @@ class LibsvtAv1Encoder(Encoder):
         provides = self.provides()
         return provides.get(encoder, {})
 
-    def stream_args(self, stream_id, filter_state=None):
-        stream_encoding = []
+    def stream_args(self, stream_info, stream_id, encoder_name, filter_state=None):
+        encoder_args = []
+        stream_args = []
 
         # Use defaults for basic mode
         if self.settings.get_setting('mode') in ['basic']:
             defaults = self.options()
-            stream_encoding += [
+            stream_args += [
                 '-preset', str(defaults.get('preset')),
             ]
             # TODO: Calculate best crf based on source bitrate
             default_crf = defaults.get('constant_quality_scale')
             if self.settings.get_setting('video_encoder') in ['libsvtav1']:
                 default_crf = 23
-            stream_encoding += ['-crf', str(default_crf)]
-            return stream_encoding
+            stream_args += ['-crf', str(default_crf)]
+            return {
+                "generic_kwargs":  {},
+                "advanced_kwargs": {},
+                "encoder_args":    encoder_args,
+                "stream_args":     stream_args,
+            }
 
         stav1_params = ["enable-stat-report=1"]
         stav1_params += ['tune=' + str(self.settings.get_setting('tune_stvav1'))]
@@ -136,23 +142,28 @@ class LibsvtAv1Encoder(Encoder):
             # Add additional parameters for SVT-AV1
             stav1_params += self.settings.get_setting('encoder_svtav1_additional_params')
 
-        stream_encoding += ['-svtav1-params', ":".join(stav1_params)]
+        stream_args += ['-svtav1-params', ":".join(stav1_params)]
 
         # Add the preset
         if self.settings.get_setting('preset'):
-            stream_encoding += ['-preset', str(self.settings.get_setting('preset'))]
+            stream_args += ['-preset', str(self.settings.get_setting('preset'))]
 
         if self.settings.get_setting('encoder_ratecontrol_method') in ['CRF']:
             # Set values for constant quantizer scale
-            stream_encoding += [
+            stream_args += [
                 '-crf', str(self.settings.get_setting('constant_quality_scale')),
             ]
 
         if self.settings.get_setting('video_pix_fmt') not in ['auto']:
             # Set the pixel format
-            stream_encoding += ['-pix_fmt', str(self.settings.get_setting('video_pix_fmt'))]
+            stream_args += ['-pix_fmt', str(self.settings.get_setting('video_pix_fmt'))]
 
-        return stream_encoding
+        return {
+            "generic_kwargs":  {},
+            "advanced_kwargs": {},
+            "encoder_args":    encoder_args,
+            "stream_args":     stream_args,
+        }
 
     def __set_default_option(self, select_options, key, default_option=None):
         """

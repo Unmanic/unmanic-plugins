@@ -413,7 +413,7 @@ class PluginStreamMapper(StreamMapper):
                     stream_encoding += stream_args.get("encoder_args", [])
                     stream_encoding += stream_args.get("stream_args", [])
                 elif encoder_name in stva1_encoder.provides():
-                    stream_args = vaapi_encoder.stream_args(stream_info, stream_id, encoder_name, filter_state=filter_state)
+                    stream_args = stva1_encoder.stream_args(stream_info, stream_id, encoder_name, filter_state=filter_state)
                     stream_encoding += stream_args.get("encoder_args", [])
                     stream_encoding += stream_args.get("stream_args", [])
                 elif encoder_name in qsv_encoder.provides():
