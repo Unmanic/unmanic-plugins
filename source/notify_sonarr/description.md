@@ -32,7 +32,7 @@ There are x2 modes available. Each mode has a different set of configuration opt
 
     Useful if you've changed encodings and have these encodings in your Sonarr name templates.
 
-    Only available if the *Trigger movie refresh on task complete* mode is selected.
+    Only available if the *Trigger series refresh on task complete* mode is selected.
 
 - **Import episode on task complete**
 

@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.9</span>**
+- Align the plugin structure with Notify Radarr to reduce drift and simplify maintenance
+- Keep shared settings, webhook handling, and logging flow consistent with the Radarr plugin
+
 **<span style="color:#56adda">0.0.8</span>**
 - Add support for receiving webhooks from Sonarr to trigger Unmanic tasks
 - Add dynamic library association settings for webhooks
