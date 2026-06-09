@@ -166,9 +166,11 @@ class QsvEncoder(Encoder):
         """
         # Encode only (no decoding)
         #   REF: https://trac.ffmpeg.org/wiki/Hardware/QuickSync#Transcode
+        # set reinit_filter here for both h/w & s/w decode paths as both use hwupload
         generic_kwargs = {
             "-init_hw_device":   "qsv=qsv0",
             "-filter_hw_device": "qsv0",
+            "-reinit_filter":    "0",
         }
         advanced_kwargs = {}
         # Check if we are using a HW accelerated decoder> Modify args as required
@@ -177,9 +179,6 @@ class QsvEncoder(Encoder):
                 "-hwaccel":               "qsv",
                 "-hwaccel_output_format": "qsv",
             })
-
-        if self.settings.get_setting('qsv_safe_decode'):
-            generic_kwargs["-reinit_filter"] = "0"
 
         return generic_kwargs, advanced_kwargs
 

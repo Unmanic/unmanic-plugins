@@ -127,12 +127,14 @@ class VaapiEncoder(Encoder):
             dev_id = 'vaapi0'
             # Configure args such that when the input may or may not be able to be decoded with hardware we can do:
             #   REF: https://trac.ffmpeg.org/wiki/Hardware/VAAPI#Encoding
+            # set reinit_filter here for both h/w & s/w decode paths as both use hwupload
             generic_kwargs = {
                 "-init_hw_device":        "vaapi={}:{}".format(dev_id, hardware_device.get('hwaccel_device_path')),
                 "-hwaccel":               "vaapi",
                 "-hwaccel_output_format": "vaapi",
                 "-hwaccel_device":        dev_id,
                 "-filter_hw_device":      dev_id,
+                "-reinit_filter":         "0",
             }
             advanced_kwargs = {}
         else:
@@ -142,9 +144,6 @@ class VaapiEncoder(Encoder):
                 "-vaapi_device": hardware_device.get('hwaccel_device_path'),
             }
             advanced_kwargs = {}
-
-        if self.settings.get_setting('vaapi_safe_decode'):
-            generic_kwargs["-reinit_filter"] = "0"
 
         return generic_kwargs, advanced_kwargs
 

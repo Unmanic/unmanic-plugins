@@ -1,3 +1,10 @@
+**<span style="color:#56adda">0.1.20</span>**
+- Corrected encoder options setting in plugin stream mapper for libsvtav1
+- Fix the libsvtav1 encoder integration so the stream mapper uses the correct encoder args contract
+
+**<span style="color:#56adda">0.1.19</span>**
+- adds the -reinit_filter:0 option for all decode modes of vaapi and qsv when h/w encode is used.
+- Needed since vaapi & qsv use hwupload to get the frame into GPU memory and will generate an error if reinit_filter is not set to 0
 
 **<span style="color:#56adda">0.1.18</span>**
 - adds similar logic for qsv and vaapi as was done for nvenc in 0.1.17
