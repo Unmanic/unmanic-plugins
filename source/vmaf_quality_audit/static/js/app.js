@@ -27,6 +27,31 @@ const formatTestDuration = (seconds) => {
   return `${remSeconds}s`;
 };
 
+const formatLocalDateTime = (timestamp) => {
+  const numericTimestamp = Number(timestamp);
+  if (!Number.isFinite(numericTimestamp) || numericTimestamp <= 0) {
+    return "";
+  }
+
+  const date = new Date(numericTimestamp * 1000);
+  const parts = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const lookup = {};
+  parts.forEach((part) => {
+    lookup[part.type] = part.value;
+  });
+
+  return `${lookup.year}-${lookup.month}-${lookup.day} ${lookup.hour}:${lookup.minute}:${lookup.second}`;
+};
+
 const describeVmaf = (value) => {
   const score = Number(value);
   if (Number.isNaN(score)) return "No VMAF result";
@@ -69,14 +94,14 @@ const sortRecords = (records, sortValue) => {
   copy.sort((left, right) => {
     switch (sortValue) {
       case "finish_asc":
-        return (left.finish_time || "").localeCompare(right.finish_time || "");
+        return Number(left.finish_time || 0) - Number(right.finish_time || 0);
       case "vmaf_desc":
         return (right.vmaf_mean ?? -1) - (left.vmaf_mean ?? -1);
       case "vmaf_asc":
         return (left.vmaf_mean ?? 9999) - (right.vmaf_mean ?? 9999);
       case "finish_desc":
       default:
-        return (right.finish_time || "").localeCompare(left.finish_time || "");
+        return Number(right.finish_time || 0) - Number(left.finish_time || 0);
     }
   });
   return copy;
@@ -125,7 +150,7 @@ const renderRecordList = () => {
           </div>
           <div class="record-tail">
             <div class="record-meta">
-              <span class="muted">Finished ${record.finish_time || "Pending"}</span>
+              <span class="muted">Finished ${formatLocalDateTime(record.finish_time) || "Pending"}</span>
               ${testDuration ? `<span class="muted">Test Duration ${testDuration}</span>` : ""}
             </div>
             <div class="record-title">${record.vmaf_mean === null || record.vmaf_mean === undefined ? "No score" : `VMAF ${formatNumber(record.vmaf_mean, 2)}`}</div>
@@ -209,8 +234,8 @@ const renderPaths = (detail) => {
     ["Source File", detail.source_abspath],
     ["Analyzed Cache File", detail.analyzed_abspath],
     ["Final Cache File", detail.final_cache_path],
-    ["Started", detail.start_time],
-    ["Finished", detail.finish_time],
+    ["Started", formatLocalDateTime(detail.start_time)],
+    ["Finished", formatLocalDateTime(detail.finish_time)],
   ];
 
   query("#detailPaths").innerHTML = items

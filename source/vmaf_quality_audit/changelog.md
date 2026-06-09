@@ -1,3 +1,7 @@
+**<span style="color:#56adda">0.0.6</span>**
+- Store new audit timestamps in UTC and emit UTC-safe timing data to Unmanic Central
+- Return timestamp values to the audit panel so records sort correctly and render in the viewer's browser timezone
+
 **<span style="color:#56adda">0.0.5</span>**
 - Remove enabled config option
 
