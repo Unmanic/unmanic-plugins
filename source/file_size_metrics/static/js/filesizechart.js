@@ -1,4 +1,21 @@
 const CompletedTasksFileSizeDiffChart = (function () {
+  const getThemeColours = function () {
+    const styles = getComputedStyle(document.documentElement);
+
+    return {
+      defaultBar: styles.getPropertyValue("--muted").trim() || "#667788",
+      positiveBar: styles.getPropertyValue("--success").trim() || "#0b7d5d",
+      negativeBar: styles.getPropertyValue("--danger").trim() || "#a92f33",
+      text: styles.getPropertyValue("--text").trim() || "#18212b",
+      subtext: styles.getPropertyValue("--muted").trim() || "#667788",
+      chartBackground:
+        styles.getPropertyValue("--surface-strong").trim() ||
+        styles.getPropertyValue("--surface").trim() ||
+        "#ffffff",
+      accent: styles.getPropertyValue("--accent").trim() || "#005f96",
+    };
+  };
+
   /**
    * Format a byte integer into the smallest possible number appending a suffix
    *
@@ -26,12 +43,13 @@ const CompletedTasksFileSizeDiffChart = (function () {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
-  const default_bar_colour = "#555";
-  const positive_bar_colour = "var(--q-positive)";
-  const negative_bar_colour = "var(--q-negative)";
-  const text_colour = "var(--q-text)";
-  const subtext_colour = "var(--q-subtext)";
-  const chart_background = "var(--q-card)";
+  const themeColours = getThemeColours();
+  const default_bar_colour = themeColours.defaultBar;
+  const positive_bar_colour = themeColours.positiveBar;
+  const negative_bar_colour = themeColours.negativeBar;
+  const text_colour = themeColours.text;
+  const subtext_colour = themeColours.subtext;
+  const chart_background = themeColours.chartBackground;
   const chartHeight = 300;
 
   let chart_title = "(Select a task from the table)";
@@ -289,12 +307,71 @@ const CompletedTasksFileSizeDiffChart = (function () {
   };
 
   const fetchTotalFileSizeDetails = function () {
-    jQuery.get("totalSizeChange", function (data) {
-      // Update/set the conversion details list
-      source_total_size = data.source;
-      destination_total_size = data.destination;
-      updateTotalChart();
-    });
+    jQuery
+      .get("totalSizeChange", function (data) {
+        source_total_size = Number(data.source || 0);
+        destination_total_size = Number(data.destination || 0);
+
+        if (typeof setMetricsPanelState === "function") {
+          setMetricsPanelState({
+            hasData:
+              typeof data.has_data === "boolean"
+                ? data.has_data
+                : Boolean(
+                    Number(data.source || 0) > 0 ||
+                    Number(data.destination || 0) > 0,
+                  ),
+            isAssigned:
+              typeof data.is_assigned === "boolean"
+                ? data.is_assigned
+                : undefined,
+            message: data.empty_state_message,
+          });
+        }
+
+        const hasTotalData =
+          typeof data.has_data === "boolean"
+            ? data.has_data
+            : Boolean(
+                Number(data.source || 0) > 0 ||
+                Number(data.destination || 0) > 0,
+              );
+
+        if (!hasTotalData) {
+          totalChart.update({
+            chart: {
+              backgroundColor: chart_background,
+              type: "bar",
+              width: null,
+            },
+            title: {
+              text: "No metrics collected yet",
+            },
+            subtitle: {
+              text:
+                data.empty_state_message ||
+                "Add this plugin to a library and process files to start collecting file size metrics.",
+            },
+          });
+
+          for (let i = totalChart.series.length - 1; i >= 0; i--) {
+            totalChart.series[i].remove(false);
+          }
+          totalChart.redraw();
+          return;
+        }
+
+        updateTotalChart();
+      })
+      .fail(function () {
+        if (typeof setMetricsPanelState === "function") {
+          setMetricsPanelState({
+            hasData: false,
+            message:
+              "The metrics summary could not be loaded. Reload this panel after the plugin has been enabled on a library.",
+          });
+        }
+      });
   };
 
   const watch = function () {
