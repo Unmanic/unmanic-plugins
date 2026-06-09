@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="light">
   <head>
     <meta charset="utf-8" />
@@ -58,68 +58,170 @@
       value=""
     />
 
-    <div class="top-content">
-      <div class="charts">
-        <div class="card">
-          <div class="collapsible card-header active">
-            Total File Size Changed
-            <button id="reset-metrics-btn" class="reset-btn" title="Reset all metrics">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-              Reset
-            </button>
+    <div class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Unmanic Data Panel</p>
+          <h1>File Size Metrics</h1>
+          <p class="lede">
+            Review how much disk space completed Unmanic tasks save or add over
+            time, then use Unmanic Central for broader dashboards, shared fleet
+            visibility, and longer-term reporting.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="refreshButton" class="button secondary" type="button">
+            Refresh
+          </button>
+          <a
+            class="button"
+            href="https://central.unmanic.app/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open Unmanic Central
+          </a>
+        </div>
+      </header>
+
+      <section class="utility-row">
+        <div id="panelNotice" class="notice-banner notice-banner-neutral">
+          <div class="notice-copy">
+            <strong id="panelNoticeTitle"
+              >Use Unmanic Central for multi-installation dashboards</strong
+            >
+            <p id="panelNoticeMessage">
+              This local panel is useful for reviewing one Unmanic installation.
+              Unmanic Central lets you collect file size metrics from multiple
+              installations into one place, then build custom dashboards
+              alongside logs, resource usage, and other installation data.
+            </p>
           </div>
-          <div class="card-content">
-            <div class="content" style="display: block">
-              <div id="total_size_chart">
-                There was an issue showing this chart
+          <a
+            id="panelNoticeLink"
+            class="button secondary button-compact"
+            href="https://docs.unmanic.app/#unmanic-central"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Learn More
+          </a>
+        </div>
+      </section>
+
+      <div class="top-content">
+        <div class="charts">
+          <div class="card">
+            <div class="collapsible card-header active">
+              <div>
+                <div class="card-title">Total File Size Changed</div>
+                <div class="card-subtitle">
+                  Aggregate size before and after successful processing
+                </div>
+              </div>
+              <div class="card-header-actions">
+                <button
+                  id="reset-metrics-btn"
+                  class="button danger button-compact"
+                  title="Reset all metrics"
+                  type="button"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                  Reset
+                </button>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="content" style="display: block">
+                <div id="total_size_chart">
+                  There was an issue showing this chart
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="tables">
-      <table id="history_completed_tasks_table" class="dataTable display">
-        <thead>
-          <tr>
-            <th>New File Name</th>
-            <th>Start Time</th>
-            <th>Finish Time</th>
-          </tr>
-        </thead>
-        <tfoot>
-          <tr>
-            <th>New File Name</th>
-            <th>Start Time</th>
-            <th>Finish Time</th>
-          </tr>
-        </tfoot>
-      </table>
-
-      <div id="individual_file_size_chart">
-        <div class="card">
-          <div class="card-header active">Individual File Size Change</div>
-          <div class="card-content">
-            <div class="task_details">
-              <div id="file_size_chart">
-                There was an issue showing this chart
+      <div class="tables">
+        <div class="card table-card">
+          <div class="card-header active">
+            <div>
+              <div class="card-title">Processed Files</div>
+              <div class="card-subtitle">
+                Completed tasks captured by this plugin
               </div>
             </div>
+          </div>
+          <div class="card-content table-card-content">
+            <table id="history_completed_tasks_table" class="dataTable display">
+              <thead>
+                <tr>
+                  <th>New File Name</th>
+                  <th>Start Time</th>
+                  <th>Finish Time</th>
+                </tr>
+              </thead>
+              <tfoot>
+                <tr>
+                  <th>New File Name</th>
+                  <th>Start Time</th>
+                  <th>Finish Time</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
 
-            <div class="selected_task_name" class="car-header"></div>
+        <div id="individual_file_size_chart">
+          <div class="card">
+            <div class="card-header active">
+              <div>
+                <div class="card-title">Individual File Size Change</div>
+                <div class="card-subtitle">
+                  Select a processed task to compare before and after sizes
+                </div>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="task_details">
+                <div id="file_size_chart">
+                  There was an issue showing this chart
+                </div>
+              </div>
+
+              <div class="selected_task_name" class="car-header"></div>
+            </div>
           </div>
         </div>
       </div>
 
       <dialog id="individual_file_size_chart_dialog" data-modal>
         <div class="card">
-          <div class="card-header active">Individual File Size Change</div>
+          <div class="card-header active">
+            <div>
+              <div class="card-title">Individual File Size Change</div>
+              <div class="card-subtitle">
+                Detailed size comparison for the selected task
+              </div>
+            </div>
+          </div>
           <div class="card-content">
             <div class="task_details">
               <div id="file_size_chart_dialog">
@@ -131,7 +233,13 @@
           </div>
           <div class="card-footer">
             <form method="dialog">
-              <button autofocus class="q-btn">Close</button>
+              <button
+                autofocus
+                class="button secondary button-compact"
+                type="submit"
+              >
+                Close
+              </button>
             </form>
           </div>
         </div>
@@ -139,28 +247,32 @@
 
       <!-- Reset Confirmation Dialog -->
       <dialog id="reset_confirm_dialog" data-reset-modal>
-        <div class="card">
-          <div class="card-header active warning-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            Confirm Reset
+        <form method="dialog" class="dialog-card">
+          <h3>Reset File Size Metrics History?</h3>
+          <p>
+            This removes all stored file size records from the standalone panel.
+            If you need longer-term reporting and historical dashboards, use
+            Unmanic Central instead.
+          </p>
+          <div class="dialog-actions">
+            <button
+              id="reset-cancel-btn"
+              value="cancel"
+              class="button secondary"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              id="reset-confirm-btn"
+              value="confirm"
+              class="button danger"
+              type="button"
+            >
+              Reset
+            </button>
           </div>
-          <div class="card-content">
-            <p class="reset-warning-text">
-              Are you sure you want to reset all metrics?
-            </p>
-            <p class="reset-warning-subtext">
-              This will permanently delete all file size tracking data. This action cannot be undone.
-            </p>
-          </div>
-          <div class="card-footer reset-dialog-footer">
-            <button id="reset-cancel-btn" class="q-btn q-btn-secondary">Cancel</button>
-            <button id="reset-confirm-btn" class="q-btn q-btn-danger">Reset All Data</button>
-          </div>
-        </div>
+        </form>
       </dialog>
     </div>
 
@@ -222,7 +334,7 @@
         for (let i = 0; i < coll.length; i++) {
           coll[i].addEventListener("click", function (e) {
             // Don't toggle if clicking the reset button
-            if (e.target.closest('.reset-btn')) {
+            if (e.target.closest(".reset-btn")) {
               return;
             }
 
