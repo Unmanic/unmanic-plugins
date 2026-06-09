@@ -192,8 +192,14 @@ class AuditRecord(BaseModel):
     test_duration_seconds = FloatField(null=True)
     start_time = DateTimeField(null=True)
     finish_time = DateTimeField(null=True)
-    created_at = DateTimeField(null=False, default=datetime.datetime.now)
-    updated_at = DateTimeField(null=False, default=datetime.datetime.now)
+    created_at = DateTimeField(
+        null=False,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+    )
+    updated_at = DateTimeField(
+        null=False,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+    )
 
 
 def _safe_json_dumps(data):
@@ -257,10 +263,57 @@ def _coerce_float(value):
         return None
 
 
-def _format_datetime(value):
-    if not value:
-        return ""
-    return value.strftime("%Y-%m-%d %H:%M:%S")
+def _get_unix_timestamp(value):
+    if value in [None, ""]:
+        return None
+
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    if isinstance(value, datetime.datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=datetime.timezone.utc)
+        return value.timestamp()
+
+    if isinstance(value, datetime.date):
+        value = datetime.datetime.combine(
+            value,
+            datetime.time.min,
+            tzinfo=datetime.timezone.utc,
+        )
+        return value.timestamp()
+
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+
+        try:
+            return float(stripped)
+        except ValueError:
+            pass
+
+        parse_formats = (
+            "%Y-%m-%d %H:%M:%S.%f",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S.%f",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M",
+        )
+        for fmt in parse_formats:
+            try:
+                parsed = datetime.datetime.strptime(stripped, fmt)
+                parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+                return parsed.timestamp()
+            except ValueError:
+                continue
+
+        try:
+            return datetime.datetime.fromisoformat(stripped).timestamp()
+        except ValueError:
+            return None
+
+    return None
 
 
 def _duration_seconds(start_time, finish_time):
@@ -815,7 +868,7 @@ class DataStore(object):
                 record = AuditRecord(task_id=payload["task_id"])
             for key, value in payload.items():
                 setattr(record, key, value)
-            record.updated_at = datetime.datetime.now()
+            record.updated_at = datetime.datetime.now(datetime.timezone.utc)
             record.save()
             record_id = record.id
         except Exception:
@@ -838,7 +891,7 @@ class DataStore(object):
             "failed_records": 0,
             "analysis_failures": 0,
             "average_vmaf": None,
-            "latest_finish_time": "",
+            "latest_finish_time": None,
         }
         scores = []
         for record in records:
@@ -851,7 +904,7 @@ class DataStore(object):
             if record.vmaf_mean is not None:
                 scores.append(record.vmaf_mean)
             if not summary["latest_finish_time"] and record.finish_time:
-                summary["latest_finish_time"] = _format_datetime(record.finish_time)
+                summary["latest_finish_time"] = _get_unix_timestamp(record.finish_time)
         if scores:
             summary["average_vmaf"] = round(sum(scores) / len(scores), 3)
         self.db_stop()
@@ -885,8 +938,8 @@ class DataStore(object):
                         if output_video.get("width") and output_video.get("height")
                         else ""
                     ),
-                    "finish_time": _format_datetime(record.finish_time),
-                    "start_time": _format_datetime(record.start_time),
+                    "finish_time": _get_unix_timestamp(record.finish_time),
+                    "start_time": _get_unix_timestamp(record.start_time),
                     "analysis_error": record.analysis_error or "",
                 }
             )
@@ -927,10 +980,10 @@ class DataStore(object):
                 "vmaf_max": record.vmaf_max,
                 "frame_count": record.frame_count,
                 "test_duration_seconds": record.test_duration_seconds,
-                "start_time": _format_datetime(record.start_time),
-                "finish_time": _format_datetime(record.finish_time),
-                "created_at": _format_datetime(record.created_at),
-                "updated_at": _format_datetime(record.updated_at),
+                "start_time": _get_unix_timestamp(record.start_time),
+                "finish_time": _get_unix_timestamp(record.finish_time),
+                "created_at": _get_unix_timestamp(record.created_at),
+                "updated_at": _get_unix_timestamp(record.updated_at),
             }
         except AuditRecord.DoesNotExist:
             result = {}
@@ -1104,12 +1157,18 @@ def _persist_audit_record(task_data_store, data):
         or {}
     )
     finish_time = (
-        datetime.datetime.fromtimestamp(analysis_timing["finish_time"])
+        datetime.datetime.fromtimestamp(
+            analysis_timing["finish_time"],
+            tz=datetime.timezone.utc,
+        )
         if analysis_timing.get("finish_time")
         else None
     )
     start_time = (
-        datetime.datetime.fromtimestamp(analysis_timing["start_time"])
+        datetime.datetime.fromtimestamp(
+            analysis_timing["start_time"],
+            tz=datetime.timezone.utc,
+        )
         if analysis_timing.get("start_time")
         else None
     )
@@ -1117,9 +1176,15 @@ def _persist_audit_record(task_data_store, data):
     if test_duration_seconds is None:
         test_duration_seconds = _duration_seconds(start_time, finish_time)
     if start_time is None and data.get("start_time"):
-        start_time = datetime.datetime.fromtimestamp(data["start_time"])
+        start_time = datetime.datetime.fromtimestamp(
+            data["start_time"],
+            tz=datetime.timezone.utc,
+        )
     if finish_time is None and data.get("finish_time"):
-        finish_time = datetime.datetime.fromtimestamp(data["finish_time"])
+        finish_time = datetime.datetime.fromtimestamp(
+            data["finish_time"],
+            tz=datetime.timezone.utc,
+        )
     if test_duration_seconds is None:
         test_duration_seconds = _duration_seconds(start_time, finish_time)
 
@@ -1191,8 +1256,8 @@ def _persist_audit_record(task_data_store, data):
         "analysis_success": payload["analysis_success"],
         "analysis_error": payload["analysis_error"],
         "ffmpeg_command": payload["ffmpeg_command"],
-        "start_time": _format_datetime(payload["start_time"]),
-        "finish_time": _format_datetime(payload["finish_time"]),
+        "start_time": _get_unix_timestamp(payload["start_time"]),
+        "finish_time": _get_unix_timestamp(payload["finish_time"]),
         "test_duration_seconds": payload["test_duration_seconds"],
         "processed_by_worker": data.get("processed_by_worker"),
         "task_log": data.get("log"),

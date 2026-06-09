@@ -36,16 +36,34 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(255, 180, 125, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(70, 117, 255, 0.08), transparent 24%),
-    var(--page);
   color: var(--text);
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
 body {
   padding: 16px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 75%, transparent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted) 92%, transparent);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .shell {
@@ -596,9 +614,9 @@ dialog::backdrop {
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 940px) {
   body {
-    padding: 10px;
+    padding: 4px;
   }
 
   .hero,
