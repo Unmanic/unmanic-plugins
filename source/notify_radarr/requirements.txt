@@ -1,3 +1,6 @@
+# NOTE:
+# Keep the pyarr version aligned with notify_sonarr/requirements.txt.
+# If pyarr needs to be updated here, review and update the Sonarr plugin as well.
 pyarr==5.2.0
 humanfriendly>=9.1
 simpleeval>=1.0.3

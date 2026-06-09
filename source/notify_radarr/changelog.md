@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.7</span>**
+- Fix issue where root_path is None due to variations in Radarr's API
+- Align the plugin structure with Notify Sonarr to reduce drift and simplify maintenance
+
 **<span style="color:#56adda">0.0.6</span>**
 - Add support for receiving webhooks from Radarr to trigger Unmanic tasks
 - Add dynamic library association settings for webhooks
