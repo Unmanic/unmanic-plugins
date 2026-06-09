@@ -1,6 +1,6 @@
 # Notify Sonarr
 
-plugin for [Unmanic](https://github.com/Unmanic)
+Plugin for [Unmanic](https://github.com/Unmanic)
 
 ---
 
