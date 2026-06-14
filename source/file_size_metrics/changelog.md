@@ -1,3 +1,7 @@
+
+**<span style="color:#56adda">0.2.3</span>**
+- Update runner signatures to accept keyword helper args for Unmanic compatibility
+
 **<span style="color:#56adda">0.2.2</span>**
 - Store new metric timestamps in UTC and emit UTC-safe timing data to Unmanic Central
 - Return timestamp values to the standalone panel and format them in the viewer's browser timezone

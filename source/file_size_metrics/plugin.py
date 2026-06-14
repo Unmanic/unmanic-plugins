@@ -38,6 +38,7 @@ from peewee import (
 from playhouse.shortcuts import model_to_dict
 from unmanic.libs.logs import UnmanicLogging
 from unmanic.libs.library import Library
+from unmanic.libs.task import TaskDataStore
 from unmanic.libs.unplugins.settings import PluginSettings
 
 # Configure plugin logger
@@ -619,7 +620,7 @@ def save_destination_size(task_id, abspath, size, finish_time):
     return success
 
 
-def emit_task_scheduled(data, store):
+def emit_task_scheduled(data, task_data_store: type[TaskDataStore] | None = None):
     """
     Runner function - emit data when a task is scheduled for execution on a worker.
 
@@ -636,7 +637,7 @@ def emit_task_scheduled(data, store):
                                       - abspath: String, absolute path to the file.
                                       - basename: String, file name.
 
-    :param store:
+    :param task_data_store:
     :param data:
     :return:
 
@@ -650,10 +651,11 @@ def emit_task_scheduled(data, store):
     source_size = os.path.getsize(abspath)
 
     # Store this data in the shared state
-    store.set_runner_value("source_size", source_size)
+    if task_data_store is not None:
+        task_data_store.set_runner_value("source_size", source_size)
 
 
-def on_postprocessor_task_results(data, store):
+def on_postprocessor_task_results(data, task_data_store: type[TaskDataStore] | None = None):
     """
     Runner function - provides a means for additional postprocessor functions based on the task success.
 
@@ -669,7 +671,7 @@ def on_postprocessor_task_results(data, store):
         start_time                      - Float, UNIX timestamp when the task began.
         finish_time                     - Float, UNIX timestamp when the task completed.
 
-    :param store:
+    :param task_data_store:
     :param data:
     :return:
 
@@ -698,7 +700,11 @@ def on_postprocessor_task_results(data, store):
     finish_time = datetime.datetime.fromtimestamp(unix_finish_time, tz=datetime.timezone.utc)
 
     # Read source_size from data store
-    source_size = store.get_runner_value("source_size", runner="emit_task_scheduled")
+    if task_data_store is None:
+        logger.error("The task data store helper is unavailable.")
+        return
+
+    source_size = task_data_store.get_runner_value("source_size", runner="emit_task_scheduled")
     if source_size is None:
         # Something is going wrong here. The data is no longer in the store.
         logger.error("The 'source_size' is missing from the task data store.")
@@ -742,7 +748,7 @@ def on_postprocessor_task_results(data, store):
     save_destination_size(task_id, dest_abspath, dest_size, finish_time)
 
 
-def render_frontend_panel(data, task_data_store=None, file_metadata=None):
+def render_frontend_panel(data):
     if data.get("path") in ["list", "/list", "/list/"]:
         data["content_type"] = "application/json"
         data["content"] = get_historical_data(data)
