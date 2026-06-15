@@ -21,105 +21,140 @@
         If not, see <https://www.gnu.org/licenses/>.
 
 """
+from audio_transcoder.lib.encoders.base import Encoder
+from audio_transcoder.lib.smart_audio_bitrate import SmartAudioBitrateHelper
 
 
-class LameEncoder:
-    encoders = [
-        "libmp3lame",
-    ]
+class LameEncoder(Encoder):
+    def __init__(self, settings=None, probe=None):
+        super().__init__(settings=settings, probe=probe)
 
-    def __init__(self, settings):
-        self.settings = settings
+    def provides(self):
+        return {
+            "libmp3lame": {
+                "codec":        "mp3",
+                "label":        "LAME - libmp3lame",
+                "max_channels": 2,
+            },
+        }
 
-    @staticmethod
-    def options():
+    def options(self):
         return {
             "encoder_ratecontrol_method": "VBR",
             "constant_quality_scale":     "4",
             "average_bitrate":            "192",
         }
 
-    @staticmethod
-    def generate_default_args(settings):
-        """
-        Generate a list of args for using a lib decoder
+    def generate_default_args(self):
+        return {}, {}
 
-        :param settings:
-        :return:
-        """
-        # No default args required
-        generic_kwargs = {}
-        advanced_kwargs = {}
-        return generic_kwargs, advanced_kwargs
+    def generate_filtergraphs(self, current_filter_args, smart_filters, encoder_name):
+        return {
+            "generic_kwargs":    {},
+            "advanced_kwargs":   {},
+            "smart_filters":     smart_filters,
+            "start_filter_args": [],
+            "end_filter_args":   [],
+        }
 
-    @staticmethod
-    def generate_filtergraphs():
-        """
-        Generate the required filter for this encoder
-        No filters are required for lib encoders
-
-        :return:
-        """
-        return []
-
-    @staticmethod
-    def get_output_file_extension(encoder):
-        """
-        Given an encoder, return the required file extension for that codec
-        :param encoder:
-        :return:
-        """
+    def get_output_file_extension(self, encoder):
         if encoder == "libmp3lame":
             return "mp3"
         return ""
 
-    def args(self, stream_id):
-        stream_encoding = []
+    def stream_args(self, stream_info, stream_id, encoder_name, filter_state=None):
+        generic_kwargs = {}
+        advanced_kwargs = {}
+        encoder_args = []
+        stream_args = []
+        target_channels = None
+        if filter_state:
+            try:
+                target_channels = int(filter_state.get('target_channels'))
+            except (TypeError, ValueError):
+                target_channels = None
 
-        # Use defaults for basic mode
         if self.settings.get_setting('mode') in ['basic']:
-            defaults = self.options()
-            stream_encoding += [
-                '-qscale:a', str(self.settings.get_setting('constant_quality_scale')),
+            if self.settings.get_setting('enable_smart_output_target') and self.probe:
+                helper = SmartAudioBitrateHelper(self.probe)
+                recommendation = helper.recommend_params(
+                    stream_info,
+                    self.settings.get_setting('audio_codec'),
+                    encoder_name,
+                    self.settings.get_setting('smart_output_target'),
+                    target_channels=target_channels,
+                )
+                target_kbps = recommendation.get('recommended_target_kbps')
+                if target_kbps:
+                    stream_args += [
+                        '-b:a', "{}k".format(target_kbps),
+                    ]
+                    if target_channels:
+                        stream_args += [
+                            '-ac:a:{}'.format(stream_id), str(target_channels),
+                        ]
+                    return {
+                        "generic_kwargs":  generic_kwargs,
+                        "advanced_kwargs": advanced_kwargs,
+                        "encoder_args":    encoder_args,
+                        "stream_args":     stream_args,
+                    }
+
+            stream_args += [
+                '-q:a', str(self.settings.get_setting('constant_quality_scale')),
             ]
-            return stream_encoding
+            if target_channels:
+                stream_args += [
+                    '-ac:a:{}'.format(stream_id), str(target_channels),
+                ]
+            return {
+                "generic_kwargs":  generic_kwargs,
+                "advanced_kwargs": advanced_kwargs,
+                "encoder_args":    encoder_args,
+                "stream_args":     stream_args,
+            }
 
         if self.settings.get_setting('encoder_ratecontrol_method') in ['VBR']:
-            # Set values for constant quantizer scale
-            stream_encoding += [
+            stream_args += [
                 '-q:a', str(self.settings.get_setting('constant_quality_scale')),
             ]
         elif self.settings.get_setting('encoder_ratecontrol_method') in ['CBR']:
-            # Set values for constant quantizer scale
-            stream_encoding += [
+            stream_args += [
                 '-b:a', "{}k".format(self.settings.get_setting('average_bitrate')),
             ]
 
-        return stream_encoding
+        if target_channels:
+            stream_args += [
+                '-ac:a:{}'.format(stream_id), str(target_channels),
+            ]
+
+        return {
+            "generic_kwargs":  generic_kwargs,
+            "advanced_kwargs": advanced_kwargs,
+            "encoder_args":    encoder_args,
+            "stream_args":     stream_args,
+        }
 
     def __set_default_option(self, select_options, key, default_option=None):
-        """
-        Sets the default option if the currently set option is not available
-
-        :param select_options:
-        :param key:
-        :return:
-        """
         available_options = []
         for option in select_options:
             available_options.append(option.get('value'))
             if not default_option:
                 default_option = option.get('value')
-        if self.settings.get_setting(key) not in available_options:
-            self.settings.set_setting(key, default_option)
+        current_value = self.settings.get_setting(key)
+        if not getattr(self.settings, 'apply_default_fallbacks', True):
+            return current_value
+        if current_value not in available_options:
+            self.settings.settings_configured[key] = default_option
+            return default_option
+        return current_value
 
     def get_encoder_ratecontrol_method_form_settings(self):
-        # TODO: Add Two-Pass
         values = {
             "label":          "Encoder ratecontrol method",
             "sub_setting":    True,
             "input_type":     "select",
-            "select_options": []
+            "select_options": [],
         }
         common_select_options = [
             {
@@ -134,13 +169,20 @@ class LameEncoder:
                     "label": "CBR - Constant Bitrate",
                 },
             ]
-        self.__set_default_option(values['select_options'], 'encoder_ratecontrol_method', default_option='VBR')
+        selected_method = self.__set_default_option(
+            values['select_options'],
+            'encoder_ratecontrol_method',
+            default_option='VBR',
+        )
+        if getattr(self.settings, 'apply_default_fallbacks', True):
+            current_value = self.settings.get_setting('encoder_ratecontrol_method')
+            if selected_method and selected_method != current_value:
+                self.settings.set_setting('encoder_ratecontrol_method', selected_method)
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
         return values
 
     def get_constant_quality_scale_form_settings(self):
-        # Lower is better
         values = {
             "label":          "Quality scale",
             "description":    "",
@@ -168,71 +210,23 @@ class LameEncoder:
             "sub_setting":    True,
             "input_type":     "select",
             "select_options": [
-                {
-                    "value": "8",
-                    "label": "8Kbit/s",
-                },
-                {
-                    "value": "16",
-                    "label": "16Kbit/s",
-                },
-                {
-                    "value": "24",
-                    "label": "24Kbit/s",
-                },
-                {
-                    "value": "32",
-                    "label": "32Kbit/s",
-                },
-                {
-                    "value": "40",
-                    "label": "40Kbit/s",
-                },
-                {
-                    "value": "48",
-                    "label": "48Kbit/s",
-                },
-                {
-                    "value": "64",
-                    "label": "64Kbit/s",
-                },
-                {
-                    "value": "80",
-                    "label": "80Kbit/s",
-                },
-                {
-                    "value": "96",
-                    "label": "96Kbit/s",
-                },
-                {
-                    "value": "112",
-                    "label": "112Kbit/s",
-                },
-                {
-                    "value": "128",
-                    "label": "128Kbit/s",
-                },
-                {
-                    "value": "160",
-                    "label": "160Kbit/s",
-                },
-                {
-                    "value": "192",
-                    "label": "192Kbit/s",
-                },
-                {
-                    "value": "224",
-                    "label": "224Kbit/s",
-                },
-                {
-                    "value": "256",
-                    "label": "256Kbit/s",
-                },
-                {
-                    "value": "320",
-                    "label": "320Kbit/s",
-                },
-            ]
+                {"value": "8", "label": "8Kbit/s"},
+                {"value": "16", "label": "16Kbit/s"},
+                {"value": "24", "label": "24Kbit/s"},
+                {"value": "32", "label": "32Kbit/s"},
+                {"value": "40", "label": "40Kbit/s"},
+                {"value": "48", "label": "48Kbit/s"},
+                {"value": "64", "label": "64Kbit/s"},
+                {"value": "80", "label": "80Kbit/s"},
+                {"value": "96", "label": "96Kbit/s"},
+                {"value": "112", "label": "112Kbit/s"},
+                {"value": "128", "label": "128Kbit/s"},
+                {"value": "160", "label": "160Kbit/s"},
+                {"value": "192", "label": "192Kbit/s"},
+                {"value": "224", "label": "224Kbit/s"},
+                {"value": "256", "label": "256Kbit/s"},
+                {"value": "320", "label": "320Kbit/s"},
+            ],
         }
         if self.settings.get_setting('mode') not in ['standard']:
             values["display"] = "hidden"
