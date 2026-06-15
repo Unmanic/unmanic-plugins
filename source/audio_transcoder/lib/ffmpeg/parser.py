@@ -97,7 +97,7 @@ class Parser(object):
         :return:
         """
         # Fetch data from line text
-        if line_text and 'frame=' in line_text:
+        if line_text and ('frame=' in line_text or 'time=' in line_text):
             # Update time
             _time = self.get_progress_from_regex_of_string(line_text, r"time=(\s+|)(\d+:\d+:\d+\.\d+)", self.time)
             if _time:

@@ -137,7 +137,7 @@ class StreamMapper(object):
         """
         Overwrite this function to test a stream.
         Return 'True' if it needs to be process.
-        Return 'False' if it should just be copied over to the new file
+        Return 'False' if it should just be copied over to the new file.
 
         :param stream_info:
         :return: bool
@@ -233,8 +233,19 @@ class StreamMapper(object):
                         self.audio_stream_count += 1
                         continue
                 else:
-                    self.__copy_stream_mapping('a', self.audio_stream_count)
-                    self.audio_stream_count += 1
+                    if self.settings.get_setting('mode') == 'advanced':
+                        amaps = self.settings.get_setting('custom_options').split()
+                        self.logger.debug("Advanced Mode Video Settings with custom audio encoding: '%s'", amaps)
+                        if '-c:a' not in amaps:
+                            self.logger.debug("-c:a not detected in custom mappings: '%s'", amaps)
+                            self.__copy_stream_mapping('a', self.audio_stream_count)
+                        else:
+                            self.logger.debug("-c:a detected in custom mappings: '%s'", amaps)
+                            self.stream_mapping += ['-map', '0:{}:{}'.format('a', self.audio_stream_count)]
+                        self.audio_stream_count += 1
+                    else:
+                        self.__copy_stream_mapping('a', self.audio_stream_count)
+                        self.audio_stream_count += 1
                     continue
 
             # If this is a subtitle stream?
@@ -255,8 +266,19 @@ class StreamMapper(object):
                         self.subtitle_stream_count += 1
                         continue
                 else:
-                    self.__copy_stream_mapping('s', self.subtitle_stream_count)
-                    self.subtitle_stream_count += 1
+                    if self.settings.get_setting('mode') == 'advanced':
+                        submaps = self.settings.get_setting('custom_options').split()
+                        self.logger.debug("Advanced Mode Video Settings with custom subtitle encoding: '%s'", submaps)
+                        if '-c:s' not in submaps:
+                            self.logger.debug("-c:s not detected in custom mappings: '%s'", submaps)
+                            self.__copy_stream_mapping('s', self.subtitle_stream_count)
+                        else:
+                            self.logger.debug("-c:s detected in custom mappings: '%s'", submaps)
+                            self.stream_mapping += ['-map', '0:{}:{}'.format('s', self.subtitle_stream_count)]
+                        self.subtitle_stream_count += 1
+                    else:
+                        self.__copy_stream_mapping('s', self.subtitle_stream_count)
+                        self.subtitle_stream_count += 1
                     continue
 
             # If this is a data stream?
@@ -367,13 +389,6 @@ class StreamMapper(object):
     def set_output_null(self):
         """Set the output container to NULL for the FFmpeg args"""
         self.output_file = '-'
-        if os.name == "nt":
-            # Windows uses NUL instead
-            self.output_file = 'NUL'
-        main_options = {
-            "-f": 'null',
-        }
-        self.__build_args(self.main_options, **main_options)
 
     def set_ffmpeg_generic_options(self, *args, **kwargs):
         """
@@ -455,14 +470,14 @@ class StreamMapper(object):
         # Add generic options first
         args += self.generic_options
 
+        # Add other main options
+        args += self.main_options
+
         # Add the input file
         # This class requires at least one input file specified with the input_file attribute
         if not self.input_file:
             raise Exception("Input file has not been set")
         args += ['-i', self.input_file]
-
-        # Add other main options
-        args += self.main_options
 
         # Add advanced options. This includes the stream mapping and the encoding args
         args += self.advanced_options
@@ -474,6 +489,10 @@ class StreamMapper(object):
         if not self.output_file:
             raise Exception("Output file has not been set")
         elif self.output_file == '-':
+            if os.name == "nt":
+                # Windows uses NUL instead
+                self.output_file = 'NUL'
+            args += ['-f', 'null']
             args += [self.output_file]
         else:
             args += ['-y', self.output_file]
