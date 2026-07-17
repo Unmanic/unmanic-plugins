@@ -154,8 +154,11 @@ def on_library_management_file_test(data):
     file_path = data.get('path')
     logger.debug("Checking file %s", file_path)
     file_mime_type = mimetypes.guess_type(file_path)[0]
-    if "video" not in file_mime_type:
-        file_extension = os.path.splitext(file_path)[1]
+    # guess_type() can return None (unknown extension, or racing another
+    # thread's mimetypes.init()) - crashing on it would abort the whole
+    # file-test chain for this file.
+    if not file_mime_type or "video" not in file_mime_type:
+        file_extension = os.path.splitext(file_path)[1].lstrip(".").lower()
         if file_extension in ["mkv", "mp4", "mov", "avi", "wmv", "flv", "avchd"]:
             raise AssertionError(f"File {file_path} was a known video type "
                                  f"but mime type was {file_mime_type} was not recognized")
