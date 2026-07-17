@@ -114,8 +114,12 @@ class Probe(object):
             allowed_mimetypes = ['audio', 'video', 'image']
         self.allowed_mimetypes = allowed_mimetypes
 
-        # Init (reset) our mimetype list
-        mimetypes.init()
+        # Init our mimetype list only once. mimetypes.init() rebuilds the module's
+        # GLOBAL database, so calling it on every Probe() instantiation from
+        # concurrent file-tester threads races guess_type() in other threads into
+        # returning None for valid media files.
+        if not mimetypes.inited:
+            mimetypes.init()
 
         # Add mimetype overrides to mimetype dictionary (replaces any existing entries)
         mimetype_overrides = MimetypeOverrides()
