@@ -39,6 +39,7 @@ class Settings(PluginSettings):
     settings = {
         'fail_task_if_file_detected_larger':                 False,
         'if_end_result_file_is_still_larger_mark_as_ignore': False,
+        'tolerance_percent':                                 0,
     }
     form_settings = {
         "fail_task_if_file_detected_larger":                 {
@@ -47,7 +48,32 @@ class Settings(PluginSettings):
         "if_end_result_file_is_still_larger_mark_as_ignore": {
             "label": "Ignore files in future scans if end result is larger than source (regardless of task history)",
         },
+        "tolerance_percent":                                 {
+            "label":          "Tolerance (%) - allow the new file to be up to this much larger before rejecting it",
+            "input_type":     "slider",
+            "slider_options": {
+                "min":  0,
+                "max":  10,
+                "step": 0.5,
+            },
+        },
     }
+
+
+def get_size_limit(settings, original_size):
+    """
+    Return the maximum acceptable size for the new file.
+
+    A small tolerance allows container-level operations that add a few bytes
+    (eg. an MP4 remux with '-movflags +faststart' relocating the moov atom,
+    or a codec-tag rewrite) to succeed rather than being rejected over an
+    insignificant size increase.
+    """
+    try:
+        tolerance_percent = float(settings.get_setting('tolerance_percent') or 0)
+    except (TypeError, ValueError):
+        tolerance_percent = 0
+    return int(original_size) * (1 + (tolerance_percent / 100))
 
 
 def file_marked_as_failed(settings, path):
@@ -145,7 +171,7 @@ def on_worker_process(data):
     original_file_stats = os.stat(os.path.join(original_file_path))
 
     # Test that the source file is not smaller than the new file
-    if int(current_file_stats.st_size) > int(original_file_stats.st_size):
+    if int(current_file_stats.st_size) > get_size_limit(settings, original_file_stats.st_size):
         if settings.get_setting('fail_task_if_file_detected_larger'):
             # Add some worker logs to be transparent as to what is happening
             if data.get('worker_log'):
@@ -226,7 +252,7 @@ def on_postprocessor_file_movement(data):
         original_file_stats = os.stat(os.path.join(original_source_path))
 
         # Test that the source file is not smaller than the new file
-        if int(current_file_stats.st_size) > int(original_file_stats.st_size):
+        if int(current_file_stats.st_size) > get_size_limit(settings, original_file_stats.st_size):
             # The current file is larger than the original.
             # Mark it as failed
             write_file_marked_as_failed(original_source_path)

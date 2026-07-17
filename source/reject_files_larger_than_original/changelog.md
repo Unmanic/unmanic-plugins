@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Add an optional size tolerance (default 0%% = unchanged behaviour). Without it, remux-style tasks that grow a file by a few bytes (eg. hev1->hvc1 codec-tag rewrites with '-movflags +faststart') are rejected and recorded as successful no-ops, permanently blocking the intended change for plugins like 'Ignore completed tasks'
+
 **<span style="color:#56adda">0.0.4</span>**
 - Improve workflow to remove additional file movements
 - Update Plugin to remove Unmanic v1 PluginHandler compatibility
