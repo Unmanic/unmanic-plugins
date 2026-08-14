@@ -31,36 +31,18 @@ as many details as possible, including potential implementation options.
 
 ### Opening Pull Requests
 
-Code contributions are very welcome. However, please understand that by opening a pull 
-requests you hand over copyright ownership of that work to the Unmanic project and the
-project owner.
-Your contribution becomes licensed under the same license as the project and ownership
-is handed over to the project owner. 
-This extends upon paragraph 11 of the Terms & Conditions stipulated in the GPL v3.0.
+Code contributions are very welcome. However, please understand that by submitting a pull request, you hand over copyright ownership of that work to the Unmanic project and the project owner (Josh Sunnex). Your contribution becomes licensed under the same license as specified in the project root (GPL v3.0) and ownership is assigned to the project owner. This extends upon paragraph 11 of the Terms & Conditions stipulated in the GPL v3.0.
 
-All new python file contributions must contain the following header:
+All new Python file contributions must contain the following standard header:
 
-```
+```python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
-    Written by:               {{YOUR_NAME}} <{{YOUR_EMAIL}}>
-    Date:                     {{DAY_NAME}} {{MONTH}} {{DAY_NUMBER}} {{YEAR}}, ({{TIME}} {{AM_PM}})
- 
-    Copyright:
-        Copyright (C) {{YEAR}} {{YOUR_NAME}}
+Copyright (C) Josh Sunnex
 
-        This program is free software: you can redistribute it and/or modify it under the terms of the GNU General
-        Public License as published by the Free Software Foundation, version 3.
-
-        This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-        implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
-        for more details.
-
-        You should have received a copy of the GNU General Public License along with this program.
-        If not, see <https://www.gnu.org/licenses/>.
-
+SPDX-License-Identifier: GPL-3.0-only
 """
 ```
 
