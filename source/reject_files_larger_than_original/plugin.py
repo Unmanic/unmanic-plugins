@@ -39,6 +39,7 @@ class Settings(PluginSettings):
     settings = {
         'fail_task_if_file_detected_larger':                 False,
         'if_end_result_file_is_still_larger_mark_as_ignore': False,
+        'size_threshold_percent':                            0,
     }
     form_settings = {
         "fail_task_if_file_detected_larger":                 {
@@ -47,7 +48,56 @@ class Settings(PluginSettings):
         "if_end_result_file_is_still_larger_mark_as_ignore": {
             "label": "Ignore files in future scans if end result is larger than source (regardless of task history)",
         },
+        "size_threshold_percent":                            {
+            "label":          "Size threshold",
+            "input_type":     "slider",
+            "slider_options": {
+                "min":    -50,
+                "max":    10,
+                "step":   0.5,
+                "suffix": "%",
+            },
+            "description":    "Shifts the size that a new file is rejected at, relative to the original file. "
+                              "Leave at 0% to reject any file larger than the original. "
+                              "Set a positive value to permit a small increase, for tasks that only rewrite the "
+                              "container and can add a few bytes without re-encoding. "
+                              "Set a negative value to demand a minimum saving, rejecting a transcode that did not "
+                              "shrink the file by enough to be worth keeping.",
+        },
     }
+
+
+def get_size_threshold(settings):
+    """Read the configured size threshold as a percentage of the original file size"""
+    try:
+        return float(settings.get_setting('size_threshold_percent'))
+    except (TypeError, ValueError):
+        return 0
+
+
+def get_maximum_permitted_size(original_size, threshold):
+    """
+    Return the largest size that the new file may be before it is rejected
+
+    A positive threshold permits the new file to be slightly larger than the original.
+    Container level operations can add bytes without the video having been re-encoded
+    (eg. an MP4 remux with '-movflags +faststart' relocating the moov atom, or a codec
+    tag rewrite), and rejecting those over a handful of bytes reverts work that
+    otherwise succeeded.
+
+    A negative threshold demands a minimum saving, rejecting a new file that is smaller
+    than the original but not by enough to be worth keeping.
+    """
+    return int(original_size) * (1 + (threshold / 100))
+
+
+def describe_threshold(threshold):
+    """Describe the size test in the terms that the configured threshold applies"""
+    if threshold > 0:
+        return "is more than {}% larger than the original file".format(threshold)
+    if threshold < 0:
+        return "is not at least {}% smaller than the original file".format(abs(threshold))
+    return "is larger than the original file"
 
 
 def file_marked_as_failed(settings, path):
@@ -145,11 +195,14 @@ def on_worker_process(data):
     original_file_stats = os.stat(os.path.join(original_file_path))
 
     # Test that the source file is not smaller than the new file
-    if int(current_file_stats.st_size) > int(original_file_stats.st_size):
+    threshold = get_size_threshold(settings)
+    maximum_permitted_size = get_maximum_permitted_size(original_file_stats.st_size, threshold)
+    if int(current_file_stats.st_size) > maximum_permitted_size:
         if settings.get_setting('fail_task_if_file_detected_larger'):
             # Add some worker logs to be transparent as to what is happening
             if data.get('worker_log'):
-                data['worker_log'].append("\nFailing task as current cache file is larger than the original file:")
+                data['worker_log'].append(
+                    "\nFailing task as current cache file {}:".format(describe_threshold(threshold)))
                 data['worker_log'].append(
                     "\n  - Original File: {} bytes '<em>{}</em>'".format(original_file_stats.st_size,
                                                                          original_file_path))
@@ -167,20 +220,21 @@ def on_worker_process(data):
         # Add some more worker logs...
         if data.get('worker_log'):
             data['worker_log'].append(
-                "\nResetting task file back to original source as current cache file is larger than the original file:")
+                "\nResetting task file back to original source as current cache file {}:".format(
+                    describe_threshold(threshold)))
             data['worker_log'].append(
                 "\n  - Original File: {} bytes '<em>{}</em>'".format(original_file_stats.st_size,
                                                                      original_file_path))
             data['worker_log'].append(
                 "\n  - Cache File: {} bytes '<em>{}</em>'".format(current_file_stats.st_size, abspath))
 
-        # The current file is larger than the original. Reset the cache file to the 'file_in'
+        # The current file failed the size test. Reset the cache file to the 'file_in'
         data['file_in'] = original_file_path
         logger.debug(
-            "Rejecting processed file as it is larger than the original: '{}' > '{}'.".format(abspath,
-                                                                                              original_file_path))
+            "Rejecting processed file as it {}: '{}' > '{}'.".format(describe_threshold(threshold), abspath,
+                                                                      original_file_path))
     else:
-        logger.debug("Keeping the processed file as it is smaller than the original.")
+        logger.debug("Keeping the processed file as it is within the permitted size.")
 
 
 def on_postprocessor_file_movement(data):
@@ -226,8 +280,10 @@ def on_postprocessor_file_movement(data):
         original_file_stats = os.stat(os.path.join(original_source_path))
 
         # Test that the source file is not smaller than the new file
-        if int(current_file_stats.st_size) > int(original_file_stats.st_size):
-            # The current file is larger than the original.
+        threshold = get_size_threshold(settings)
+        maximum_permitted_size = get_maximum_permitted_size(original_file_stats.st_size, threshold)
+        if int(current_file_stats.st_size) > maximum_permitted_size:
+            # The current file failed the size test.
             # Mark it as failed
             write_file_marked_as_failed(original_source_path)
             if not filecmp.cmp(original_source_path, data.get('file_in'), shallow=True):
