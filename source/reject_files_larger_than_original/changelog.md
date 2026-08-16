@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.5</span>**
+- Add a configurable size threshold (default 0% = unchanged behaviour). A positive value permits container level rewrites that add a few bytes without re-encoding. A negative value demands a minimum saving before the new file is kept
+
 **<span style="color:#56adda">0.0.4</span>**
 - Improve workflow to remove additional file movements
 - Update Plugin to remove Unmanic v1 PluginHandler compatibility

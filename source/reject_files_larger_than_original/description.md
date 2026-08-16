@@ -34,6 +34,16 @@ If during the worker processing, the file is determined to be larger than the or
 If during a library scan or file event, a file is found that would otherwise meet the criteria to be added as a new pending task, if that file has been previously flagged to be ignored, then it shall be ignored regardless of the file's status in the Completed Tasks list.
 
 
+#### <span style="color:blue">Size threshold</span>
+Shifts the size at which a new file is rejected, relative to the original file. It applies to both the worker process and the post-processor checks described above.
+
+At the default of **0%**, any file larger than the original is rejected.
+
+A **positive** value permits the new file to be slightly larger. Some tasks only rewrite the container and do not re-encode the video, and those can add a small number of bytes: an MP4 remux with `-movflags +faststart` relocates the moov atom, and a codec tag rewrite (eg. `hev1` to `hvc1`) changes the header. A file that grows by a few bytes this way has still had the work done to it, but at 0% it is rejected and reset, and the task is still recorded as successful. Combined with the option above, or with the Ignore Completed Tasks Plugin, that permanently blocks the file from ever receiving the change. Setting 1% lets those through while genuinely larger encodes, which are typically 10-30% larger, are still rejected.
+
+A **negative** value demands a minimum saving. A transcode that shrinks a file by only a percent or two may not be worth the quality loss or the write cycles. At -10%, a new file is only kept if it is at least 10% smaller than the original.
+
+
 ---
 
 #### Examples:
