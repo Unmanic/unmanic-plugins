@@ -13,8 +13,9 @@
     ],
     "priorities": {
         "on_library_management_file_test": 99,
-        "on_worker_process": 0
+        "on_worker_process": 0,
+        "on_postprocessor_task_results": 0
     },
     "tags": "audio,ffmpeg,library file test",
-    "version": "0.0.9"
+    "version": "0.1.0"
 }

@@ -1,3 +1,7 @@
+**<span style="color:#56adda">0.1.0</span>**
+- Refactor to use database-backed UnmanicFileMetadata for persistent file tracking across scans and tasks
+- Remove deprecated full-file SHA-256 hashing in favour of native content fingerprinting
+- Preserve backwards-compatibility with legacy DirectoryInfo markers
 
 **<span style="color:#56adda">0.0.9</span>**
 - fix in 0.0.8 had a bug where the original_sample_rate calculation was in the middle of the return values (moved it just above return stanza)
