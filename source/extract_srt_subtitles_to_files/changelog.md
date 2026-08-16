@@ -1,4 +1,8 @@
 
+**<span style="color:#56adda">0.0.13</span>**
+- add flag to extract untagged subtitle streams
+- fix bug that causes only the latest stream to survive when multiple streams have the same tag
+
 **<span style="color:#56adda">0.0.12</span>**
 - add back in file test check for presence of text subtitles
 - change text of what is written in .unmanic file to prevent against empty string in cases where remove all subtitles is run in same library
