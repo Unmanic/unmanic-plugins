@@ -1,0 +1,13 @@
+{
+  "author": "mmenanno",
+  "compatibility": [2],
+  "description": "Run MKVPropEdit on a file",
+  "icon": "https://upload.wikimedia.org/wikipedia/commons/2/21/Mkvmerge256.png",
+  "id": "mkvpropedit",
+  "name": "MKVPropEdit",
+  "priorities": {
+    "on_worker_process": 99
+  },
+  "tags": "command, mkv, tweaks",
+  "version": "0.0.4"
+}

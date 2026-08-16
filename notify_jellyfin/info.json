@@ -1,0 +1,19 @@
+{
+    "author": "yajrendrag",
+    "compatibility": [
+        1,
+        2
+    ],
+    "description": "Instructs Jellyfin to do a library scan",
+    "icon": "https://raw.githubusercontent.com/yajrendrag/unmanic-plugins/master/source/notify_jellyfin/icon.png",
+    "id": "notify_jellyfin",
+    "name": "Notify Jellyfin",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_postprocessor_task_results": 0
+    },
+    "tags": "post-processor",
+    "version": "0.0.2"
+}

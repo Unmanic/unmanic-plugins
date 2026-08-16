@@ -1,0 +1,19 @@
+{
+    "author": "Baconing",
+    "compatibility": [
+        2
+    ],
+    "description": "Send a Discord webhook notification when a worker starts and finishes processing a file.",
+    "icon": "https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png",
+    "id": "discord_webhook",
+    "name": "Discord Webhook",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_worker_process": "1",
+        "on_postprocessor_task_results": "99"
+    },
+    "tags": "discord,wekbook,notification",
+    "version": "1.0.0"
+}

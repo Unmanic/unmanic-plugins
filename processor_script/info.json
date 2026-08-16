@@ -1,0 +1,18 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Execute an external script from an Unmanic worker process.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.processor_script/master/icon.png",
+    "id": "processor_script",
+    "name": "External Worker Processor Script",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_worker_process": 0
+    },
+    "tags": "script,command",
+    "version": "0.0.1"
+}
