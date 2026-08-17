@@ -23,6 +23,7 @@
 """
 import logging
 import os
+import json
 
 from unmanic.libs.unplugins.settings import PluginSettings
 
@@ -47,6 +48,29 @@ class Settings(PluginSettings):
                            "without executing any subsequent file test plugins.",
         }
     }
+
+    def __init__(self, *args, **kwargs):
+        super(Settings, self).__init__(*args, **kwargs)
+        self.__ensure_settings_files_exist()
+
+    def __ensure_settings_files_exist(self):
+        """
+        Seed the plugin profile with default settings files before Unmanic
+        attempts a first library-scoped save.
+        """
+        profile_directory = self.get_profile_directory()
+        settings_data = dict(self.settings)
+
+        settings_file = os.path.join(profile_directory, "settings.json")
+        if not os.path.exists(settings_file):
+            with open(settings_file, "w") as outfile:
+                json.dump(settings_data, outfile, indent=2)
+
+        if self.library_id:
+            library_settings_file = os.path.join(profile_directory, f"settings.{self.library_id}.json")
+            if not os.path.exists(library_settings_file):
+                with open(library_settings_file, "w") as outfile:
+                    json.dump(settings_data, outfile, indent=2)
 
 
 def file_ends_in_allowed_extensions(path, allowed_extensions):
