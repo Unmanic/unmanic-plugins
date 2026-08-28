@@ -69,6 +69,7 @@ class GlobalSettings:
             "output_settings":        {
                 "keep_container": True,
                 "dest_container": "mkv",
+                "remove_chapters": False,
             },
             "filter_settings":        {
                 "apply_smart_filters":      False,
@@ -258,7 +259,18 @@ class GlobalSettings:
         if self.settings.get_setting('keep_container'):
             values["display"] = 'hidden'
         return values
-
+        
+    def get_remove_chapters_form_settings(self):
+        values = {
+            "label":       "Remove chapters",
+            "description": "Remove all chapter markers from the output file.\n"
+                           "Applies '-map_chapters -1' to the FFmpeg command.",
+            "req_lev":     2,
+        }
+        if self.settings.get_setting('mode') not in ['basic', 'standard']:
+            values["display"] = 'hidden'
+        return values
+    
     def get_apply_smart_filters_form_settings(self):
         values = {
             "label":   "Enable plugin's smart video filters",

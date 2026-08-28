@@ -106,6 +106,12 @@ class PluginStreamMapper(StreamMapper):
                 if self.crop_value:
                     tools.append_worker_log(self.worker_log, "Stream mapper detected black bars - crop='{}'".format(self.crop_value))
 
+        # Remove chapter markers if configured
+        # Note: this is not applied to advanced mode - advanced mode was returned above
+        if self.settings.get_setting('remove_chapters'):
+            tools.append_worker_log(self.worker_log, "Stream mapper configured to remove chapters")
+            self.set_ffmpeg_advanced_options(**{'-map_chapters': '-1'})
+        
         # Build hardware acceleration args based on encoder
         # Note: these are not applied to advanced mode - advanced mode was returned above
         encoder_name = self.settings.get_setting('video_encoder')
