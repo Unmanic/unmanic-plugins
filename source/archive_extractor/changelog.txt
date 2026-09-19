@@ -1,0 +1,17 @@
+[b][color=56adda]0.1.1[/color][/b]
+• Rebase plugin onto the official Unmanic plugin branch
+• Add compatibility, platform, and hook priority metadata
+• Use official hook data instead of unsupported cross-hook task state
+• Fix RAR extraction to complete in a single worker pass
+• Leave non-archive worker jobs unchanged
+• Preserve safe cleanup behavior after successful processing
+
+[b][color=56adda]0.1.0[/color][/b]
+• Initial implementation for Unmanic/unmanic#612
+• Queue ZIP, RAR, part01 RAR, and fallback R00 archive inputs
+• Safely extract the largest supported video from ZIP archives
+• Extract RAR archives with 7z, 7zz, or unrar when available
+• Pass extracted media to the remaining Unmanic worker flow
+• Preserve archives by default
+• Optional archive cleanup only after successful processing and file movement
+• Avoid duplicate tasks for multipart RAR volumes

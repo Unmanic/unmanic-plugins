@@ -1,0 +1,21 @@
+{
+    "author": "Kasun Indika",
+    "compatibility": [
+        2
+    ],
+    "description": "Extract ZIP and RAR archives containing video files and pass the selected video through the Unmanic worker flow.",
+    "icon": "",
+    "id": "archive_extractor",
+    "name": "Archive Extractor",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 0,
+        "on_worker_process": 0,
+        "on_postprocessor_file_movement": 0,
+        "on_postprocessor_task_results": 0
+    },
+    "tags": "archive,rar,zip,extract,worker,library",
+    "version": "0.1.1"
+}
