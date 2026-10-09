@@ -36,7 +36,7 @@ class Settings(PluginSettings):
 
 
 def update_jellyfin(jellyfin_url, jellyfin_apikey):
-    headers = {'X-MediaBrowser-Token': jellyfin_apikey}
+    headers={"Authorization": f'MediaBrowser Token="{jellyfin_apikey}"'}
     try:
         r = requests.post(jellyfin_url + "/Library/Refresh", headers=headers)
     except (ConnectionRefusedError, requests.exceptions.ConnectionError) as error:
