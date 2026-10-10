@@ -1,0 +1,18 @@
+{
+    "author": "Josh5",
+    "compatibility": [
+        2
+    ],
+    "description": "Upscale videos using Dandere2x, Real-ESRGAN or Waifu2x. Supports Intel/AMD/NVIDIA GPUs.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.video_ai_upscaler/master/icon.png",
+    "id": "video_ai_upscaler",
+    "name": "Video Upscaler (Dandere2x / Real-ESRGAN / Waifu2x)",
+    "platform": [
+        "linux"
+    ],
+    "priorities": {
+        "on_worker_process": 50
+    },
+    "tags": "upscale,realesrgan,waifu2x,gpu,video,enhancement",
+    "version": "0.0.2"
+}

@@ -1,0 +1,18 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Repair and stitch Plex DVR .ts recordings that were split into '(copy N)' fragments.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.plex_dvr_repair/refs/heads/master/icon.png",
+    "id": "plex_dvr_repair",
+    "name": "Plex DVR Repair",
+    "priorities": {
+        "on_library_management_file_test": 10,
+        "on_postprocessor_file_movement": 0,
+        "on_postprocessor_task_results": 0,
+        "on_worker_process": 1
+    },
+    "tags": "video,plex,dvr,ffmpeg",
+    "version": "0.0.6"
+}

@@ -1,0 +1,18 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Only look for files ending in a specified extension.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.limit_library_search_by_file_extension/master/icon.png",
+    "id": "limit_library_search_by_file_extension",
+    "name": "Limit library search by file extension",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 1
+    },
+    "tags": "library file test",
+    "version": "0.0.4"
+}

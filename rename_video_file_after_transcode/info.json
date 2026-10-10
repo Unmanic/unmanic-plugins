@@ -1,0 +1,15 @@
+{
+    "author": "Unmanic",
+    "compatibility": [
+        2
+    ],
+    "description": "Rename processed video files so codec/resolution/HDR tokens match the current media.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.rename_video_file_after_transcode/master/icon.png",
+    "id": "rename_video_file_after_transcode",
+    "name": "Rename Video File After Transcode",
+    "priorities": {
+        "on_postprocessor_task_results": 0
+    },
+    "tags": "rename,ffprobe,postprocessor",
+    "version": "0.0.1"
+}

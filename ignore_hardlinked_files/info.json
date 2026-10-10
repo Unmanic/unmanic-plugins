@@ -1,0 +1,15 @@
+{
+    "author": "hstep20",
+    "compatibility": [
+        2
+    ],
+    "description": "Ignores any files with a Hardlink for transcoding. Useful for situations where you need source files in tact",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.ignore_hardlinked_files/master/icon.png",
+    "id": "ignore_hardlinked_files",
+    "name": "Ignore Hardlinked Files",
+    "priorities": {
+        "on_library_management_file_test": 0
+    },
+    "tags": "",
+    "version": "0.0.1"
+}

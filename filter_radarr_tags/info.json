@@ -1,0 +1,13 @@
+{
+  "author": "rosscop123",
+  "compatibility": [2],
+  "description": "Filters Movies in Radarr based on given tags",
+  "icon": "",
+  "id": "filter_radarr_tags",
+  "name": "Filter Radarr Tags",
+  "priorities": {
+    "on_library_management_file_test": 0
+  },
+  "tags": "",
+  "version": "0.0.1"
+}

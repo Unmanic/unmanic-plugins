@@ -1,0 +1,16 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Configure a few tweaks to Unmanic's default behaviour.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.modify_default_unmanic_file_movements/master/icon.png",
+    "id": "modify_default_unmanic_file_movements",
+    "name": "Modify Unmanic's Default File Movements",
+    "priorities": {
+        "on_worker_process": 9999,
+        "on_postprocessor_file_movement": 9999
+    },
+    "tags": "post-processor,tweaks",
+    "version": "0.0.1"
+}

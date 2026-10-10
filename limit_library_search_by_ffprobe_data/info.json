@@ -1,0 +1,15 @@
+{
+    "author": "Josh.5",
+    "compatibility": [
+        2
+    ],
+    "description": "Only look for files containing specified value in the FFprobe data.",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.limit_library_search_by_ffprobe_data/master/icon.png",
+    "id": "limit_library_search_by_ffprobe_data",
+    "name": "Limit Library Search by FFprobe Data",
+    "priorities": {
+        "on_library_management_file_test": 0
+    },
+    "tags": "audio,video,ffmpeg",
+    "version": "0.0.5"
+}

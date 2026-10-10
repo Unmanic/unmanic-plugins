@@ -1,0 +1,19 @@
+{
+    "author": "yajrendrag",
+    "compatibility": [
+        2
+    ],
+    "description": "Creates an extra stereo libfdk stereo audio stream from existing audio stream",
+    "icon": "https://raw.githubusercontent.com/Unmanic/plugin.encoder_audio_aac/master/icon.png",
+    "id": "add_extra_stereo_audio",
+    "name": "Add Extra Stereo Audio",
+    "platform": [
+        "all"
+    ],
+    "priorities": {
+        "on_library_management_file_test": 99,
+        "on_worker_process": 0
+    },
+    "tags": "audio,encoder,ffmpeg,library file test",
+    "version": "0.0.13"
+}
