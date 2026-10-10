@@ -1,4 +1,7 @@
 
+**<span style="color:#56adda">0.0.3</span>**
+- update authorization headers
+
 **<span style="color:#56adda">0.0.2</span>**
 - add check for connection error so plugin doesn't fail due to connection/authorization errors - otherwise plugin will prevent post processing from continuing 
 
